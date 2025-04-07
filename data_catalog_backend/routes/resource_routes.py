@@ -4,9 +4,10 @@ import uuid
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 
-from data_catalog_backend.models.resource_models import  Resource, SpatialExtent
+from data_catalog_backend.models import SpatialExtent, Resource
 from data_catalog_backend.dependencies import get_license_service, get_resource_service, get_examples_service
-from data_catalog_backend.schemas.resources import  ResourcesResponse,ResourceSummeryResponse, ResourceRequest
+from data_catalog_backend.schemas.resources import ResourcesResponse, ResourceSummeryResponse, ResourceRequest, \
+    ResourcesRequest
 from data_catalog_backend.services.license_service import LicenseService
 from data_catalog_backend.services.resource_service import  ResourceService
 from data_catalog_backend.services.examples_service import ExamplesService
@@ -14,7 +15,7 @@ from data_catalog_backend.services.examples_service import ExamplesService
 router = APIRouter()
 
 @router.post(
-    "/resources",
+    "/resource",
     summary="Add a resource to the database",
     tags=["admin"],
     response_model=ResourcesResponse)
@@ -28,7 +29,7 @@ async def post_resource(
 
     license = license_service.create_license(resource_req.license)
     examples = example_service.create_examples(resource_req.examples)
-    codeexamples = example_service.create_code_examples(resource_req.codeexamples)
+    code_examples = example_service.create_code_examples(resource_req.code_examples)
 
     if not license:
         raise HTTPException(status_code=404, detail="License not found")
@@ -59,7 +60,7 @@ async def post_resource(
         version=resource_req.version,
         type=resource_req.type,
         spatial_extent=spatial_extent_objects,
-        codeexamples=codeexamples,
+        code_examples=code_examples,
         license=license,
         examples=examples
     )
@@ -76,16 +77,18 @@ async def post_resource(
         logging.error(e)
     raise HTTPException(status_code=500, detail="Unknown error")
 
-@router.get("/resources",
+@router.post("/resources",
             summary="Get all resources",
             description="Returns all locations from the metadata store",
             tags=["admin"],
             response_model=List[ResourcesResponse],
             response_model_exclude_none=True)
-async def get_resources(service: ResourceService = 
-                Depends(get_resource_service)) -> List[ResourcesResponse]:
+async def get_resources(
+        resources_req: ResourcesRequest,
+        service: ResourceService = Depends(get_resource_service)
+    ) -> List[ResourcesResponse]:
     logging.info('Getting resources')
-    resources = service.get_resources()
+    resources = service.get_resources(resources_req)
     for resource in resources:
         for extent in resource.spatial_extent:
             extent.geometry = extent.geom  # Convert WKB to GeoJSON
@@ -111,4 +114,4 @@ async def get_resource_summeries(service: ResourceService =
 async def get_resource(resource_id: uuid.UUID, 
                        service: ResourceService = Depends(get_resource_service)) -> ResourcesResponse:
         logging.info('getting resource')
-        return service.get_resource(resource_id) 
+        return service.get_resource(resource_id)

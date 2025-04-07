@@ -5,7 +5,8 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from data_catalog_backend.models.resource_models import License, Resource
+from data_catalog_backend.models import License, Resource, Provider
+from data_catalog_backend.schemas.resources import ResourcesRequest
 from data_catalog_backend.services.license_service import LicenseService
 from data_catalog_backend.services.provider_service import ProviderService
 from data_catalog_backend.utils.type_mapping import type_mapping
@@ -23,8 +24,17 @@ class ResourceService:
         stmt = select(Resource).where(Resource.title == title)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def get_resources(self) -> List[Resource]:
-        stmt = select(Resource)
+    def get_resources(self, resources_req: ResourcesRequest) -> List[Resource]:
+        stmt = (
+            select(Resource)
+            .join(Resource.providers)
+            .where(
+                Resource.type.in_(resources_req.types),
+                Provider.provider_id.in_(resources_req.providers)
+            )
+            .offset(resources_req.per_page * resources_req.page)
+            .limit(resources_req.per_page)
+        )
         return self.session.scalars(stmt).unique().all()
     
     def get_resource(self, resource_id) -> Resource: 

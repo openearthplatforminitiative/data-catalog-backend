@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy.orm import joinedload
 
-from data_catalog_backend.models.resource_models import Examples, CodeExamples, Code
+from data_catalog_backend.models import Examples, CodeExamples, Code
 
 from sqlalchemy import select
 

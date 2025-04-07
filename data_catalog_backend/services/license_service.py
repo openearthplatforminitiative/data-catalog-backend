@@ -3,8 +3,7 @@ import logging
 from fastapi import HTTPException
 from sqlalchemy import select
 
-from data_catalog_backend.models.resource_models import License
-from data_catalog_backend.utils.type_mapping import type_mapping
+from data_catalog_backend.models import License
 
 logger = logging.getLogger(__name__)
 

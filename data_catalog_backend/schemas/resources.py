@@ -1,17 +1,20 @@
 
 import uuid
 from typing import List, Optional
+from fastapi import Query
+
+from geojson_pydantic import Polygon
+from geojson_pydantic.geometries import _GeometryBase
 from pydantic import Field, PastDate, HttpUrl
-from data_catalog_backend.models.resource_types import ResourceType
+from data_catalog_backend.models import ResourceType, SpatialExtentRequestType
 from data_catalog_backend.schemas.basemodel import BaseModel
 from data_catalog_backend.schemas.code import CodeExampleRequest, CodeExampleResponse
 from data_catalog_backend.schemas.example import ExampleResponse, ExampleRequest
 from data_catalog_backend.schemas.license import LicenseRequest, LicenseResponse
 from data_catalog_backend.schemas.spatial_extent import SpatialExtentRequest, SpatialExtentResponse
 
-
 class ResourceSummeryResponse(BaseModel):
-    resource_id: uuid.UUID 
+    resource_id: uuid.UUID
     title: str = Field(description="Title of the resource")
     abstract: str = Field(description="Short description of the resource")
     type: ResourceType
@@ -30,9 +33,21 @@ class ResourceRequest(BaseModel):
     keywords: List[str]
     version: str = Field(description="The version of this resource")
     type: ResourceType
-    codeexamples: Optional[List[CodeExampleRequest]] = Field(description="Code examples")
+    code_examples: Optional[List[CodeExampleRequest]] = Field(description="Code examples")
     license: LicenseRequest
     examples: Optional[List[ExampleRequest]] = Field(description="examples of the resource")
+
+class ResourcesRequest(BaseModel):
+    types: Optional[List[ResourceType]] = Field(description="Resource types")
+    features: Optional[List[_GeometryBase]] = Field(description="GeoJson features, polygons or points")
+    spatial: Optional[List[SpatialExtentRequestType]] = Field(description="spatial extent")
+    categories: Optional[List[uuid.UUID]] = Field(description="Categories associated with this resource")
+    providers: Optional[List[uuid.UUID]] = Field(description="List of providers")
+    tags: Optional[List[str]] = Field(description="query tags")
+
+    # pagination
+    page: Optional[int] = Field(default=1, gt=0, description="Page number")
+    per_page: Optional[int] = Field(default=10, gt=0, description="Number of results per page")
 
 class ResourcesResponse(ResourceSummeryResponse):
     html_content: Optional[str] = None

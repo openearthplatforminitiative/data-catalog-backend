@@ -4,7 +4,7 @@ import uuid
 from pydantic import  Field
 from geojson_pydantic.geometries import Geometry
 
-from data_catalog_backend.models.resource_types import SpatialExtentType
+from data_catalog_backend.models import SpatialExtentType
 from data_catalog_backend.schemas.basemodel import BaseModel
 
 class SpatialExtentRequest(BaseModel):

@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_provider_service
-from data_catalog_backend.models.resource_models import Providers
+from data_catalog_backend.models.resource import Provider
 from data_catalog_backend.schemas.provider import ProviderRequest, ProviderResponse
 from data_catalog_backend.services.provider_service import ProviderService
 
@@ -26,7 +26,7 @@ async def post_provider(provider_req: ProviderRequest,
       ]
       resources = [item for sublist in resources for item in sublist]
 
-      ed = Providers(
+      ed = Provider(
             name = provider_req.name,
             provider_url = provider_req.provider_url,
             description = provider_req.description,

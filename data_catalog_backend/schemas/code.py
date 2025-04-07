@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Optional
 
-from data_catalog_backend.models.resource_types import CodeType
+from data_catalog_backend.models import CodeType
 from data_catalog_backend.schemas.basemodel import BaseModel
 
 
