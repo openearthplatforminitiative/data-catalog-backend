@@ -1,4 +1,4 @@
-from data_catalog_backend.models.categories import *
+from data_catalog_backend.models.category import *
 from data_catalog_backend.models.code import *
 from data_catalog_backend.models.code_example import *
 from data_catalog_backend.models.example import *
