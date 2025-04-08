@@ -4,7 +4,7 @@ from geoalchemy2 import Geometry, WKBElement
 from geoalchemy2.shape import to_shape, from_shape
 from shapely.geometry.geo import mapping, shape
 from pydantic import ValidationError
-from sqlalchemy import UUID, String, ForeignKey
+from sqlalchemy import UUID, String, ForeignKey, select, case
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from data_catalog_backend.database import Base
 from enum import StrEnum as PyStrEnum
@@ -22,7 +22,7 @@ class SpatialExtentType(PyStrEnum):
 class SpatialExtent(Base):
     __tablename__ = 'spatial_extents'
 
-    spatial_extent_id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
@@ -34,7 +34,7 @@ class SpatialExtent(Base):
     details: Mapped[Optional[str]] = mapped_column(String, nullable=True, doc="details")
     geometry: Mapped[Optional[WKBElement]] = mapped_column(Geometry(geometry_type="GEOMETRY", srid=4326), nullable=True, doc="geometry value")
     spatial_resolution: Mapped[Optional[str]] = mapped_column(String, nullable=True, doc="region")
-    resource_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('resources.resource_id'), nullable=False)
+    resource_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('resources.id'), nullable=False)
 
     # Relations
     resource: Mapped["Resource"] = relationship(back_populates="spatial_extent")

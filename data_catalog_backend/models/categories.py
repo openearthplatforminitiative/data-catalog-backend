@@ -9,7 +9,7 @@ from data_catalog_backend.database import Base
 
 class Categories(Base):
     __tablename__ = 'categories'
-    category_id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,

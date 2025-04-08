@@ -1,9 +1,11 @@
 import logging
+from typing import Union
 
 from fastapi import HTTPException
 from sqlalchemy import select
 
 from data_catalog_backend.models import License
+from data_catalog_backend.schemas.license import LicenseRequest, LicenseGetRequest
 
 logger = logging.getLogger(__name__)
 
@@ -11,8 +13,8 @@ class LicenseService:
     def __init__(self, session):
         self.session = session
 
-    def get_license(self, license_id) -> License:
-        stmt = select(License).where(License.license_id == license_id)
+    def get_license(self, id) -> License:
+        stmt = select(License).where(License.id == id)
         return self.session.scalars(stmt).unique().one_or_none()
 
     def create_license(self, license: License) -> License:
@@ -27,4 +29,11 @@ class LicenseService:
         except Exception as e:
             self.session.rollback()
             raise e
-        return license      
+        return license
+
+    def create_or_find_license(self, license: Union[LicenseGetRequest, LicenseRequest]) -> License:
+        if license.id:
+            existing_license = self.get_license(license.id)
+            if existing_license:
+                return existing_license
+        return self.create_license(license)

@@ -16,7 +16,7 @@ class CodeType(PyStrEnum):
 class Code(Base):
     __tablename__ = 'code'
 
-    code_id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
@@ -25,7 +25,7 @@ class Code(Base):
     )
     language: Mapped[str] = mapped_column(String, nullable=True, doc="type")
     source: Mapped[str] = mapped_column(String, nullable=True, doc="code")
-    examples_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('code_examples.examples_id'), nullable=True)
+    examples_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('code_examples.id'), nullable=True)
 
     #Relations
     code_examples: Mapped["CodeExamples"] = relationship(back_populates='code')

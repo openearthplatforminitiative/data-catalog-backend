@@ -31,8 +31,8 @@ class ExamplesService:
 
         return created_examples
 
-    def get_examples(self, example_id: int) -> List[Examples]:
-        stmt = select(Examples).where(Examples.example_id == example_id)
+    def get_examples(self, id: int) -> List[Examples]:
+        stmt = select(Examples).where(Examples.id == id)
         return self.session.scalars(stmt).unique().all()
 
     def create_code_examples(self, code_examples: List[CodeExamples]) -> List[CodeExamples]:
@@ -49,7 +49,7 @@ class ExamplesService:
                 new_code = Code(
                     language=code.language,
                     source=code.source,
-                    examples_id=new_code_example.examples_id
+                    examples_id=new_code_example.id
                 )
                 self.session.add(new_code)
 
@@ -63,6 +63,6 @@ class ExamplesService:
 
         return created_code_examples
 
-    def get_code_examples(self, code_example_id: int) -> List[CodeExamples]:
-        stmt = select(CodeExamples).where(CodeExamples.examples_id == code_example_id).options(joinedload(CodeExamples.code))
+    def get_code_examples(self, id: int) -> List[CodeExamples]:
+        stmt = select(CodeExamples).where(CodeExamples.id == id).options(joinedload(CodeExamples.code))
         return self.session.scalars(stmt).unique().all()

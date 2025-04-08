@@ -8,7 +8,7 @@ from data_catalog_backend.database import Base
 
 class Examples(Base):
     __tablename__ = 'examples'
-    example_id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
@@ -19,7 +19,7 @@ class Examples(Base):
     description: Mapped[str] = mapped_column(String, nullable=True, doc="description")
     example_url: Mapped[str] = mapped_column(String, nullable=True, doc="link to example")
     favicon_url: Mapped[str] = mapped_column(String, nullable=True, doc="link to favicon")
-    resource_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('resources.resource_id'), nullable=True)
+    resource_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('resources.id'), nullable=True)
 
     #Relations
     resource: Mapped["Resource"] = relationship(back_populates='examples')

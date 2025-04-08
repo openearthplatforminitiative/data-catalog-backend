@@ -5,10 +5,11 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.models import SpatialExtent, Resource
-from data_catalog_backend.dependencies import get_license_service, get_resource_service, get_examples_service
-from data_catalog_backend.schemas.resources import ResourcesResponse, ResourceSummeryResponse, ResourceRequest, \
-    ResourcesRequest
+from data_catalog_backend.dependencies import get_license_service, get_resource_service, get_examples_service, \
+    get_provider_service
+from data_catalog_backend.schemas.resources import ResourcesResponse, ResourceRequest, ResourcesRequest
 from data_catalog_backend.services.license_service import LicenseService
+from data_catalog_backend.services.provider_service import ProviderService
 from data_catalog_backend.services.resource_service import  ResourceService
 from data_catalog_backend.services.examples_service import ExamplesService
 
@@ -21,15 +22,29 @@ router = APIRouter()
     response_model=ResourcesResponse)
 
 async def post_resource(
-    resource_req: ResourceRequest,
-    resource_service: ResourceService = Depends(get_resource_service),
-    license_service: LicenseService = Depends(get_license_service),
+        resource_req: ResourceRequest,
+        resource_service: ResourceService = Depends(get_resource_service),
+        license_service: LicenseService = Depends(get_license_service),
         example_service: ExamplesService = Depends(get_examples_service),
+        provider_service: ProviderService = Depends(get_provider_service)
     ) -> ResourcesResponse:
 
-    license = license_service.create_license(resource_req.license)
-    examples = example_service.create_examples(resource_req.examples)
-    code_examples = example_service.create_code_examples(resource_req.code_examples)
+    license = license_service.create_or_find_license(resource_req.license)
+
+    providers = []
+    for provider_req in resource_req.providers:
+        provider = provider_service.create_or_find_provider(provider_req)
+        if not provider:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        providers.append(provider)
+
+    examples = []
+    if resource_req.examples:
+        examples = example_service.create_examples(resource_req.examples)
+
+    code_examples = []
+    if resource_req.code_examples:
+        code_examples = example_service.create_code_examples(resource_req.code_examples)
 
     if not license:
         raise HTTPException(status_code=404, detail="License not found")
@@ -46,27 +61,18 @@ async def post_resource(
         spa.geom = extent.geometry
         spatial_extent_objects.append(spa)
 
-    ed = Resource(
-        title=resource_req.title,
-        abstract=resource_req.abstract,
-        html_content=resource_req.html_content,
-        resource_url=resource_req.resource_url,
-        documentation_url=resource_req.documentation_url,
-        git_url=resource_req.git_url,
-        maintenance_and_update_frequency=resource_req.maintenance_and_update_frequency,
-        release_date=resource_req.release_date,
-        contact=resource_req.contact,
-        keywords=resource_req.keywords,
-        version=resource_req.version,
-        type=resource_req.type,
-        spatial_extent=spatial_extent_objects,
-        code_examples=code_examples,
-        license=license,
-        examples=examples
-    )
+    resource_data = resource_req.model_dump()
+    resource_data.update({
+        "spatial_extent": spatial_extent_objects,
+        "code_examples": code_examples,
+        "license": license,
+        "providers": providers,
+        "examples": examples
+    })
+    resource_obj = Resource(**resource_data)
 
     try:
-        created = resource_service.create_resource(ed)
+        created = resource_service.create_resource(resource_obj)
 
         for extent in created.spatial_extent:
               extent.geometry = extent.geom  # Convert WKB to GeoJSON
@@ -85,33 +91,35 @@ async def post_resource(
             response_model_exclude_none=True)
 async def get_resources(
         resources_req: ResourcesRequest,
+        page: int = 0,
+        per_page: int = 10,
         service: ResourceService = Depends(get_resource_service)
     ) -> List[ResourcesResponse]:
     logging.info('Getting resources')
-    resources = service.get_resources(resources_req)
+    logging.info(resources_req)
+    resources = service.get_resources(page, per_page, resources_req)
     for resource in resources:
         for extent in resource.spatial_extent:
             extent.geometry = extent.geom  # Convert WKB to GeoJSON
     return resources
 
-@router.get("/resources/summery",
-            summary="Get all resource summerys",
-            description="Returns all locations from the metadata store",
-            tags=["admin"],
-            response_model=List[ResourceSummeryResponse],
-            response_model_exclude_none=True)
-async def get_resource_summeries(service: ResourceService = 
-                                Depends(get_resource_service)) -> List[ResourceSummeryResponse]:
-      logging.info('getting resource summeries')
-      summeries = service.get_resource_summary_list()
-      return [ResourceSummeryResponse(**summery) for summery in summeries]
-
-@router.get("/resources/{resource_id}",
+@router.get("/resources/{id}",
             description="Returns one specific resource from the metadata store",
             tags=["admin"],
             response_model=ResourcesResponse,
             response_model_exclude_none=True)
-async def get_resource(resource_id: uuid.UUID, 
+async def get_resource(id: uuid.UUID,
                        service: ResourceService = Depends(get_resource_service)) -> ResourcesResponse:
         logging.info('getting resource')
-        return service.get_resource(resource_id)
+        return service.get_resource(id)
+@router.put("/resources/{id}",
+            summary="Update a resource",
+            description="Updates a resource in the database",
+            tags=["admin"],
+            response_model=ResourcesResponse)
+async def update_resource(id: uuid.UUID,
+                           resource_req: ResourceRequest,
+                           service: ResourceService = Depends(get_resource_service)) -> ResourcesResponse:
+        pass
+        # logging.info('updating resource')
+        # return service.update_resource(id, resource_req)

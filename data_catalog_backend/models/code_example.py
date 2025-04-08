@@ -10,7 +10,7 @@ from data_catalog_backend.database import Base
 class CodeExamples(Base):
     __tablename__ = 'code_examples'
 
-    examples_id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
@@ -19,7 +19,7 @@ class CodeExamples(Base):
     )
     title: Mapped[str] = mapped_column(String, nullable=False, doc="name")
     description: Mapped[str] = mapped_column(String, nullable=True, doc="description")
-    resource_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('resources.resource_id'), nullable=True)
+    resource_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('resources.id'), nullable=True)
     # Relations
     code: Mapped[List["Code"]] = relationship(back_populates='code_examples')
     resource: Mapped["Resource"] = relationship(back_populates='code_examples')

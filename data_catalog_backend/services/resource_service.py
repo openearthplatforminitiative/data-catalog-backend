@@ -1,16 +1,14 @@
 import logging
 from typing import List, Optional
 
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from geoalchemy2.functions import ST_Covers, ST_Intersects
+from sqlalchemy import select, case
 
-from data_catalog_backend.models import License, Resource, Provider
+from data_catalog_backend.models import License, Resource, Provider, SpatialExtent, SpatialExtentRequestType, \
+    ResourceType
 from data_catalog_backend.schemas.resources import ResourcesRequest
 from data_catalog_backend.services.license_service import LicenseService
 from data_catalog_backend.services.provider_service import ProviderService
-from data_catalog_backend.utils.type_mapping import type_mapping
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,21 +22,37 @@ class ResourceService:
         stmt = select(Resource).where(Resource.title == title)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def get_resources(self, resources_req: ResourcesRequest) -> List[Resource]:
-        stmt = (
-            select(Resource)
-            .join(Resource.providers)
-            .where(
-                Resource.type.in_(resources_req.types),
-                Provider.provider_id.in_(resources_req.providers)
+    def get_resources(self, page: int, per_page: int, resources_req: ResourcesRequest) -> List[Resource]:
+        stmt = select(Resource)
+
+        if len(resources_req.features) > 0 or (
+            len(resources_req.spatial) > 0 and not (
+                len(resources_req.spatial) == 1 and SpatialExtentRequestType.NonSpatial in resources_req.spatial
             )
-            .offset(resources_req.per_page * resources_req.page)
-            .limit(resources_req.per_page)
-        )
+        ):
+            stmt = stmt.outerjoin(Resource.spatial_extent)
+
+        if len(resources_req.features) > 0:
+            stmt = stmt.add_columns(
+                case((ST_Covers(SpatialExtent.geometry, resources_req.geometry), True), else_=False).label("covers"),
+                case((ST_Intersects(SpatialExtent.geometry, resources_req.geometry), True), else_=False).label("intersects")
+            )
+
+        if len(resources_req.types) > 0:
+            logging.info(resources_req.types)
+            logging.info(ResourceType.__members__)
+            stmt = stmt.where(Resource.type.in_(resources_req.types))
+        if len(resources_req.providers) > 0:
+            stmt = stmt.where(Provider.id.in_(resources_req.providers))
+        if len(resources_req.features) > 0:
+            stmt = stmt.where(
+                ST_Intersects(SpatialExtent.geometry, resources_req.geometry) | ST_Covers(SpatialExtent.geometry, resources_req.geometry)
+            )
+        stmt = stmt.offset(per_page * page).limit(per_page)
         return self.session.scalars(stmt).unique().all()
     
-    def get_resource(self, resource_id) -> Resource: 
-            stmt = select(Resource).where(Resource.resource_id == resource_id)
+    def get_resource(self, id) -> Resource:
+            stmt = select(Resource).where(Resource.id == id)
             return self.session.scalars(stmt).unique().one_or_none()
     
     def create_resource(self, resource: Resource) -> Resource:
@@ -58,38 +72,20 @@ class ResourceService:
             raise e
         return resource
 
-    def get_resource_summary_list(self) -> List[Resource]:
-        stmt = select(
-            Resource.resource_id, 
-            Resource.title, 
-            Resource.abstract, 
-            Resource.type)
-        
-        result = self.session.execute(stmt).mappings().all()
-        return [
-            {
-                "resource_id": row.resource_id,
-                "title": row.title,
-                "abstract": row.abstract,
-                "type": row.type
-            }
-            for row in result
-        ]
-
-    def get_resource_summery_on_id(self, resource_id) -> List[Resource]:
-        stmt = select(
-            Resource.resource_id, 
-            Resource.title, 
-            Resource.abstract, 
-            Resource.type).where(Resource.resource_id == resource_id)
-        
-        result = self.session.scalars(stmt).mappings().all()
-        return [
-            {
-                "resource_id": row.resource_id,
-                "title": row.title,
-                "abstract": row.abstract,
-                "type": row.type
-            }
-            for row in result
-        ]
+    def update_resource(self, id, resource_req):
+        pass
+        # resource = self.get_resource(id)
+        # if not resource:
+        #     raise HTTPException(status_code=404, detail="Resource not found")
+        #
+        # for field, value in resource_req.model_dump().items():
+        #     logger.info(value)
+        #     # setattr(resource, field, value)
+        #
+        # # try:
+        # #     self.session.commit()
+        # # except Exception as e:
+        # #     self.session.rollback()
+        # #     raise e
+        # #
+        # return resource
