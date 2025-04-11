@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 
-from sqlalchemy import UUID, Column, ForeignKey, String, Table
+from sqlalchemy import UUID, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from data_catalog_backend.database import Base
@@ -18,6 +18,7 @@ class Category(Base):
     )
     title: Mapped[str] = mapped_column(String, nullable=True, doc="title")
     abstract: Mapped[str] = mapped_column(String, nullable=True, doc="abstract")
+    icon: Mapped[str] = mapped_column(String, nullable=True, doc="mui icon")
 
     # Relations
-    resources: Mapped[List["ResourceCategory"]] = relationship(back_populates="categories")
+    resources: Mapped[List["Resource"]] = relationship(secondary="resource_category", back_populates="categories")
