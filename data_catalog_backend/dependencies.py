@@ -2,6 +2,7 @@ from fastapi.params import Depends
 from sqlalchemy.orm import Session
 
 from data_catalog_backend.database import SessionLocal
+from data_catalog_backend.services.category_service import CategoryService
 from data_catalog_backend.services.examples_service import ExamplesService
 from data_catalog_backend.services.provider_service import ProviderService
 from data_catalog_backend.services.resource_service import ResourceService
@@ -14,6 +15,11 @@ def get_db() -> Session:
         yield db
     finally:
         db.close()
+
+def get_category_service(
+        db: Session = Depends(get_db)
+) -> CategoryService:
+    return CategoryService(db)
 
 def get_provider_service(
         db: Session = Depends(get_db)
