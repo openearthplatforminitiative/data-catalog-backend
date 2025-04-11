@@ -32,15 +32,7 @@ class ProviderService:
         return self.session.scalars(stmt).unique().one_or_none() 
 
     def create_provider(self, provider: Provider) -> Provider:
-        associated_resources = []
-        for resource_summary in provider.resources:
-            resource = self.session.get(Resource, resource_summary["id"])
-            if resource:
-                associated_resources.append(resource)
-
-        provider.resources = associated_resources
         self.session.add(provider)
-
         try:
             self.session.commit()
         except Exception as e:
@@ -50,13 +42,19 @@ class ProviderService:
         return provider
 
     def create_or_find_provider(self, provider: Union[ProviderRequest, ProviderGetRequest]) -> Provider:
-        existing_provider = self.get_provider(provider.provider_id)
-        if existing_provider:
-            return existing_provider
-        return self.create_provider(provider)
+        if isinstance(provider, ProviderGetRequest):
+            return self.get_provider(provider.id)
+        else:
+            # map, validate and create the provider
+            provider = Provider(
+                name=provider.name,
+                provider_url=provider.provider_url,
+                description=provider.description,
+            )
+            return self.create_provider(provider)
 
-    def update_provider(self, provider_id, provider_req):
-        provider = self.get_provider(provider_id)
+    def update_provider(self, id, provider_req):
+        provider = self.get_provider(id)
         if not provider:
             raise HTTPException(status_code=404, detail="Provider not found")
 

@@ -1,5 +1,6 @@
 import logging
 from http.client import HTTPException
+from typing import List
 
 from fastapi import APIRouter, Depends
 
@@ -25,3 +26,13 @@ async def post_license(
     except Exception as e:
         logging.error(e)
     raise HTTPException(status_code=500, detail="Unknown error")
+
+@router.get("/licenses",
+            summary="Get all licenses",
+            description="Returns all licenses in our system",
+            tags=["admin"],
+            response_model=List[LicenseResponse],
+            response_model_exclude_none=True)
+async def get_licenses(service: LicenseService = Depends(get_license_service)) -> List[LicenseResponse]:
+      logging.info('Getting licenses')
+      return service.get_licenses()

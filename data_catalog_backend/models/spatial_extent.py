@@ -1,10 +1,13 @@
+import logging
 import uuid
-from typing import Optional
+from typing import Optional, List
 from geoalchemy2 import Geometry, WKBElement
 from geoalchemy2.shape import to_shape, from_shape
+from geojson_pydantic import Feature
 from shapely.geometry.geo import mapping, shape
 from pydantic import ValidationError
 from sqlalchemy import UUID, String, ForeignKey, select, case
+from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from data_catalog_backend.database import Base
 from enum import StrEnum as PyStrEnum
@@ -42,20 +45,32 @@ class SpatialExtent(Base):
 
     # WKBElement to GeoJSON
     @property
-    def geom(self):
+    def geom(self) -> Optional[List[Feature]]:
         if isinstance(self.geometry, WKBElement):
-            return mapping(to_shape(self.geometry))
+            geojson = mapping(to_shape(self.geometry))
+            if geojson.get("type") == "GeometryCollection":
+                return [
+                    Feature(geometry=g, properties={}, type="Feature")
+                    for g in geojson.get("geometries", [])
+                ]
+            return [Feature(geometry=geojson, properties={}, type="Feature")]
         return None
 
     # GeoJSON to WKBElement
     @geom.setter
     def geom(self, new_value):
-        try:
-            # Convert GeoJSON-like dictionary to a Shapely geometry object
-            if new_value is not None:
-                shapely_geometry = shape(new_value.model_dump())
+        from shapely.geometry import GeometryCollection
 
-                # Convert Shapely geometry to WKBElement
+        try:
+            if new_value is not None:
+                geometries = [
+                    shape(g.geometry if hasattr(g, "geometry") else g["geometry"])
+                    if (hasattr(g, "type") and g.type == "Feature") or (isinstance(g, dict) and g.get("type") == "Feature")
+                    else shape(g)
+                    for g in new_value
+                ]
+                shapely_geometry = GeometryCollection(geometries)
+
                 self.geometry = from_shape(shapely_geometry, srid=4326)
-        except (ValidationError, ValueError) as e:
+        except (ValidationError, ValueError, TypeError, AttributeError) as e:
             raise ValueError("Invalid geometry value.") from e

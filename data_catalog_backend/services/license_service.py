@@ -1,5 +1,5 @@
 import logging
-from typing import Union
+from typing import Union, List
 
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -16,6 +16,10 @@ class LicenseService:
     def get_license(self, id) -> License:
         stmt = select(License).where(License.id == id)
         return self.session.scalars(stmt).unique().one_or_none()
+
+    def get_licenses(self) -> List[License]:
+        stmt = select(License)
+        return self.session.scalars(stmt).unique().all()
 
     def create_license(self, license: License) -> License:
         license = License(

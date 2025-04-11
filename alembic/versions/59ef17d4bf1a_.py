@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 519e8d0ed055
+Revision ID: 59ef17d4bf1a
 Revises: 
-Create Date: 2025-04-08 13:59:39.934398
+Create Date: 2025-04-11 08:40:14.136923
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '519e8d0ed055'
+revision: str = '59ef17d4bf1a'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,6 +26,7 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('title', sa.String(), nullable=True),
     sa.Column('abstract', sa.String(), nullable=True),
+    sa.Column('icon', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_categories'))
     )
     op.create_table('licenses',
@@ -49,6 +50,7 @@ def upgrade() -> None:
     sa.Column('html_content', sa.String(), nullable=True),
     sa.Column('resource_url', sa.String(), nullable=True),
     sa.Column('documentation_url', sa.String(), nullable=True),
+    sa.Column('openapi_url', sa.String(), nullable=True),
     sa.Column('git_url', sa.String(), nullable=True),
     sa.Column('maintenance_and_update_frequency', sa.String(), nullable=True),
     sa.Column('release_date', sa.Date(), nullable=True),
@@ -81,6 +83,7 @@ def upgrade() -> None:
     op.create_table('resource_category',
     sa.Column('category_id', sa.UUID(), nullable=False),
     sa.Column('resource_id', sa.UUID(), nullable=False),
+    sa.Column('is_main_category', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], name=op.f('fk_resource_category_category_id_categories')),
     sa.ForeignKeyConstraint(['resource_id'], ['resources.id'], name=op.f('fk_resource_category_resource_id_resources')),
     sa.PrimaryKeyConstraint('category_id', 'resource_id', name=op.f('pk_resource_category'))
