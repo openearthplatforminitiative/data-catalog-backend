@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 432912c71cfe
+Revision ID: 18530ed4fb4a
 Revises: 
-Create Date: 2025-04-11 10:15:35.561729
+Create Date: 2025-04-14 10:26:30.530020
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '432912c71cfe'
+revision: str = '18530ed4fb4a'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -88,11 +88,12 @@ def upgrade() -> None:
     op.create_table('resource_category',
     sa.Column('category_id', sa.UUID(), nullable=False),
     sa.Column('resource_id', sa.UUID(), nullable=False),
-    sa.Column('is_main_category', sa.Boolean(), nullable=True),
+    sa.Column('is_main_category', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], name=op.f('fk_resource_category_category_id_categories')),
     sa.ForeignKeyConstraint(['resource_id'], ['resources.id'], name=op.f('fk_resource_category_resource_id_resources')),
     sa.PrimaryKeyConstraint('category_id', 'resource_id', name=op.f('pk_resource_category'))
     )
+    op.create_index('only_one_main_category_per_resource', 'resource_category', ['resource_id'], unique=True, postgresql_where=sa.text('is_main_category = true'))
     op.create_table('resource_provider',
     sa.Column('provider_id', sa.UUID(), nullable=False),
     sa.Column('resource_id', sa.UUID(), nullable=False),
@@ -145,6 +146,7 @@ def downgrade() -> None:
     op.drop_table('spatial_extents')
     op.drop_table('resource_resource')
     op.drop_table('resource_provider')
+    op.drop_index('only_one_main_category_per_resource', table_name='resource_category', postgresql_where=sa.text('is_main_category = true'))
     op.drop_table('resource_category')
     op.drop_table('examples')
     op.drop_table('code_examples')

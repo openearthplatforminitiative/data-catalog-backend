@@ -78,22 +78,6 @@ class ResourceService:
             resources=[ResourceQuerySpatialResponse(**dict(row)) for row in results]
         )
 
-        # stmt = stmt.add_columns(
-        #     (Resource.spatial_extent != None).label("has_spatial_extent")
-        # )
-
-        # total_stmt = stmt.with_only_columns(sqlalchemy.func.count(Resource.id)).order_by(None)
-        # total = self.session.execute(total_stmt).scalar()
-        # stmt = stmt.offset(per_page * page).limit(per_page)
-        # resources = self.session.execute(stmt).mappings().all()
-        # resources_models = [ResourceQuerySpatialResponse(**dict(row)) for row in resources]
-        #
-        # return ResourceQueryResponse(
-        #     current_page=page,
-        #     total_pages=total // per_page + (total % per_page > 0),
-        #     resources=resources_models
-        # )
-
     def get_resource(self, resource_id) -> Resource:
         stmt = select(Resource).where(Resource.id == resource_id)
         return self.session.scalars(stmt).unique().one_or_none()
