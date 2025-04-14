@@ -23,4 +23,4 @@ class CodeExampleResponse(BaseModel):
 class CodeExampleRequest(BaseModel):
     title: str
     description: str
-    code: Optional[List[CodeRequest]]
+    code: List[CodeRequest]

@@ -61,10 +61,9 @@ class ResourceService:
         base_stmt = query.apply_spatial_filters(base_stmt, resources_req)
         base_stmt = query.apply_features_filters(base_stmt, resources_req)
 
-        # Remove duplicates
         base_stmt = base_stmt.group_by(Resource.id, Resource.title, Resource.type, Category.icon, SpatialExtent.type, SpatialExtent.geometry)
+        base_stmt = base_stmt.distinct(Resource.id)
 
-        # Paginate after counting
         total_stmt = select(func.count()).select_from(base_stmt.subquery())
         total = self.session.execute(total_stmt).scalar()
 
@@ -97,12 +96,14 @@ class ResourceService:
         main_category = self.category_service.get_category(resource_req.main_category_id)
         if not main_category:
             raise HTTPException(status_code=404, detail="Main category not found")
+
         additional_categories = []
-        for category_id in resource_req.additional_categories:
-            cat = self.category_service.get_category(category_id)
-            if not cat:
-                raise HTTPException(status_code=404, detail="Category not found")
-            additional_categories.append(cat)
+        if resource_req.additional_categories:
+            for category_id in resource_req.additional_categories:
+                cat = self.category_service.get_category(category_id)
+                if not cat:
+                    raise HTTPException(status_code=404, detail="Category not found")
+                additional_categories.append(cat)
 
         examples = []
         if resource_req.examples:

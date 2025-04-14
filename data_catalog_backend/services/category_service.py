@@ -1,6 +1,5 @@
 import logging
 import uuid
-from typing import Union
 
 from sqlalchemy import select
 
