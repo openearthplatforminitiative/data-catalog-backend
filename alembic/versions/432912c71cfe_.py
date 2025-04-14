@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 59ef17d4bf1a
+Revision ID: 432912c71cfe
 Revises: 
-Create Date: 2025-04-11 08:40:14.136923
+Create Date: 2025-04-11 10:15:35.561729
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '59ef17d4bf1a'
+revision: str = '432912c71cfe'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,21 +27,26 @@ def upgrade() -> None:
     sa.Column('title', sa.String(), nullable=True),
     sa.Column('abstract', sa.String(), nullable=True),
     sa.Column('icon', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_categories'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_categories')),
+    sa.UniqueConstraint('title', name=op.f('uq_categories_title'))
     )
     op.create_table('licenses',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('url', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_licenses'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_licenses')),
+    sa.UniqueConstraint('name', name=op.f('uq_licenses_name'))
     )
     op.create_table('providers',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
+    sa.Column('short_name', sa.String(), nullable=True),
     sa.Column('provider_url', sa.String(), nullable=True),
     sa.Column('description', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_providers'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_providers')),
+    sa.UniqueConstraint('name', name=op.f('uq_providers_name')),
+    sa.UniqueConstraint('short_name', name=op.f('uq_providers_short_name'))
     )
     op.create_table('resources',
     sa.Column('id', sa.UUID(), nullable=False),

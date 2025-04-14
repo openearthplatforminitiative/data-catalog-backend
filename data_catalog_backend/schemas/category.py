@@ -18,11 +18,8 @@ class CategoryRequest(BaseModel):
     abstract: str = Field(description="short description of the category")
     icon: str = Field(description="MUI icon of the category")
 
-class CategoriesResponse(BaseModel):
+class CategorySummaryResponse(BaseModel):
     id: uuid.UUID
     title: str = Field(description="title of the category")
     abstract: str = Field(description="short description of the category")
     icon: str = Field(description="MUI icon of the category")
-
-class CategoryGetRequest(BaseModel):
-    id: uuid.UUID

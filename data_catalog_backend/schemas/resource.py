@@ -1,18 +1,16 @@
 import datetime
 import uuid
-from typing import List, Optional, Union
+from typing import List, Optional
 
-from geojson_pydantic import Feature
-from pydantic import Field, PastDate, HttpUrl
+from pydantic import Field
 
-from data_catalog_backend.models import ResourceType, SpatialExtentRequestType
+from data_catalog_backend.models import ResourceType
 from data_catalog_backend.schemas.basemodel import BaseModel
-from data_catalog_backend.schemas.category import CategoryGetRequest
+from data_catalog_backend.schemas.category import CategorySummaryResponse
 from data_catalog_backend.schemas.code import CodeExampleRequest, CodeExampleResponse
 from data_catalog_backend.schemas.example import ExampleResponse, ExampleRequest
-from data_catalog_backend.schemas.license import LicenseRequest, LicenseResponse, LicenseGetRequest
-from data_catalog_backend.schemas.provider import ProviderGetRequest, ProviderRequest, ProviderResponse
-from data_catalog_backend.schemas.resource_summary import ResourceSummaryResponse
+from data_catalog_backend.schemas.license import LicenseResponse
+from data_catalog_backend.schemas.provider import ProviderResponse
 from data_catalog_backend.schemas.spatial_extent import SpatialExtentRequest, SpatialExtentResponse
 
 class ResourceRequest(BaseModel):
@@ -30,19 +28,12 @@ class ResourceRequest(BaseModel):
     keywords: List[str]
     version: Optional[str] = Field(default=None, nullable=True, description="The version of this resource")
     type: ResourceType
-    categories: Optional[List[CategoryGetRequest]] = Field(description="List of relevant categories")
+    main_category_id: str = Field(description="Main category of the resource")
+    additional_categories: Optional[List[str]] = Field(default=None, nullable=True, description="List of relevant categories")
     code_examples: Optional[List[CodeExampleRequest]] = Field(default=None, nullable=True, description="Code examples")
-    license: Union[LicenseGetRequest, LicenseRequest]
-    providers: List[Union[ProviderGetRequest, ProviderRequest]]
+    license: str = Field(description="License of the resource")
+    providers: List[str] = Field(description="List of providers")
     examples: Optional[List[ExampleRequest]] = Field(default=None, nullable=True, description="examples of the resource")
-
-class ResourcesRequest(BaseModel):
-    types: Optional[List[ResourceType]] = None
-    features: Optional[List[Feature]] = None
-    spatial: Optional[List[SpatialExtentRequestType]] = None
-    categories: Optional[List[uuid.UUID]] = None
-    providers: Optional[List[uuid.UUID]] = None
-    tags: Optional[List[str]] = None
 
 class ResourceResponse(BaseModel):
     id: uuid.UUID
@@ -61,20 +52,8 @@ class ResourceResponse(BaseModel):
     keywords: List[str] = Field(description="keywords")
     version: Optional[str] = Field(default=None, nullable=True, description="The version of this resource")
     type: ResourceType = Field(description="Type of the resource")
-    main_category: CategoryGetRequest = Field(description="Main category of the resource")
-    categories: List[CategoryGetRequest] = Field(default=None, nullable=True, description="List of categories")
+    categories: List[CategorySummaryResponse] = Field(default=None, nullable=True, description="List of categories")
     code_examples: Optional[List[CodeExampleResponse]] = Field(default=None, nullable=True, description="Code examples")
-    license: Union[LicenseGetRequest, LicenseResponse] = Field(description="License of the resource")
-    providers: List[Union[ProviderGetRequest, ProviderResponse]] = Field(description="List of providers")
+    license: LicenseResponse = Field(description="License of the resource")
+    providers: List[ProviderResponse] = Field(description="List of providers")
     examples: Optional[List[ExampleResponse]] = Field(default=None, nullable=True, description="examples of the resource")
-
-class ExtraResponse(ResourceSummaryResponse):
-    covers_some: Optional[bool] = Field(default=None, description="if the resource covers some of the spatial extent")
-    covers_all: Optional[bool] = Field(default=None, description="if the resource covers all of the spatial extent")
-    intersects_some: Optional[bool] = Field(default=None, description="if the resource intersects some of the spatial extent")
-    intersects_all: Optional[bool] = Field(default=None, description="if the resource intersects all of the spatial extent")
-
-class ResourcesResponse(BaseModel):
-    current_page: int
-    total_pages: int
-    resources: List[ExtraResponse]

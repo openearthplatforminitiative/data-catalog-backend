@@ -2,13 +2,10 @@ import logging
 from typing import List, Union
 import uuid
 
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy import select
 
-from data_catalog_backend.models import Resource, Provider
-from data_catalog_backend.schemas.provider import ProviderRequest, ProviderGetRequest
-from data_catalog_backend.utils import type_mapping
-
+from data_catalog_backend.models import Provider
 
 logger = logging.getLogger(__name__)
 
@@ -40,18 +37,6 @@ class ProviderService:
             raise e
         
         return provider
-
-    def create_or_find_provider(self, provider: Union[ProviderRequest, ProviderGetRequest]) -> Provider:
-        if isinstance(provider, ProviderGetRequest):
-            return self.get_provider(provider.id)
-        else:
-            # map, validate and create the provider
-            provider = Provider(
-                name=provider.name,
-                provider_url=provider.provider_url,
-                description=provider.description,
-            )
-            return self.create_provider(provider)
 
     def update_provider(self, id, provider_req):
         provider = self.get_provider(id)

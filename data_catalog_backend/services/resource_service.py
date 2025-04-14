@@ -1,184 +1,180 @@
 import logging
+from http.client import HTTPException
 from typing import List, Optional
-from pydantic import parse_obj_as, TypeAdapter
 
 from geoalchemy2.functions import ST_Covers, ST_Intersects
 from geoalchemy2.shape import from_shape
 from shapely.geometry.geo import shape
-from sqlalchemy import select, case, join
+from sqlalchemy import select, case, join, func, and_
 import sqlalchemy
+from sqlalchemy.orm import aliased
 
-from data_catalog_backend.models import License, Resource, Provider, SpatialExtent, SpatialExtentRequestType, \
+from data_catalog_backend.models import Resource, Provider, SpatialExtent, SpatialExtentRequestType, \
     ResourceType, Category, ResourceCategory
-from data_catalog_backend.schemas.resource import ResourcesRequest, ResourcesResponse, ExtraResponse
+from data_catalog_backend.schemas.resource import ResourceRequest
+from data_catalog_backend.schemas.resource_query import ResourceQueryRequest, ResourceQuerySpatialResponse, ResourceQueryResponse
+from data_catalog_backend.services.category_service import CategoryService
+from data_catalog_backend.services.code_example_service import CodeExampleService
+from data_catalog_backend.services.example_service import ExampleService
+from data_catalog_backend.services.helpers.resource_queries import ResourceQuery
 from data_catalog_backend.services.license_service import LicenseService
 from data_catalog_backend.services.provider_service import ProviderService
 
 logger = logging.getLogger(__name__)
 
 class ResourceService:
-    def __init__(self, session, license_service: LicenseService, provider_service: ProviderService):
+    def __init__(self, session, license_service: LicenseService, provider_service: ProviderService, category_service: CategoryService, example_service: ExampleService, code_example_service: CodeExampleService):
         self.session = session
         self.license_service = license_service
         self.provider_service = provider_service
+        self.category_service = category_service
+        self.example_service = example_service
+        self.code_example_service = code_example_service
 
     def find_entity_with_name(self, title) -> Optional[Resource]:
         stmt = select(Resource).where(Resource.title == title)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def get_resources(self, page: int, per_page: int, resources_req: ResourcesRequest):
-        first_category = (
-            select(Category.icon.label("icon"), ResourceCategory.c.resource_id)
-            .select_from(Category)
-            .outerjoin(ResourceCategory, Category.id == ResourceCategory.c.category_id)
-            .distinct(ResourceCategory.c.resource_id)
-            .subquery()
+    def get_resources(self, page: int, per_page: int, resources_req: ResourceQueryRequest):
+        base_stmt = (
+            select(
+                Resource.id.label("id"),
+                Resource.title,
+                Resource.type,
+                Category.icon.label("icon"),
+                (Resource.spatial_extent != None).label("has_spatial_extent")
+            )
+            .select_from(Resource)
+            .outerjoin(Resource.spatial_extent)
+            .join(ResourceCategory, and_(
+                ResourceCategory.c.resource_id == Resource.id,
+                ResourceCategory.c.is_main_category.is_(True)
+            ))
+            .join(Category, Category.id == ResourceCategory.c.category_id)
         )
 
-        stmt = select(
-            Resource.id,
-            Resource.title,
-            Resource.type,
-            first_category.c.icon.label("icon"),
-        ).outerjoin(first_category, Resource.id == first_category.c.resource_id)
+        query = ResourceQuery()
+        base_stmt = query.apply_tag_filters(base_stmt, resources_req)
+        base_stmt = query.apply_type_filters(base_stmt, resources_req)
+        base_stmt = query.apply_category_filters(base_stmt, resources_req)
+        base_stmt = query.apply_provider_filters(base_stmt, resources_req)
+        base_stmt = query.apply_spatial_filters(base_stmt, resources_req)
+        base_stmt = query.apply_features_filters(base_stmt, resources_req)
 
-        if len(resources_req.tags) > 0:
-            tag_filters = []
-            for tag in resources_req.tags:
-                tag_filters.append(
-                    sqlalchemy.or_(
-                        Resource.title.ilike(f"%{tag}%"),
-                        Resource.abstract.ilike(f"%{tag}%"),
-                        Resource.keywords.any(tag),
-                        Resource.html_content.ilike(f"%{tag}%"),
-                        Resource.spatial_extent.any(SpatialExtent.details.ilike(f"%{tag}%")),
-                        Resource.spatial_extent.any(SpatialExtent.region.ilike(f"%{tag}%")),
-                    )
-                )
-            stmt = stmt.where(sqlalchemy.or_(*tag_filters))
+        # Remove duplicates
+        base_stmt = base_stmt.group_by(Resource.id, Resource.title, Resource.type, Category.icon, SpatialExtent.type, SpatialExtent.geometry)
 
-        stmt = stmt.add_columns(
-            (Resource.spatial_extent != None).label("has_spatial_extent")
-        )
+        # Paginate after counting
+        total_stmt = select(func.count()).select_from(base_stmt.subquery())
+        total = self.session.execute(total_stmt).scalar()
 
-        if len(resources_req.features) > 0 or (
-            len(resources_req.spatial) > 0 and not (
-                len(resources_req.spatial) == 1 and SpatialExtentRequestType.NonSpatial in resources_req.spatial
-            )
-        ):
-            stmt = stmt.outerjoin(Resource.spatial_extent)
+        # Pagination
+        stmt = base_stmt.offset(per_page * page).limit(per_page)
+        results = self.session.execute(stmt).mappings().all()
 
-        if len(resources_req.features) > 0:
-            logging.info("Filtering by features")
-            shapely_geoms = [from_shape(shape(feature.geometry), srid=4326) for feature in resources_req.features]
-            covers_conditions = [ST_Covers(SpatialExtent.geometry, geom) for geom in shapely_geoms]
-            intersects_conditions = [ST_Intersects(SpatialExtent.geometry, geom) for geom in shapely_geoms]
-
-            stmt = stmt.add_columns(
-                case(
-                    (SpatialExtent.type == SpatialExtentRequestType.Global, True),
-                    (sqlalchemy.or_(*covers_conditions), True),
-                    else_=False
-                ).label("covers_some"),
-                case(
-                    (SpatialExtent.type == SpatialExtentRequestType.Global, True),
-                    (sqlalchemy.and_(*covers_conditions), True),
-                    else_=False
-                ).label("covers_all"),
-                case(
-                    (SpatialExtent.type == SpatialExtentRequestType.Global, True),
-                    (sqlalchemy.or_(*intersects_conditions), True),
-                    else_=False
-                ).label("intersects_some"),
-                case(
-                    (SpatialExtent.type == SpatialExtentRequestType.Global, True),
-                    (sqlalchemy.and_(*intersects_conditions), True),
-                    else_=False
-                ).label("intersects_all")
-            )
-        if len(resources_req.spatial) > 0:
-            logging.info("Filtering by spatial extent types")
-            conditions = []
-            if SpatialExtentRequestType.NonSpatial in resources_req.spatial:
-                conditions.append(Resource.spatial_extent == None)
-            other_types = [stype for stype in resources_req.spatial if stype != SpatialExtentRequestType.NonSpatial]
-            if other_types:
-                conditions.append(
-                    SpatialExtent.type.in_(other_types)
-                )
-            if conditions:
-                stmt = stmt.where(
-                    sqlalchemy.or_(*conditions)
-                )
-        if len(resources_req.types) > 0:
-            logging.info("Filtering by types")
-            logging.info(resources_req.types)
-            logging.info(ResourceType.__members__)
-            stmt = stmt.where(Resource.type.in_(resources_req.types))
-        if len(resources_req.categories) > 0:
-            logging.info("Filtering by categories")
-            stmt = stmt.outerjoin(Resource.categories)
-            stmt = stmt.where(Category.id.in_(resources_req.categories))
-        if len(resources_req.providers) > 0:
-            logging.info("Filtering by providers")
-            stmt = stmt.outerjoin(Resource.providers)
-            stmt = stmt.where(Provider.id.in_(resources_req.providers))
-        if len(resources_req.features) > 0:
-            logging.info("Filtering by features")
-            stmt = stmt.where(
-                sqlalchemy.or_(
-                    (SpatialExtent.type == SpatialExtentRequestType.Global),
-                    *intersects_conditions,
-                    *covers_conditions
-                )
-            )
-        # get number of rows in total in stmt
-        total = self.session.execute(stmt.with_only_columns(sqlalchemy.func.count())).scalar()
-        stmt = stmt.offset(per_page * page).limit(per_page)
-        resources = self.session.execute(stmt).mappings().all()
-        resources_models = [ExtraResponse(**dict(row)) for row in resources]
-
-        return ResourcesResponse(
+        return ResourceQueryResponse(
             current_page=page,
             total_pages=total // per_page + (total % per_page > 0),
-            resources=resources_models
+            resources=[ResourceQuerySpatialResponse(**dict(row)) for row in results]
         )
-    
+
+        # stmt = stmt.add_columns(
+        #     (Resource.spatial_extent != None).label("has_spatial_extent")
+        # )
+
+        # total_stmt = stmt.with_only_columns(sqlalchemy.func.count(Resource.id)).order_by(None)
+        # total = self.session.execute(total_stmt).scalar()
+        # stmt = stmt.offset(per_page * page).limit(per_page)
+        # resources = self.session.execute(stmt).mappings().all()
+        # resources_models = [ResourceQuerySpatialResponse(**dict(row)) for row in resources]
+        #
+        # return ResourceQueryResponse(
+        #     current_page=page,
+        #     total_pages=total // per_page + (total % per_page > 0),
+        #     resources=resources_models
+        # )
+
     def get_resource(self, resource_id) -> Resource:
         stmt = select(Resource).where(Resource.id == resource_id)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def create_resource(self, resource: Resource) -> Resource:
+    def create_resource(self, resource_req: ResourceRequest) -> Resource:
 
-        license = self.session.query(License).filter(License.name == resource.license.name).first()
-
+        license = self.license_service.get_license(resource_req.license)
         if not license:
-            license = self.license_service.create_license(resource.license)
+            raise HTTPException(status_code=404, detail="License not found")
 
+        providers = []
+        for provider_id in resource_req.providers:
+            provider = self.provider_service.get_provider(provider_id)
+            if not provider:
+                raise HTTPException(status_code=404, detail="Provider not found")
+            providers.append(provider)
+
+        main_category = self.category_service.get_category(resource_req.main_category_id)
+        if not main_category:
+            raise HTTPException(status_code=404, detail="Main category not found")
+        additional_categories = []
+        for category_id in resource_req.additional_categories:
+            cat = self.category_service.get_category(category_id)
+            if not cat:
+                raise HTTPException(status_code=404, detail="Category not found")
+            additional_categories.append(cat)
+
+        examples = []
+        if resource_req.examples:
+            examples = self.example_service.create_examples(resource_req.examples)
+
+        code_examples = []
+        if resource_req.code_examples:
+            code_examples = self.code_example_service.create_code_examples(resource_req.code_examples)
+
+        spatial_extent_objects = []
+        if resource_req.spatial_extent is not None:
+            for extent in resource_req.spatial_extent:
+                spa = SpatialExtent(
+                    type=extent.type,
+                    region=extent.region if extent.region else None,
+                    details=extent.details if extent.details else None,
+                    spatial_resolution=extent.spatial_resolution
+                )
+                if extent.geometry:
+                    spa.geom = extent.geometry
+                spatial_extent_objects.append(spa)
+
+        resource = Resource(
+            **resource_req.model_dump(exclude={
+                "examples",
+                "license",
+                "spatial_extent",
+                "code_examples",
+                "providers",
+                "main_category_id",
+                "additional_categories"
+            }),
+        )
+        categories = additional_categories
+        resource.categories = categories
+
+        resource.providers = providers
         resource.license = license
+        resource.spatial_extent = spatial_extent_objects
+        resource.examples = examples
+        resource.code_examples = code_examples
 
         self.session.add(resource)
         try:
+            self.session.flush()
+            self.session.execute(
+                ResourceCategory.insert().values(
+                    resource_id=resource.id,
+                    category_id=main_category.id,
+                    is_main_category=True
+                )
+            )
             self.session.commit()
         except Exception as e:
             self.session.rollback()
             raise e
-        return resource
 
-    def update_resource(self, id, resource_req):
-        pass
-        # resource = self.get_resource(id)
-        # if not resource:
-        #     raise HTTPException(status_code=404, detail="Resource not found")
-        #
-        # for field, value in resource_req.model_dump().items():
-        #     logger.info(value)
-        #     # setattr(resource, field, value)
-        #
-        # # try:
-        # #     self.session.commit()
-        # # except Exception as e:
-        # #     self.session.rollback()
-        # #     raise e
-        # #
-        # return resource
+        return resource

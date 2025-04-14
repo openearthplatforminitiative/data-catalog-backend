@@ -13,6 +13,3 @@ class LicenseResponse(BaseModel):
     name: str
     url: Optional[str]
     description: Optional[str]
-
-class LicenseGetRequest(BaseModel):
-    id: uuid.UUID

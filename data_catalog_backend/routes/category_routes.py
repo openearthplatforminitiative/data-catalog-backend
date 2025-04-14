@@ -5,11 +5,9 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from data_catalog_backend.dependencies import get_license_service, get_category_service
+from data_catalog_backend.dependencies import get_category_service
 from data_catalog_backend.schemas.category import CategoryResponse, CategoryRequest
-from data_catalog_backend.schemas.license import LicenseResponse, LicenseRequest
 from data_catalog_backend.services.category_service import CategoryService
-from data_catalog_backend.services.license_service import LicenseService
 
 router = APIRouter()
 

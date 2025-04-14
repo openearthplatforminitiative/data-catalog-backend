@@ -16,7 +16,7 @@ class License(Base):
         nullable=False,
         doc="Unique identifier for License"
     )
-    name: Mapped[str] = mapped_column(String, nullable=False, doc="Name")
+    name: Mapped[str] = mapped_column(String, nullable=False, doc="Name", unique=True)
     url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 

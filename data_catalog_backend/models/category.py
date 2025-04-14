@@ -16,7 +16,7 @@ class Category(Base):
         nullable=False,
         doc="Unique identifier for category"
     )
-    title: Mapped[str] = mapped_column(String, nullable=True, doc="title")
+    title: Mapped[str] = mapped_column(String, nullable=True, doc="title", unique=True)
     abstract: Mapped[str] = mapped_column(String, nullable=True, doc="abstract")
     icon: Mapped[str] = mapped_column(String, nullable=True, doc="mui icon")
 

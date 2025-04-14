@@ -1,11 +1,9 @@
 import logging
-from typing import Union, List
+from typing import List
 
-from fastapi import HTTPException
 from sqlalchemy import select
 
 from data_catalog_backend.models import License
-from data_catalog_backend.schemas.license import LicenseRequest, LicenseGetRequest
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +32,3 @@ class LicenseService:
             self.session.rollback()
             raise e
         return license
-
-    def create_or_find_license(self, license: Union[LicenseGetRequest, LicenseRequest]) -> License:
-        if license.id:
-            existing_license = self.get_license(license.id)
-            if existing_license:
-                return existing_license
-        return self.create_license(license)
