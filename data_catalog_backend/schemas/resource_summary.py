@@ -10,3 +10,5 @@ class ResourceSummaryResponse(BaseModel):
     id: uuid.UUID
     title: str = Field(description="Title of the resource")
     type: ResourceType
+    icon: str = Field(description="Icon of the resource")
+    has_spatial_extent: bool

@@ -14,22 +14,24 @@ router = APIRouter()
     "/resource",
     summary="Add a resource to the database",
     tags=["admin"],
-    response_model=ResourceRequest)
+    response_model=ResourceResponse)
 async def post_resource(
         resource_req: ResourceRequest,
         resource_service: ResourceService = Depends(get_resource_service),
     ) -> ResourceResponse:
     try:
-        created = resource_service.create_resource(resource_req)
+        validated_request = ResourceRequest.model_validate(resource_req)
+        created = resource_service.create_resource(validated_request)
 
-        for extent in created.spatial_extent:
-              extent.geometry = extent.geom  # Convert WKB to GeoJSON
+        if created.spatial_extent is not None:
+            for extent in created.spatial_extent:
+                  extent.geometry = extent.geom
 
         converted = ResourceResponse.model_validate(created)
         return converted
     except Exception as e:
         logging.error(e)
-        raise HTTPException(status_code=500, detail=e)
+        raise HTTPException(status_code=500, detail=f"Error creating resource: {str(e)}")
 
 @router.post("/resources",
             summary="Get all resources",

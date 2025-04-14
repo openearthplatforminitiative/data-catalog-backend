@@ -6,7 +6,7 @@ from data_catalog_backend.schemas.basemodel import BaseModel
 
 
 class CodeResponse(BaseModel):
-    code_id: uuid.UUID
+    id: uuid.UUID
     language: CodeType
     source: str
 
@@ -15,7 +15,7 @@ class CodeRequest(BaseModel):
     source: str
 
 class CodeExampleResponse(BaseModel):
-    examples_id: uuid.UUID
+    id: uuid.UUID
     title: str
     description: str
     code: Optional[List[CodeResponse]]

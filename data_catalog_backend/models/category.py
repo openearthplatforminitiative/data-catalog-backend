@@ -3,6 +3,7 @@ from typing import List
 
 from sqlalchemy import UUID, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from data_catalog_backend.models.resource_category import ResourceCategory
 
 from data_catalog_backend.database import Base
 
@@ -22,3 +23,4 @@ class Category(Base):
 
     # Relations
     resources: Mapped[List["Resource"]] = relationship(secondary="resource_category", back_populates="categories")
+    resource_categories: Mapped[List["ResourceCategory"]] = relationship("ResourceCategory", back_populates="category")

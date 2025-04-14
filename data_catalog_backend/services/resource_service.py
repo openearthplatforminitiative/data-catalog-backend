@@ -47,10 +47,10 @@ class ResourceService:
             .select_from(Resource)
             .outerjoin(Resource.spatial_extent)
             .join(ResourceCategory, and_(
-                ResourceCategory.c.resource_id == Resource.id,
-                ResourceCategory.c.is_main_category.is_(True)
+                ResourceCategory.resource_id == Resource.id,
+                ResourceCategory.is_main_category.is_(True)
             ))
-            .join(Category, Category.id == ResourceCategory.c.category_id)
+            .join(Category, Category.id == ResourceCategory.category_id)
         )
 
         query = ResourceQuery()
@@ -83,7 +83,6 @@ class ResourceService:
         return self.session.scalars(stmt).unique().one_or_none()
 
     def create_resource(self, resource_req: ResourceRequest) -> Resource:
-
         license = self.license_service.get_license(resource_req.license)
         if not license:
             raise HTTPException(status_code=404, detail="License not found")
@@ -149,13 +148,12 @@ class ResourceService:
         self.session.add(resource)
         try:
             self.session.flush()
-            self.session.execute(
-                ResourceCategory.insert().values(
-                    resource_id=resource.id,
-                    category_id=main_category.id,
-                    is_main_category=True
-                )
+            resource_category = ResourceCategory(
+                resource_id=resource.id,
+                category_id=main_category.id,
+                is_main_category=True
             )
+            self.session.add(resource_category)
             self.session.commit()
         except Exception as e:
             self.session.rollback()

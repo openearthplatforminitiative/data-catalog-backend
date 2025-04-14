@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Optional
-from sqlalchemy import UUID, ForeignKey, String, Date, ARRAY
+from sqlalchemy import UUID, ForeignKey, String, Date, ARRAY, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from data_catalog_backend.database import Base
 from enum import StrEnum as PyStrEnum
@@ -46,6 +46,29 @@ class Resource(Base):
     used_by: Mapped[List["Resource"]] = relationship("Resource", secondary="resource_resource", primaryjoin=id == ResourceResource.c.based_on, secondaryjoin=id == ResourceResource.c.used_by, back_populates="based_on")
     based_on: Mapped[List["Resource"]] = relationship("Resource", secondary="resource_resource", primaryjoin=id == ResourceResource.c.used_by, secondaryjoin=id == ResourceResource.c.based_on, back_populates="used_by")
     categories: Mapped[List["Category"]] = relationship(secondary="resource_category", back_populates="resources")
+    resource_categories: Mapped[List["ResourceCategory"]] = relationship("ResourceCategory", back_populates="resource")
     providers: Mapped[List["Provider"]] = relationship("Provider", secondary="resource_provider", back_populates="resources")
     code_examples: Mapped[List["CodeExamples"]] = relationship(back_populates="resource")
     examples: Mapped[List["Examples"]] = relationship(back_populates="resource")
+
+    @property
+    def icon(self) -> Optional[str]:
+        main_categories = [
+            rc.category.icon
+            for rc in self.resource_categories
+            if rc.is_main_category and rc.category is not None
+        ]
+        return main_categories[0] if main_categories else None
+
+    @property
+    def has_spatial_extent(self) -> bool:
+        return bool(self.spatial_extent)
+
+    __table_args__ = (
+        Index(
+            'unique_resource_title_type',
+            'title',
+            'type',
+            unique=True
+        ),
+    )
