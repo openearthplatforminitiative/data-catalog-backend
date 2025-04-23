@@ -22,5 +22,4 @@ class Category(Base):
     icon: Mapped[str] = mapped_column(String, nullable=True, doc="mui icon")
 
     # Relations
-    resources: Mapped[List["Resource"]] = relationship(secondary="resource_category", back_populates="categories")
-    resource_categories: Mapped[List["ResourceCategory"]] = relationship("ResourceCategory", back_populates="category")
+    resources: Mapped[List["Resource"]] = relationship("ResourceCategory", back_populates="category")
