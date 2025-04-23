@@ -24,6 +24,10 @@ class ProviderService:
         stmt = select(Provider)
         return self.session.scalars(stmt).unique().all()
 
+    def get_provider_by_short_name(self, short_name: str) -> Provider:
+        stmt = select(Provider).where(Provider.short_name == short_name)
+        return self.session.scalars(stmt).unique().one_or_none()
+
     def get_provider(self, id) -> Provider:
         stmt = select(Provider).where(Provider.id == id)
         return self.session.scalars(stmt).unique().one_or_none() 

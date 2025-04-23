@@ -15,6 +15,10 @@ class LicenseService:
         stmt = select(License).where(License.id == id)
         return self.session.scalars(stmt).unique().one_or_none()
 
+    def get_license_by_name(self, name: str) -> License:
+        stmt = select(License).where(License.name == name)
+        return self.session.scalars(stmt).unique().one_or_none()
+
     def get_licenses(self) -> List[License]:
         stmt = select(License)
         return self.session.scalars(stmt).unique().all()

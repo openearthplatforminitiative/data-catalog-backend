@@ -21,11 +21,12 @@ async def post_provider(provider_req: ProviderRequest,
                         ) -> ProviderResponse:
       ed = Provider(
             name = provider_req.name,
+            short_name=provider_req.short_name,
             provider_url = provider_req.provider_url,
             description = provider_req.description,
       )
       
-      try: 
+      try:
             created = service.create_provider(ed)
             converted = ProviderResponse.model_validate(created)
             return converted
