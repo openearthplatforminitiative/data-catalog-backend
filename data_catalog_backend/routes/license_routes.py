@@ -15,7 +15,7 @@ router = APIRouter()
     summary="Add a license to the database",
     tags=["admin"],
     response_model=LicenseResponse)
-async def post_license(
+async def add_license(
         license_req: LicenseRequest,
         license_service: LicenseService = Depends(get_license_service),
 ) -> LicenseResponse:

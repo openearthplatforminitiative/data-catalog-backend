@@ -16,7 +16,7 @@ router = APIRouter()
     summary="Add a category to the database",
     tags=["admin"],
     response_model=CategoryResponse)
-async def post_category(
+async def add_category(
         category_req: CategoryRequest,
         category_service: CategoryService = Depends(get_category_service),
 ) -> CategoryResponse:

@@ -16,17 +16,12 @@ router = APIRouter()
              summary="Add a provider to the database",
              tags=["admin"],
              response_model=ProviderResponse)
-async def post_provider(provider_req: ProviderRequest,
+async def add_provider(provider_req: ProviderRequest,
                         service: ProviderService = Depends(get_provider_service)
                         ) -> ProviderResponse:
-      ed = Provider(
-            name = provider_req.name,
-            provider_url = provider_req.provider_url,
-            description = provider_req.description,
-      )
       
       try: 
-            created = service.create_provider(ed)
+            created = service.create_provider(Provider(**provider_req.model_dump()))
             converted = ProviderResponse.model_validate(created)
             return converted
       except Exception as e: 
