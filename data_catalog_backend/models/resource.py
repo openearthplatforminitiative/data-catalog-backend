@@ -10,9 +10,9 @@ from data_catalog_backend.models.resource_resource import ResourceResource
 
 class ResourceType(PyStrEnum):
     Dataset = "DATASET"
+    DatasetCollection = "DATASET_COLLECTION"
     ML_Model = "ML_MODEL"
     API = "API"
-    File = "FILE"
 
 class Resource(Base):
     __tablename__ = 'resources'
