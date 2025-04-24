@@ -1,8 +1,7 @@
 import logging
-from http.client import HTTPException
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_license_service
 from data_catalog_backend.schemas.license import LicenseResponse, LicenseRequest
@@ -27,7 +26,7 @@ async def add_license(
         return converted
     except Exception as e:
         logging.error(e)
-    raise HTTPException(status_code=500, detail="Unknown error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get(

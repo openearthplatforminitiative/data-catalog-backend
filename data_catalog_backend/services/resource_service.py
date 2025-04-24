@@ -1,20 +1,12 @@
 import logging
-from http.client import HTTPException
-from typing import List, Optional
+from typing import Optional
 
-from geoalchemy2.functions import ST_Covers, ST_Intersects
-from geoalchemy2.shape import from_shape
-from shapely.geometry.geo import shape
-from sqlalchemy import select, case, join, func, and_
-import sqlalchemy
-from sqlalchemy.orm import aliased
+from fastapi import HTTPException
+from sqlalchemy import select, func, and_
 
 from data_catalog_backend.models import (
     Resource,
-    Provider,
     SpatialExtent,
-    SpatialExtentRequestType,
-    ResourceType,
     Category,
     ResourceCategory,
     ResourceProvider,
@@ -117,32 +109,39 @@ class ResourceService:
     def create_resource(self, resource_req: ResourceRequest) -> Resource:
         license = self.license_service.get_license_by_name(resource_req.license)
         if not license:
-            raise HTTPException(status_code=404, detail="License not found")
+            raise ValueError("License not found")
 
         providers = []
         for provider_short_name in resource_req.providers:
             provider = self.provider_service.get_provider_by_short_name(
                 provider_short_name
             )
-            resourceProvider = ResourceProvider(role="")
             if not provider:
-                raise HTTPException(status_code=404, detail="Provider not found")
-            resourceProvider.provider = provider
-            providers.append(resourceProvider)
+                raise ValueError("Provider not found")
+            providers.append(ResourceProvider(
+                role="",
+                provider=provider
+            ))
 
         main_category = self.category_service.get_category_by_title(
             resource_req.main_category
         )
         if not main_category:
-            raise HTTPException(status_code=404, detail="Main category not found")
+            raise ValueError("Main category not found")
 
-        additional_categories = []
+        categories = [ResourceCategory(
+            is_main_category=True,
+            category=main_category
+        )]
         if resource_req.additional_categories:
             for category_title in resource_req.additional_categories:
                 cat = self.category_service.get_category_by_title(category_title)
                 if not cat:
-                    raise HTTPException(status_code=404, detail="Category not found")
-                additional_categories.append(cat)
+                    raise ValueError("Category not found")
+                categories.append(ResourceCategory(
+                    is_main_category=False,
+                    category=cat
+                ))
 
         examples = []
         if resource_req.examples:
@@ -180,7 +179,7 @@ class ResourceService:
                 }
             ),
         )
-        categories = additional_categories
+        categories = categories
         resource.categories = categories
 
         resource.providers = providers
@@ -191,13 +190,6 @@ class ResourceService:
 
         self.session.add(resource)
         try:
-            self.session.flush()
-            resource_category = ResourceCategory(
-                resource_id=resource.id,
-                category_id=main_category.id,
-                is_main_category=True,
-            )
-            self.session.add(resource_category)
             self.session.commit()
         except Exception as e:
             self.session.rollback()

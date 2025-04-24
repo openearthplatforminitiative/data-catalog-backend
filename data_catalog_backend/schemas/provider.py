@@ -13,9 +13,12 @@ class ProviderRequest(BaseModel):
     provider_url: str = Field(description="url to the providers website")
     description: str = Field(description="description of the provider")
 
-class ProviderResponse(BaseModel):
+class ProviderSummaryResponse(BaseModel):
     id: uuid.UUID
     name: str = Field(description="name of provider")
+    short_name: str = Field(description="short name of provider")
     provider_url: HttpUrl = Field(description="url to the providers website")
     description: str = Field(description="description of the provider")
+
+class ProviderResponse(ProviderSummaryResponse):
     resources: List[ResourceSummaryResponse]

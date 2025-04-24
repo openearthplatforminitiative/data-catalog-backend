@@ -1,9 +1,8 @@
 import logging
 import uuid
-from http.client import HTTPException
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_category_service
 from data_catalog_backend.schemas.category import CategoryResponse, CategoryRequest
@@ -28,7 +27,7 @@ async def add_category(
         return converted
     except Exception as e:
         logging.error(e)
-    raise HTTPException(status_code=500, detail="Unknown error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get(

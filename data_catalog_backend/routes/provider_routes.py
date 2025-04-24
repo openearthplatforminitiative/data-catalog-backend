@@ -29,7 +29,7 @@ async def add_provider(
         return converted
     except Exception as e:
         logging.error(e)
-        raise HTTPException(status_code=500, detail="Unknown error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get(

@@ -23,4 +23,4 @@ class Provider(Base):
     description: Mapped[str] = mapped_column(String, nullable=True, doc="Description")
 
     # Relations
-    resources: Mapped[List["Resource"]] = relationship("ResourceProvider", back_populates="provider")
+    resources: Mapped[List["ResourceProvider"]] = relationship("ResourceProvider", back_populates="provider")

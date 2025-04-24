@@ -2,7 +2,7 @@ import datetime
 import uuid
 from typing import List, Optional
 
-from pydantic import Field
+from pydantic import Field, conlist
 
 from data_catalog_backend.models import ResourceType
 from data_catalog_backend.schemas.basemodel import BaseModel
@@ -11,6 +11,8 @@ from data_catalog_backend.schemas.code import CodeExampleRequest, CodeExampleRes
 from data_catalog_backend.schemas.example import ExampleResponse, ExampleRequest
 from data_catalog_backend.schemas.license import LicenseResponse
 from data_catalog_backend.schemas.provider import ProviderResponse
+from data_catalog_backend.schemas.resource_category import ResourceCategoryResponse
+from data_catalog_backend.schemas.resource_provider import ResourceProviderResponse
 from data_catalog_backend.schemas.spatial_extent import SpatialExtentRequest, SpatialExtentResponse
 
 class ResourceRequest(BaseModel):
@@ -32,7 +34,7 @@ class ResourceRequest(BaseModel):
     additional_categories: Optional[List[str]] = Field(default=None, nullable=True, description="List of relevant categories")
     code_examples: Optional[List[CodeExampleRequest]] = Field(default=None, nullable=True, description="Code examples")
     license: str = Field(description="License of the resource")
-    providers: List[str] = Field(description="List of providers")
+    providers: conlist(str, min_length=1) = Field(description="List of providers")
     examples: Optional[List[ExampleRequest]] = Field(default=None, nullable=True, description="examples of the resource")
 
 class ResourceResponse(BaseModel):
@@ -52,8 +54,8 @@ class ResourceResponse(BaseModel):
     keywords: List[str] = Field(description="keywords")
     version: Optional[str] = Field(default=None, nullable=True, description="The version of this resource")
     type: ResourceType = Field(description="Type of the resource")
-    categories: List[CategorySummaryResponse] = Field(default=None, nullable=True, description="List of categories")
+    categories: List[ResourceCategoryResponse] = Field(default=None, nullable=True, description="List of categories")
     code_examples: Optional[List[CodeExampleResponse]] = Field(default=None, nullable=True, description="Code examples")
     license: LicenseResponse = Field(description="License of the resource")
-    providers: List[ProviderResponse] = Field(description="List of providers")
+    providers: List[ResourceProviderResponse] = Field(description="List of providers")
     examples: Optional[List[ExampleResponse]] = Field(default=None, nullable=True, description="examples of the resource")

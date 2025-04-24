@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from data_catalog_backend.config import settings
 
 
-engine = create_engine(settings.database_connection, pool_pre_ping=True)
+engine = create_engine(settings.database_connection, pool_pre_ping=True, pool_size=20)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

@@ -26,8 +26,7 @@ class LicenseService:
     def create_license(self, license: License) -> License:
         license = License(
             name = license.name,
-            url=str(license.url),
-            description = license.description
+            url=str(license.url)
         )
         self.session.add(license)
         try:

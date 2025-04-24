@@ -99,4 +99,4 @@ async def get_resource(
         return converted
     except Exception as e:
         logging.error(e)
-    raise HTTPException(status_code=500, detail="Unknown error")
+        raise HTTPException(status_code=500, detail=str(e))
