@@ -28,7 +28,7 @@ class ResourceRequest(BaseModel):
     keywords: List[str]
     version: Optional[str] = Field(default=None, nullable=True, description="The version of this resource")
     type: ResourceType
-    main_category_id: str = Field(description="Main category of the resource")
+    main_category: str = Field(description="Main category of the resource")
     additional_categories: Optional[List[str]] = Field(default=None, nullable=True, description="List of relevant categories")
     code_examples: Optional[List[CodeExampleRequest]] = Field(default=None, nullable=True, description="Code examples")
     license: str = Field(description="License of the resource")

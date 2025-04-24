@@ -16,6 +16,10 @@ class CategoryService:
         stmt = select(Category).where(Category.id == category_id)
         return self.session.scalars(stmt).unique().one_or_none()
 
+    def get_category_by_title(self, title: str) -> Category:
+        stmt = select(Category).where(Category.title == title)
+        return self.session.scalars(stmt).unique().one_or_none()
+
     def get_categories(self) -> list[CategorySummaryResponse]:
         stmt = select(Category)
         return self.session.scalars(stmt).all()

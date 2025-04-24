@@ -12,8 +12,8 @@ class ResourceCategory(Base):
     category_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("categories.id"), primary_key=True)
     is_main_category: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    resource: Mapped["Resource"] = relationship("Resource", back_populates="resource_categories")
-    category: Mapped["Category"] = relationship("Category", back_populates="resource_categories")
+    resource: Mapped["Resource"] = relationship("Resource", back_populates="categories")
+    category: Mapped["Category"] = relationship("Category", back_populates="resources")
 
     __table_args__ = (
         Index(

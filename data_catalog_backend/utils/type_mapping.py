@@ -11,4 +11,4 @@ type_mapping = {
     "ENUM": str,
     "UUID": uuid.UUID,
     "GEOMETRY": Geometry 
-    }
+}

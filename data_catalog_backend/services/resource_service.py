@@ -82,25 +82,25 @@ class ResourceService:
         return self.session.scalars(stmt).unique().one_or_none()
 
     def create_resource(self, resource_req: ResourceRequest) -> Resource:
-        license = self.license_service.get_license(resource_req.license)
+        license = self.license_service.get_license_by_name(resource_req.license)
         if not license:
             raise HTTPException(status_code=404, detail="License not found")
 
         providers = []
-        for provider_id in resource_req.providers:
-            provider = self.provider_service.get_provider(provider_id)
+        for provider_short_name in resource_req.providers:
+            provider = self.provider_service.get_provider_by_short_name(provider_short_name)
             if not provider:
                 raise HTTPException(status_code=404, detail="Provider not found")
             providers.append(provider)
 
-        main_category = self.category_service.get_category(resource_req.main_category_id)
+        main_category = self.category_service.get_category_by_title(resource_req.main_category)
         if not main_category:
             raise HTTPException(status_code=404, detail="Main category not found")
 
         additional_categories = []
         if resource_req.additional_categories:
-            for category_id in resource_req.additional_categories:
-                cat = self.category_service.get_category(category_id)
+            for category_title in resource_req.additional_categories:
+                cat = self.category_service.get_category_by_title(category_title)
                 if not cat:
                     raise HTTPException(status_code=404, detail="Category not found")
                 additional_categories.append(cat)
@@ -133,7 +133,7 @@ class ResourceService:
                 "spatial_extent",
                 "code_examples",
                 "providers",
-                "main_category_id",
+                "main_category",
                 "additional_categories"
             }),
         )

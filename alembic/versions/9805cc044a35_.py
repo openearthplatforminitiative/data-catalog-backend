@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: e1ee6cdf0474
+Revision ID: 9805cc044a35
 Revises: 
-Create Date: 2025-04-14 12:19:43.217253
+Create Date: 2025-04-23 12:20:03.615306
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e1ee6cdf0474'
+revision: str = '9805cc044a35'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -96,11 +96,12 @@ def upgrade() -> None:
     )
     op.create_index('only_one_main_category_per_resource', 'resource_category', ['resource_id'], unique=True, postgresql_where=sa.text('is_main_category = true'))
     op.create_table('resource_provider',
-    sa.Column('provider_id', sa.UUID(), nullable=False),
     sa.Column('resource_id', sa.UUID(), nullable=False),
+    sa.Column('provider_id', sa.UUID(), nullable=False),
+    sa.Column('role', sa.String(), nullable=False),
     sa.ForeignKeyConstraint(['provider_id'], ['providers.id'], name=op.f('fk_resource_provider_provider_id_providers')),
     sa.ForeignKeyConstraint(['resource_id'], ['resources.id'], name=op.f('fk_resource_provider_resource_id_resources')),
-    sa.PrimaryKeyConstraint('provider_id', 'resource_id', name=op.f('pk_resource_provider'))
+    sa.PrimaryKeyConstraint('resource_id', 'provider_id', name=op.f('pk_resource_provider'))
     )
     op.create_table('resource_resource',
     sa.Column('used_by', sa.UUID(), nullable=False),

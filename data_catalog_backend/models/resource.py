@@ -10,9 +10,9 @@ from data_catalog_backend.models.resource_resource import ResourceResource
 
 class ResourceType(PyStrEnum):
     Dataset = "DATASET"
+    DatasetCollection = "DATASET_COLLECTION"
     ML_Model = "ML_MODEL"
     API = "API"
-    File = "FILE"
 
 class Resource(Base):
     __tablename__ = 'resources'
@@ -45,9 +45,8 @@ class Resource(Base):
     temporal_extent: Mapped[List["TemporalExtent"]] = relationship(back_populates="resource")
     used_by: Mapped[List["Resource"]] = relationship("Resource", secondary="resource_resource", primaryjoin=id == ResourceResource.c.based_on, secondaryjoin=id == ResourceResource.c.used_by, back_populates="based_on")
     based_on: Mapped[List["Resource"]] = relationship("Resource", secondary="resource_resource", primaryjoin=id == ResourceResource.c.used_by, secondaryjoin=id == ResourceResource.c.based_on, back_populates="used_by")
-    categories: Mapped[List["Category"]] = relationship(secondary="resource_category", back_populates="resources")
-    resource_categories: Mapped[List["ResourceCategory"]] = relationship("ResourceCategory", back_populates="resource")
-    providers: Mapped[List["Provider"]] = relationship("Provider", secondary="resource_provider", back_populates="resources")
+    categories: Mapped[List["Category"]] = relationship("ResourceCategory", back_populates="resource")
+    providers: Mapped[List["Provider"]] = relationship("ResourceProvider", back_populates="resource")
     code_examples: Mapped[List["CodeExamples"]] = relationship(back_populates="resource")
     examples: Mapped[List["Examples"]] = relationship(back_populates="resource")
 
