@@ -9,10 +9,22 @@ from sqlalchemy import select, case, join, func, and_
 import sqlalchemy
 from sqlalchemy.orm import aliased
 
-from data_catalog_backend.models import Resource, Provider, SpatialExtent, SpatialExtentRequestType, \
-    ResourceType, Category, ResourceCategory
+from data_catalog_backend.models import (
+    Resource,
+    Provider,
+    SpatialExtent,
+    SpatialExtentRequestType,
+    ResourceType,
+    Category,
+    ResourceCategory,
+    ResourceProvider,
+)
 from data_catalog_backend.schemas.resource import ResourceRequest
-from data_catalog_backend.schemas.resource_query import ResourceQueryRequest, ResourceQuerySpatialResponse, ResourceQueryResponse
+from data_catalog_backend.schemas.resource_query import (
+    ResourceQueryRequest,
+    ResourceQuerySpatialResponse,
+    ResourceQueryResponse,
+)
 from data_catalog_backend.services.category_service import CategoryService
 from data_catalog_backend.services.code_example_service import CodeExampleService
 from data_catalog_backend.services.example_service import ExampleService
@@ -22,8 +34,17 @@ from data_catalog_backend.services.provider_service import ProviderService
 
 logger = logging.getLogger(__name__)
 
+
 class ResourceService:
-    def __init__(self, session, license_service: LicenseService, provider_service: ProviderService, category_service: CategoryService, example_service: ExampleService, code_example_service: CodeExampleService):
+    def __init__(
+        self,
+        session,
+        license_service: LicenseService,
+        provider_service: ProviderService,
+        category_service: CategoryService,
+        example_service: ExampleService,
+        code_example_service: CodeExampleService,
+    ):
         self.session = session
         self.license_service = license_service
         self.provider_service = provider_service
@@ -35,21 +56,26 @@ class ResourceService:
         stmt = select(Resource).where(Resource.title == title)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def get_resources(self, page: int, per_page: int, resources_req: ResourceQueryRequest):
+    def get_resources(
+        self, page: int, per_page: int, resources_req: ResourceQueryRequest
+    ):
         base_stmt = (
             select(
                 Resource.id.label("id"),
                 Resource.title,
                 Resource.type,
                 Category.icon.label("icon"),
-                (Resource.spatial_extent != None).label("has_spatial_extent")
+                (Resource.spatial_extent != None).label("has_spatial_extent"),
             )
             .select_from(Resource)
             .outerjoin(Resource.spatial_extent)
-            .join(ResourceCategory, and_(
-                ResourceCategory.resource_id == Resource.id,
-                ResourceCategory.is_main_category.is_(True)
-            ))
+            .join(
+                ResourceCategory,
+                and_(
+                    ResourceCategory.resource_id == Resource.id,
+                    ResourceCategory.is_main_category.is_(True),
+                ),
+            )
             .join(Category, Category.id == ResourceCategory.category_id)
         )
 
@@ -61,7 +87,14 @@ class ResourceService:
         base_stmt = query.apply_spatial_filters(base_stmt, resources_req)
         base_stmt = query.apply_features_filters(base_stmt, resources_req)
 
-        base_stmt = base_stmt.group_by(Resource.id, Resource.title, Resource.type, Category.icon, SpatialExtent.type, SpatialExtent.geometry)
+        base_stmt = base_stmt.group_by(
+            Resource.id,
+            Resource.title,
+            Resource.type,
+            Category.icon,
+            SpatialExtent.type,
+            SpatialExtent.geometry,
+        )
         base_stmt = base_stmt.distinct(Resource.id)
 
         total_stmt = select(func.count()).select_from(base_stmt.subquery())
@@ -74,7 +107,7 @@ class ResourceService:
         return ResourceQueryResponse(
             current_page=page,
             total_pages=total // per_page + (total % per_page > 0),
-            resources=[ResourceQuerySpatialResponse(**dict(row)) for row in results]
+            resources=[ResourceQuerySpatialResponse(**dict(row)) for row in results],
         )
 
     def get_resource(self, resource_id) -> Resource:
@@ -88,12 +121,18 @@ class ResourceService:
 
         providers = []
         for provider_short_name in resource_req.providers:
-            provider = self.provider_service.get_provider_by_short_name(provider_short_name)
+            provider = self.provider_service.get_provider_by_short_name(
+                provider_short_name
+            )
+            resourceProvider = ResourceProvider(role="")
             if not provider:
                 raise HTTPException(status_code=404, detail="Provider not found")
-            providers.append(provider)
+            resourceProvider.provider = provider
+            providers.append(resourceProvider)
 
-        main_category = self.category_service.get_category_by_title(resource_req.main_category)
+        main_category = self.category_service.get_category_by_title(
+            resource_req.main_category
+        )
         if not main_category:
             raise HTTPException(status_code=404, detail="Main category not found")
 
@@ -111,7 +150,9 @@ class ResourceService:
 
         code_examples = []
         if resource_req.code_examples:
-            code_examples = self.code_example_service.create_code_examples(resource_req.code_examples)
+            code_examples = self.code_example_service.create_code_examples(
+                resource_req.code_examples
+            )
 
         spatial_extent_objects = []
         if resource_req.spatial_extent is not None:
@@ -120,22 +161,24 @@ class ResourceService:
                     type=extent.type,
                     region=extent.region if extent.region else None,
                     details=extent.details if extent.details else None,
-                    spatial_resolution=extent.spatial_resolution
+                    spatial_resolution=extent.spatial_resolution,
                 )
                 if extent.geometry:
                     spa.geom = extent.geometry
                 spatial_extent_objects.append(spa)
 
         resource = Resource(
-            **resource_req.model_dump(exclude={
-                "examples",
-                "license",
-                "spatial_extent",
-                "code_examples",
-                "providers",
-                "main_category",
-                "additional_categories"
-            }),
+            **resource_req.model_dump(
+                exclude={
+                    "examples",
+                    "license",
+                    "spatial_extent",
+                    "code_examples",
+                    "providers",
+                    "main_category",
+                    "additional_categories",
+                }
+            ),
         )
         categories = additional_categories
         resource.categories = categories
@@ -152,7 +195,7 @@ class ResourceService:
             resource_category = ResourceCategory(
                 resource_id=resource.id,
                 category_id=main_category.id,
-                is_main_category=True
+                is_main_category=True,
             )
             self.session.add(resource_category)
             self.session.commit()

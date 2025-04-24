@@ -41,11 +41,10 @@ async def add_resource(
         )
 
 
-@router.post(
+@router.get(
     "/resources",
     summary="Get all resources",
     description="Returns all locations from the metadata store",
-    tags=["admin"],
     response_model=ResourceQueryResponse,
     response_model_exclude_none=True,
 )
@@ -55,7 +54,28 @@ async def get_resources(
     per_page: int = 10,
     service: ResourceService = Depends(get_resource_service),
 ) -> ResourceQueryResponse:
-    logging.info("Getting resources")
+    logging.info("Getting resources with non-geospatial filters")
+    logging.info(resources_req)
+    resources_req.features = None
+    resources_req.spatial = None
+    resources = service.get_resources(page, per_page, resources_req)
+    return resources
+
+
+@router.post(
+    "/resources/search",
+    summary="Search resources with all filters, including geospatial",
+    description="Search resources using all available filters, including geospatial filters.",
+    response_model=ResourceQueryResponse,
+    response_model_exclude_none=True,
+)
+async def search_resources(
+    resources_req: ResourceQueryRequest,
+    page: int = 0,
+    per_page: int = 10,
+    service: ResourceService = Depends(get_resource_service),
+) -> ResourceQueryResponse:
+    logging.info("Searching resources with all filters")
     logging.info(resources_req)
     resources = service.get_resources(page, per_page, resources_req)
     return resources
@@ -64,7 +84,6 @@ async def get_resources(
 @router.get(
     "/resources/{resource_id}",
     description="Returns one specific resource from the metadata store",
-    tags=["admin"],
     response_model=ResourceResponse,
     response_model_exclude_none=True,
 )
