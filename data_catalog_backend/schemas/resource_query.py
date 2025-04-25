@@ -19,13 +19,22 @@ class ResourceQueryRequest(BaseModel):
 
 
 class ResourceQuerySpatialResponse(ResourceSummaryResponse):
-    covers_some: Optional[bool] = Field(default=None, description="if the resource covers some of the spatial extent")
-    covers_all: Optional[bool] = Field(default=None, description="if the resource covers all of the spatial extent")
-    intersects_some: Optional[bool] = Field(default=None, description="if the resource intersects some of the spatial extent")
-    intersects_all: Optional[bool] = Field(default=None, description="if the resource intersects all of the spatial extent")
+    covers_some: Optional[bool] = Field(
+        default=None, description="if the resource covers some of the spatial extent"
+    )
+    covers_all: Optional[bool] = Field(
+        default=None, description="if the resource covers all of the spatial extent"
+    )
+    intersects_some: Optional[bool] = Field(
+        default=None,
+        description="if the resource intersects some of the spatial extent",
+    )
+    intersects_all: Optional[bool] = Field(
+        default=None, description="if the resource intersects all of the spatial extent"
+    )
 
 
 class ResourceQueryResponse(BaseModel):
     current_page: int
     total_pages: int
-    resources: List[ResourceQuerySpatialResponse]
+    data: List[ResourceQuerySpatialResponse]

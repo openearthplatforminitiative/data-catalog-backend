@@ -99,7 +99,7 @@ class ResourceService:
         return ResourceQueryResponse(
             current_page=page,
             total_pages=total // per_page + (total % per_page > 0),
-            resources=[ResourceQuerySpatialResponse(**dict(row)) for row in results],
+            data=[ResourceQuerySpatialResponse(**dict(row)) for row in results],
         )
 
     def get_resource(self, resource_id) -> Resource:
@@ -118,10 +118,7 @@ class ResourceService:
             )
             if not provider:
                 raise ValueError("Provider not found")
-            providers.append(ResourceProvider(
-                role="",
-                provider=provider
-            ))
+            providers.append(ResourceProvider(role="", provider=provider))
 
         main_category = self.category_service.get_category_by_title(
             resource_req.main_category
@@ -129,19 +126,15 @@ class ResourceService:
         if not main_category:
             raise ValueError("Main category not found")
 
-        categories = [ResourceCategory(
-            is_main_category=True,
-            category=main_category
-        )]
+        categories = [ResourceCategory(is_main_category=True, category=main_category)]
         if resource_req.additional_categories:
             for category_title in resource_req.additional_categories:
                 cat = self.category_service.get_category_by_title(category_title)
                 if not cat:
                     raise ValueError("Category not found")
-                categories.append(ResourceCategory(
-                    is_main_category=False,
-                    category=cat
-                ))
+                categories.append(
+                    ResourceCategory(is_main_category=False, category=cat)
+                )
 
         examples = []
         if resource_req.examples:
