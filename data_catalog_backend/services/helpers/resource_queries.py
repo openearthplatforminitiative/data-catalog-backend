@@ -6,8 +6,15 @@ from shapely.geometry.geo import shape
 from sqlalchemy import or_, case, and_
 from sqlalchemy.orm import aliased
 
-from data_catalog_backend.models import Resource, SpatialExtent, SpatialExtentRequestType, Category, ResourceCategory, \
-    Provider
+from data_catalog_backend.models import (
+    Resource,
+    SpatialExtent,
+    SpatialExtentRequestType,
+    Category,
+    ResourceCategory,
+    Provider,
+    ResourceProvider,
+)
 
 
 class ResourceQuery:
@@ -24,7 +31,9 @@ class ResourceQuery:
                     Resource.abstract.ilike(f"%{tag}%"),
                     Resource.keywords.any(tag),
                     Resource.html_content.ilike(f"%{tag}%"),
-                    Resource.spatial_extent.any(SpatialExtent.details.ilike(f"%{tag}%")),
+                    Resource.spatial_extent.any(
+                        SpatialExtent.details.ilike(f"%{tag}%")
+                    ),
                     Resource.spatial_extent.any(SpatialExtent.region.ilike(f"%{tag}%")),
                 )
             )
@@ -42,25 +51,19 @@ class ResourceQuery:
             return stmt
 
         logging.info("Filtering by categories")
-        FilterCategory = aliased(Category)
         FilterResourceCategory = aliased(ResourceCategory)
         return stmt.outerjoin(
-            FilterResourceCategory,
-            FilterResourceCategory.c.resource_id == Resource.id
-        ).outerjoin(
-            FilterCategory,
-            FilterCategory.id == FilterResourceCategory.c.category_id
-        ).where(
-            FilterCategory.id.in_(resources_req.categories)
-        )
+            FilterResourceCategory, FilterResourceCategory.resource_id == Resource.id
+        ).where(FilterResourceCategory.category_id.in_(resources_req.categories))
 
     def apply_provider_filters(self, stmt, resources_req):
         if not resources_req.providers:
             return stmt
 
         logging.info("Filtering by providers")
-        stmt = stmt.outerjoin(Resource.providers)
-        return stmt.where(Provider.id.in_(resources_req.providers))
+        return stmt.outerjoin(
+            Resource.providers,
+        ).where(ResourceProvider.provider_id.in_(resources_req.providers))
 
     def apply_spatial_filters(self, stmt, resources_req):
         if not resources_req.spatial:
@@ -70,15 +73,15 @@ class ResourceQuery:
         conditions = []
         if SpatialExtentRequestType.NonSpatial in resources_req.spatial:
             conditions.append(Resource.spatial_extent == None)
-        other_types = [stype for stype in resources_req.spatial if stype != SpatialExtentRequestType.NonSpatial]
+        other_types = [
+            stype
+            for stype in resources_req.spatial
+            if stype != SpatialExtentRequestType.NonSpatial
+        ]
         if other_types:
-            conditions.append(
-                SpatialExtent.type.in_(other_types)
-            )
+            conditions.append(SpatialExtent.type.in_(other_types))
         if conditions:
-            stmt = stmt.where(
-                or_(*conditions)
-            )
+            stmt = stmt.where(or_(*conditions))
         return stmt
 
     def apply_features_filters(self, stmt, resources_req):
@@ -87,37 +90,44 @@ class ResourceQuery:
 
         logging.info("Filtering by features")
 
-        shapely_geoms = [from_shape(shape(feature.geometry), srid=4326) for feature in resources_req.features]
-        covers_conditions = [ST_Covers(SpatialExtent.geometry, geom) for geom in shapely_geoms]
-        intersects_conditions = [ST_Intersects(SpatialExtent.geometry, geom) for geom in shapely_geoms]
+        shapely_geoms = [
+            from_shape(shape(feature.geometry), srid=4326)
+            for feature in resources_req.features
+        ]
+        covers_conditions = [
+            ST_Covers(SpatialExtent.geometry, geom) for geom in shapely_geoms
+        ]
+        intersects_conditions = [
+            ST_Intersects(SpatialExtent.geometry, geom) for geom in shapely_geoms
+        ]
 
         stmt = stmt.add_columns(
             case(
                 (SpatialExtent.type == SpatialExtentRequestType.Global, True),
                 (or_(*covers_conditions), True),
-                else_=False
+                else_=False,
             ).label("covers_some"),
             case(
                 (SpatialExtent.type == SpatialExtentRequestType.Global, True),
                 (and_(*covers_conditions), True),
-                else_=False
+                else_=False,
             ).label("covers_all"),
             case(
                 (SpatialExtent.type == SpatialExtentRequestType.Global, True),
                 (or_(*intersects_conditions), True),
-                else_=False
+                else_=False,
             ).label("intersects_some"),
             case(
                 (SpatialExtent.type == SpatialExtentRequestType.Global, True),
                 (and_(*intersects_conditions), True),
-                else_=False
-            ).label("intersects_all")
+                else_=False,
+            ).label("intersects_all"),
         )
 
         return stmt.where(
-                or_(
-                    (SpatialExtent.type == SpatialExtentRequestType.Global),
-                    *intersects_conditions,
-                    *covers_conditions
-                )
+            or_(
+                (SpatialExtent.type == SpatialExtentRequestType.Global),
+                *intersects_conditions,
+                *covers_conditions,
             )
+        )

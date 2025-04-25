@@ -6,6 +6,8 @@ from pydantic import Field, HttpUrl
 from data_catalog_backend.schemas.basemodel import BaseModel
 from data_catalog_backend.schemas.resource_summary import ResourceSummaryResponse
 
+class ResourceProviderResponse(BaseModel):
+    resource: ResourceSummaryResponse = Field(description="List of providers")
 
 class ProviderRequest(BaseModel):
     name: str = Field(description="name of provider")
@@ -21,4 +23,4 @@ class ProviderSummaryResponse(BaseModel):
     description: str = Field(description="description of the provider")
 
 class ProviderResponse(ProviderSummaryResponse):
-    resources: List[ResourceSummaryResponse]
+    resources: List[ResourceProviderResponse]

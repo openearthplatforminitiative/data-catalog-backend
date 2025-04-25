@@ -10,10 +10,16 @@ from data_catalog_backend.schemas.category import CategorySummaryResponse
 from data_catalog_backend.schemas.code import CodeExampleRequest, CodeExampleResponse
 from data_catalog_backend.schemas.example import ExampleResponse, ExampleRequest
 from data_catalog_backend.schemas.license import LicenseResponse
-from data_catalog_backend.schemas.provider import ProviderResponse
-from data_catalog_backend.schemas.resource_category import ResourceCategoryResponse
-from data_catalog_backend.schemas.resource_provider import ResourceProviderResponse
+from data_catalog_backend.schemas.provider import ProviderSummaryResponse
 from data_catalog_backend.schemas.spatial_extent import SpatialExtentRequest, SpatialExtentResponse
+
+class ResourceCategoryResponse(BaseModel):
+    category: CategorySummaryResponse = Field(description="Category")
+    is_main_category: bool = Field(description="Role of the provider")
+
+class ResourceProviderResponse(BaseModel):
+    provider: ProviderSummaryResponse = Field(description="List of providers")
+    role: str = Field(description="Role of the provider")
 
 class ResourceRequest(BaseModel):
     title: str = Field(description="Title of the resource")
