@@ -12,16 +12,12 @@ from data_catalog_backend.routes.provider_routes import router as provider_route
 from data_catalog_backend.routes.category_routes import router as category_routes
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("Starting application")
-    yield
-
-
 def get_application() -> FastAPI:
-    api = FastAPI(lifespan=lifespan, root_path=settings.api_root_path)
-    for router in [resource_routes, license_routes, provider_routes, category_routes]:
-        api.include_router(router)
+    api = FastAPI(root_path=settings.api_root_path)
+    api.include_router(resource_routes)
+    api.include_router(license_routes)
+    api.include_router(provider_routes)
+    api.include_router(category_routes)
     logging.basicConfig(level=logging.INFO)
     Instrumentator().instrument(api).expose(api)
     return api
@@ -35,8 +31,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "data_catalog_backend.__main__:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
+        host=settings.host,
+        port=settings.port,
+        reload=settings.reload,
     )
-    # uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
