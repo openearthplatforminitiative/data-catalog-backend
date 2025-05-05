@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "data_catalog_backend.__main__:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.reload,
+        host=settings.uvicorn_host,
+        port=settings.uvicorn_port,
+        reload=settings.uvicorn_reload,
     )
