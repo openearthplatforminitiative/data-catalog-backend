@@ -1,4 +1,12 @@
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+import os
+
+load_dotenv("../.env.local")
+
+print("Loaded POSTGRES_USER:", os.getenv("POSTGRES_USER"))
+print("Loaded POSTGRES_PASSWORD:", os.getenv("POSTGRES_PASSWORD"))
+print("Loaded POSTGRES_DB:", os.getenv("POSTGRES_DB"))
 
 
 class Settings(BaseSettings):
@@ -11,16 +19,19 @@ class Settings(BaseSettings):
     api_description: str = ""
     api_domain: str = "localhost"
 
-    postgres_user: str = "dc_user"
-    postgres_password: str = "dc_password"
-    postgres_db: str = "datacatalog_db"
-    postgres_host: str = "localhost"
-    postgres_port: str = "5434"
+    postgres_user: str
+    postgres_password: str
+    postgres_db: str
+    postgres_host: str
+    postgres_port: str = "5432"
     postgres_schema: str = "public"
 
     run_migrations: bool = True
     alembic_directory: str = "./alembic"
     alembic_file: str = "./alembic.ini"
+
+    class Config:
+        env_file = "../.env.local"
 
     @property
     def api_url(self):
@@ -40,3 +51,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+print(
+    "values: ", settings.postgres_user, settings.postgres_password, settings.postgres_db
+)

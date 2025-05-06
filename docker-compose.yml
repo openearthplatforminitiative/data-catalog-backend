@@ -8,4 +8,4 @@ services:
       POSTGRES_PASSWORD: dc_password
       POSTGRES_DB: datacatalog_db
     ports:
-      - "5434:5432"
+      - "5432:5432"
