@@ -3,12 +3,24 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
+from dotenv import load_dotenv
+import os
 from alembic import context
 
 from data_catalog_backend import models
 from data_catalog_backend.config import settings
 from data_catalog_backend import database
 
+print("Alembic env.py is running")
+
+# Get the root directory of the project
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Construct the path to .env.local
+ENV_PATH = os.path.join(ROOT_DIR, ".env.local")
+
+# Load environment variables from .env.local
+load_dotenv(ENV_PATH)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -90,7 +102,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata, include_name=include_name
+            connection=connection,
+            target_metadata=target_metadata,
+            include_name=include_name,
         )
 
         with context.begin_transaction():

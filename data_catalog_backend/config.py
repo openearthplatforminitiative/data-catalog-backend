@@ -2,7 +2,19 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 import os
 
-load_dotenv("../.env.local")
+# Get the root directory of the project
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Construct the path to .env.local
+ENV_PATH = os.path.join(ROOT_DIR, ".env.local")
+
+
+print(
+    "Loaded .env.local:",
+    os.path.exists(ENV_PATH),
+)
+
+load_dotenv(ENV_PATH)
 
 print("Loaded POSTGRES_USER:", os.getenv("POSTGRES_USER"))
 print("Loaded POSTGRES_PASSWORD:", os.getenv("POSTGRES_PASSWORD"))
@@ -23,12 +35,12 @@ class Settings(BaseSettings):
     postgres_password: str
     postgres_db: str
     postgres_host: str
-    postgres_port: str = "5432"
-    postgres_schema: str = "public"
+    postgres_port: str
+    postgres_schema: str
 
     run_migrations: bool = True
-    alembic_directory: str = "./alembic"
-    alembic_file: str = "./alembic.ini"
+    alembic_directory: str = "../alembic"
+    alembic_file: str = "../alembic.ini"
 
     class Config:
         env_file = "../.env.local"
@@ -51,6 +63,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+print("Database Connection URL:", settings.database_connection)
 
 print(
     "values: ", settings.postgres_user, settings.postgres_password, settings.postgres_db
