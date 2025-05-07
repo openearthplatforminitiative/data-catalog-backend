@@ -162,6 +162,12 @@ class ResourceService:
                         spa.geom = extent.geometry
                     spatial_extent_objects.append(spa)
 
+            keywords = []
+            if resource_req.keywords is not None:
+                for keyword in resource_req.keywords:
+                    keywords.append(keyword.strip())
+
+
             resource = Resource(
                 **resource_req.model_dump(
                     exclude={
@@ -172,6 +178,7 @@ class ResourceService:
                         "providers",
                         "main_category",
                         "additional_categories",
+                        "keywords",
                     }
                 ),
             )
@@ -183,6 +190,7 @@ class ResourceService:
             resource.spatial_extent = spatial_extent_objects
             resource.examples = examples
             resource.code_examples = code_examples
+            resource.keywords = keywords
 
             self.session.add(resource)
             self.session.commit()

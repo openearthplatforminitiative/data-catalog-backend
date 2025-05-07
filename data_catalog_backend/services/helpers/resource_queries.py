@@ -3,7 +3,7 @@ import logging
 from geoalchemy2.functions import ST_Covers, ST_Intersects
 from geoalchemy2.shape import from_shape
 from shapely.geometry.geo import shape
-from sqlalchemy import or_, case, and_
+from sqlalchemy import or_, case, and_, func, select, literal_column, exists
 from sqlalchemy.orm import aliased
 
 from data_catalog_backend.models import (
@@ -29,7 +29,11 @@ class ResourceQuery:
                 or_(
                     Resource.title.ilike(f"%{tag}%"),
                     Resource.abstract.ilike(f"%{tag}%"),
-                    Resource.keywords.any(tag),
+                    exists( # search for tag in keywords, case-insensitive
+                        select(literal_column("1"))
+                        .select_from(func.unnest(Resource.keywords).alias("keyword"))
+                        .where(func.lower(literal_column("keyword")) == func.lower(tag))
+                    ),
                     Resource.html_content.ilike(f"%{tag}%"),
                     Resource.spatial_extent.any(
                         SpatialExtent.details.ilike(f"%{tag}%")
