@@ -39,7 +39,6 @@ class ProviderService:
         except Exception as e:
             self.session.rollback()
             raise e
-
         return provider
 
     def update_provider(self, id, provider_req):

@@ -1,7 +1,6 @@
 import logging
 from typing import Optional
 
-from fastapi import HTTPException
 from sqlalchemy import select, func, and_
 
 from data_catalog_backend.models import (
@@ -11,7 +10,9 @@ from data_catalog_backend.models import (
     ResourceCategory,
     ResourceProvider,
 )
-from data_catalog_backend.schemas.resource import ResourceRequest
+from data_catalog_backend.schemas.resource import (
+    ResourceRequest,
+)
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQuerySpatialResponse,
