@@ -7,7 +7,8 @@ from data_catalog_backend.models import License
 
 logger = logging.getLogger(__name__)
 
-class LicenseService: 
+
+class LicenseService:
     def __init__(self, session):
         self.session = session
 
@@ -24,10 +25,7 @@ class LicenseService:
         return self.session.scalars(stmt).unique().all()
 
     def create_license(self, license: License) -> License:
-        license = License(
-            name = license.name,
-            url=str(license.url)
-        )
+        license = License(name=license.name, url=str(license.url))
         self.session.add(license)
         try:
             self.session.commit()

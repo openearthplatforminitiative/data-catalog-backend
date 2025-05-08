@@ -14,9 +14,9 @@ class ProviderService:
     def __init__(self, session):
         self.session = session
 
-    
     def get_resource_summery_on_id(self, id: uuid.UUID) -> List[dict]:
         from data_catalog_backend.dependencies import get_resource_service
+
         resource_service = get_resource_service()
         return resource_service.get_resource_summery_on_id(id)
 
@@ -30,7 +30,7 @@ class ProviderService:
 
     def get_provider(self, id) -> Provider:
         stmt = select(Provider).where(Provider.id == id)
-        return self.session.scalars(stmt).unique().one_or_none() 
+        return self.session.scalars(stmt).unique().one_or_none()
 
     def create_provider(self, provider: Provider) -> Provider:
         self.session.add(provider)
@@ -39,7 +39,7 @@ class ProviderService:
         except Exception as e:
             self.session.rollback()
             raise e
-        
+
         return provider
 
     def update_provider(self, id, provider_req):

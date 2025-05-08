@@ -10,5 +10,5 @@ type_mapping = {
     "DATE": date,
     "ENUM": str,
     "UUID": uuid.UUID,
-    "GEOMETRY": Geometry 
+    "GEOMETRY": Geometry,
 }

@@ -11,12 +11,13 @@ class CodeExampleService:
     def __init__(self, session):
         self.session = session
 
-    def create_code_examples(self, code_examples: List[CodeExamples]) -> List[CodeExamples]:
+    def create_code_examples(
+        self, code_examples: List[CodeExamples]
+    ) -> List[CodeExamples]:
         created_code_examples = []
         for code_example in code_examples:
             new_code_example = CodeExamples(
-                title=code_example.title,
-                description=code_example.description
+                title=code_example.title, description=code_example.description
             )
             self.session.add(new_code_example)
             self.session.commit()
@@ -25,7 +26,7 @@ class CodeExampleService:
                 new_code = Code(
                     language=code.language,
                     source=code.source,
-                    examples_id=new_code_example.id
+                    examples_id=new_code_example.id,
                 )
                 self.session.add(new_code)
 
@@ -40,5 +41,9 @@ class CodeExampleService:
         return created_code_examples
 
     def get_code_examples(self, id: int) -> List[CodeExamples]:
-        stmt = select(CodeExamples).where(CodeExamples.id == id).options(joinedload(CodeExamples.code))
+        stmt = (
+            select(CodeExamples)
+            .where(CodeExamples.id == id)
+            .options(joinedload(CodeExamples.code))
+        )
         return self.session.scalars(stmt).unique().all()
