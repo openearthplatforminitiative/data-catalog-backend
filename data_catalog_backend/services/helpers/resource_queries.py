@@ -29,7 +29,7 @@ class ResourceQuery:
                 or_(
                     Resource.title.ilike(f"%{tag}%"),
                     Resource.abstract.ilike(f"%{tag}%"),
-                    exists( # search for tag in keywords, case-insensitive
+                    exists(  # search for tag in keywords, case-insensitive
                         select(literal_column("1"))
                         .select_from(func.unnest(Resource.keywords).alias("keyword"))
                         .where(func.lower(literal_column("keyword")) == func.lower(tag))

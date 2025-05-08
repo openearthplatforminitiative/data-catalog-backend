@@ -167,7 +167,6 @@ class ResourceService:
                 for keyword in resource_req.keywords:
                     keywords.append(keyword.strip())
 
-
             resource = Resource(
                 **resource_req.model_dump(
                     exclude={
