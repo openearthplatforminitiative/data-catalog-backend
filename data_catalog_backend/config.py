@@ -7,12 +7,6 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 ENV_PATH = os.path.join(ROOT_DIR, ".env")
 
-
-print(
-    "Loaded .env:",
-    os.path.exists(ENV_PATH),
-)
-
 load_dotenv(ENV_PATH)
 
 
