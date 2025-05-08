@@ -8,6 +8,7 @@ from data_catalog_backend.schemas.resource import ResourceRelationRequest
 
 logger = logging.getLogger(__name__)
 
+
 class ResourceRelationService:
     def __init__(self, session, resource_service):
         self.session = session

@@ -3,14 +3,23 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from data_catalog_backend.dependencies import get_resource_service, get_resource_relation_service
-from data_catalog_backend.schemas.resource import ResourceRequest, ResourceResponse, ResourceRelationRequest, \
-    ResourceRelationResponse
+from data_catalog_backend.dependencies import (
+    get_resource_service,
+    get_resource_relation_service,
+)
+from data_catalog_backend.schemas.resource import (
+    ResourceRequest,
+    ResourceResponse,
+    ResourceRelationRequest,
+    ResourceRelationResponse,
+)
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQueryResponse,
 )
-from data_catalog_backend.services.resource_relation_service import ResourceRelationService
+from data_catalog_backend.services.resource_relation_service import (
+    ResourceRelationService,
+)
 from data_catalog_backend.services.resource_service import ResourceService
 
 router = APIRouter()
@@ -47,14 +56,18 @@ async def add_resource(
     "/resources/relations",
     summary="Add a resource relation to the database",
     tags=["admin"],
-    response_model=ResourceRelationResponse
+    response_model=ResourceRelationResponse,
 )
 async def add_resource_relation(
-        resource_relation_req: ResourceRelationRequest,
-        resource_relation_service: ResourceRelationService = Depends(get_resource_relation_service),
+    resource_relation_req: ResourceRelationRequest,
+    resource_relation_service: ResourceRelationService = Depends(
+        get_resource_relation_service
+    ),
 ) -> ResourceRelationResponse:
     try:
-        validated_request = ResourceRelationRequest.model_validate(resource_relation_req)
+        validated_request = ResourceRelationRequest.model_validate(
+            resource_relation_req
+        )
         created = resource_relation_service.create_resource_relation(validated_request)
 
         converted = ResourceRelationResponse.model_validate(created)
