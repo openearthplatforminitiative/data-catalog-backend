@@ -13,6 +13,7 @@ class ExampleService:
         created_examples = []
         for example in examples:
             new_example = Examples(
+                title=example.title,
                 type=example.type,
                 description=example.description,
                 example_url=example.example_url,
