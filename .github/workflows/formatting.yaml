@@ -1,4 +1,4 @@
-name: Formattingb
+name: Formatting
 on:
   workflow_dispatch:
   pull_request:
