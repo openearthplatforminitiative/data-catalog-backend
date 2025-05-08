@@ -8,6 +8,7 @@ from data_catalog_backend.services.category_service import CategoryService
 from data_catalog_backend.services.code_example_service import CodeExampleService
 from data_catalog_backend.services.example_service import ExampleService
 from data_catalog_backend.services.provider_service import ProviderService
+from data_catalog_backend.services.resource_relation_service import ResourceRelationService
 from data_catalog_backend.services.resource_service import ResourceService
 from data_catalog_backend.services.license_service import LicenseService
 
@@ -58,3 +59,9 @@ def get_resource_service(
         example_service,
         code_example_service,
     )
+
+def get_resource_relation_service(
+        db: Session = Depends(get_db),
+        resource_service: ResourceService = Depends(get_resource_service)
+) -> ResourceRelationService:
+    return ResourceRelationService(db, resource_service)
