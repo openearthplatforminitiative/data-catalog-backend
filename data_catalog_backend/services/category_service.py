@@ -4,11 +4,15 @@ import uuid
 from sqlalchemy import select
 
 from data_catalog_backend.models import Category
-from data_catalog_backend.schemas.category import CategoryRequest, CategorySummaryResponse
+from data_catalog_backend.schemas.category import (
+    CategoryRequest,
+    CategorySummaryResponse,
+)
 
 logger = logging.getLogger(__name__)
 
-class CategoryService: 
+
+class CategoryService:
     def __init__(self, session):
         self.session = session
 
@@ -26,7 +30,7 @@ class CategoryService:
 
     def create_category(self, category: CategoryRequest) -> Category:
         category = Category(
-            title = category.title,
+            title=category.title,
             abstract=category.abstract,
             icon=category.icon,
         )

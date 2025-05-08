@@ -18,30 +18,39 @@ class SpatialExtentRequestType(PyStrEnum):
     Global = "GLOBAL"
     NonSpatial = "NON_SPATIAL"
 
+
 class SpatialExtentType(PyStrEnum):
     Region = "REGION"
     Global = "GLOBAL"
 
+
 class SpatialExtent(Base):
-    __tablename__ = 'spatial_extents'
+    __tablename__ = "spatial_extents"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
         nullable=False,
-        doc="Unique identifier for Spatial extent"
+        doc="Unique identifier for Spatial extent",
     )
     type: Mapped[str] = mapped_column(String, nullable=False, doc="type")
     region: Mapped[Optional[str]] = mapped_column(String, nullable=True, doc="region")
     details: Mapped[Optional[str]] = mapped_column(String, nullable=True, doc="details")
-    geometry: Mapped[Optional[WKBElement]] = mapped_column(Geometry(geometry_type="GEOMETRY", srid=4326), nullable=True, doc="geometry value")
-    spatial_resolution: Mapped[Optional[str]] = mapped_column(String, nullable=True, doc="region")
-    resource_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('resources.id'), nullable=False)
+    geometry: Mapped[Optional[WKBElement]] = mapped_column(
+        Geometry(geometry_type="GEOMETRY", srid=4326),
+        nullable=True,
+        doc="geometry value",
+    )
+    spatial_resolution: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, doc="region"
+    )
+    resource_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("resources.id"), nullable=False
+    )
 
     # Relations
     resource: Mapped["Resource"] = relationship(back_populates="spatial_extent")
-
 
     # WKBElement to GeoJSON
     @property
@@ -64,9 +73,12 @@ class SpatialExtent(Base):
         try:
             if new_value is not None:
                 geometries = [
-                    shape(g.geometry if hasattr(g, "geometry") else g["geometry"])
-                    if (hasattr(g, "type") and g.type == "Feature") or (isinstance(g, dict) and g.get("type") == "Feature")
-                    else shape(g)
+                    (
+                        shape(g.geometry if hasattr(g, "geometry") else g["geometry"])
+                        if (hasattr(g, "type") and g.type == "Feature")
+                        or (isinstance(g, dict) and g.get("type") == "Feature")
+                        else shape(g)
+                    )
                     for g in new_value
                 ]
                 shapely_geometry = GeometryCollection(geometries)

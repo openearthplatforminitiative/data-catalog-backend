@@ -10,15 +10,18 @@ class CodeResponse(BaseModel):
     language: CodeType
     source: str
 
+
 class CodeRequest(BaseModel):
     language: CodeType
     source: str
+
 
 class CodeExampleResponse(BaseModel):
     id: uuid.UUID
     title: str
     description: str
     code: Optional[List[CodeResponse]]
+
 
 class CodeExampleRequest(BaseModel):
     title: str
