@@ -75,13 +75,13 @@ class ResourceRequest(BaseModel):
 
 
 class ResourceRelationRequest(BaseModel):
-    used_by: str = Field(description="The resource the resource belongs to")
-    based_on: str = Field(description="The resource the resource is based on")
+    used_by: str = Field(description="The resource it belongs to")
+    based_on: str = Field(description="The resource it is based on")
 
 
 class ResourceRelationResponse(BaseModel):
-    used_by: uuid.UUID = Field(description="The resource the resource belongs to")
-    based_on: uuid.UUID = Field(description="The resource the resource is based on")
+    used_by: uuid.UUID = Field(description="The resource it belongs to")
+    based_on: uuid.UUID = Field(description="The resource it is based on")
 
 
 class ResourceResponse(BaseModel):
