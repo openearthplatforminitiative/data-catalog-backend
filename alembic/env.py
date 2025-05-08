@@ -11,7 +11,6 @@ from data_catalog_backend import models
 from data_catalog_backend.config import settings
 from data_catalog_backend import database
 
-print("Alembic env.py is running")
 
 # Get the root directory of the project
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
