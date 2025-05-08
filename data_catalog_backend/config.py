@@ -1,24 +1,19 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 import os
 
 # Get the root directory of the project
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-# Construct the path to .env.local
-ENV_PATH = os.path.join(ROOT_DIR, ".env.local")
+ENV_PATH = os.path.join(ROOT_DIR, ".env")
 
 
 print(
-    "Loaded .env.local:",
+    "Loaded .env:",
     os.path.exists(ENV_PATH),
 )
 
 load_dotenv(ENV_PATH)
-
-print("Loaded POSTGRES_USER:", os.getenv("POSTGRES_USER"))
-print("Loaded POSTGRES_PASSWORD:", os.getenv("POSTGRES_PASSWORD"))
-print("Loaded POSTGRES_DB:", os.getenv("POSTGRES_DB"))
 
 
 class Settings(BaseSettings):
@@ -42,8 +37,7 @@ class Settings(BaseSettings):
     alembic_directory: str = "../alembic"
     alembic_file: str = "../alembic.ini"
 
-    class Config:
-        env_file = "../.env.local"
+    model_config = SettingsConfigDict(env_file=ENV_PATH)
 
     @property
     def api_url(self):
@@ -63,9 +57,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-print("Database Connection URL:", settings.database_connection)
-
-print(
-    "values: ", settings.postgres_user, settings.postgres_password, settings.postgres_db
-)

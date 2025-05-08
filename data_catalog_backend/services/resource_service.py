@@ -107,85 +107,96 @@ class ResourceService:
         return self.session.scalars(stmt).unique().one_or_none()
 
     def create_resource(self, resource_req: ResourceRequest) -> Resource:
-        license = self.license_service.get_license_by_name(resource_req.license)
-        if not license:
-            raise ValueError("License not found")
-
-        providers = []
-        for provider_short_name in resource_req.providers:
-            provider = self.provider_service.get_provider_by_short_name(
-                provider_short_name
-            )
-            if not provider:
-                raise ValueError("Provider not found")
-            providers.append(ResourceProvider(role="", provider=provider))
-
-        main_category = self.category_service.get_category_by_title(
-            resource_req.main_category
-        )
-        if not main_category:
-            raise ValueError("Main category not found")
-
-        categories = [ResourceCategory(is_main_category=True, category=main_category)]
-        if resource_req.additional_categories:
-            for category_title in resource_req.additional_categories:
-                cat = self.category_service.get_category_by_title(category_title)
-                if not cat:
-                    raise ValueError("Category not found")
-                categories.append(
-                    ResourceCategory(is_main_category=False, category=cat)
-                )
-
-        examples = []
-        if resource_req.examples:
-            examples = self.example_service.create_examples(resource_req.examples)
-
-        code_examples = []
-        if resource_req.code_examples:
-            code_examples = self.code_example_service.create_code_examples(
-                resource_req.code_examples
-            )
-
-        spatial_extent_objects = []
-        if resource_req.spatial_extent is not None:
-            for extent in resource_req.spatial_extent:
-                spa = SpatialExtent(
-                    type=extent.type,
-                    region=extent.region if extent.region else None,
-                    details=extent.details if extent.details else None,
-                    spatial_resolution=extent.spatial_resolution,
-                )
-                if extent.geometry:
-                    spa.geom = extent.geometry
-                spatial_extent_objects.append(spa)
-
-        resource = Resource(
-            **resource_req.model_dump(
-                exclude={
-                    "examples",
-                    "license",
-                    "spatial_extent",
-                    "code_examples",
-                    "providers",
-                    "main_category",
-                    "additional_categories",
-                }
-            ),
-        )
-        categories = categories
-        resource.categories = categories
-
-        resource.providers = providers
-        resource.license = license
-        resource.spatial_extent = spatial_extent_objects
-        resource.examples = examples
-        resource.code_examples = code_examples
-
-        self.session.add(resource)
         try:
-            self.session.commit()
-        except Exception as e:
-            self.session.rollback()
-            raise e
+            license = self.license_service.get_license_by_name(resource_req.license)
+            if not license:
+                raise ValueError("License not found")
 
-        return resource
+            providers = []
+            for provider_short_name in resource_req.providers:
+                provider = self.provider_service.get_provider_by_short_name(
+                    provider_short_name
+                )
+                if not provider:
+                    raise ValueError("Provider not found")
+                providers.append(ResourceProvider(role="", provider=provider))
+
+            main_category = self.category_service.get_category_by_title(
+                resource_req.main_category
+            )
+            if not main_category:
+                raise ValueError("Main category not found")
+
+            categories = [
+                ResourceCategory(is_main_category=True, category=main_category)
+            ]
+            if resource_req.additional_categories:
+                for category_title in resource_req.additional_categories:
+                    cat = self.category_service.get_category_by_title(category_title)
+                    if not cat:
+                        raise ValueError("Category not found")
+                    categories.append(
+                        ResourceCategory(is_main_category=False, category=cat)
+                    )
+
+            examples = []
+            if resource_req.examples:
+                examples = self.example_service.create_examples(resource_req.examples)
+
+            code_examples = []
+            if resource_req.code_examples:
+                code_examples = self.code_example_service.create_code_examples(
+                    resource_req.code_examples
+                )
+
+            spatial_extent_objects = []
+            if resource_req.spatial_extent is not None:
+                for extent in resource_req.spatial_extent:
+                    spa = SpatialExtent(
+                        type=extent.type,
+                        region=extent.region if extent.region else None,
+                        details=extent.details if extent.details else None,
+                        spatial_resolution=extent.spatial_resolution,
+                    )
+                    if extent.geometry:
+                        spa.geom = extent.geometry
+                    spatial_extent_objects.append(spa)
+
+            resource = Resource(
+                **resource_req.model_dump(
+                    exclude={
+                        "examples",
+                        "license",
+                        "spatial_extent",
+                        "code_examples",
+                        "providers",
+                        "main_category",
+                        "additional_categories",
+                    }
+                ),
+            )
+            categories = categories
+            resource.categories = categories
+
+            resource.providers = providers
+            resource.license = license
+            resource.spatial_extent = spatial_extent_objects
+            resource.examples = examples
+            resource.code_examples = code_examples
+
+            self.session.add(resource)
+            self.session.commit()
+
+            return resource
+        except HTTPException as http_exc:
+            # Log and re-raise HTTP exceptions
+            logger.error(f"HTTP error: {http_exc.detail}")
+            raise
+        except Exception as e:
+            # Log unexpected errors and raise a 500 error
+            logger.error(f"Unexpected error: {e}")
+            self.session.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail="An unexpected error occurred while creating the resource",
+            )
