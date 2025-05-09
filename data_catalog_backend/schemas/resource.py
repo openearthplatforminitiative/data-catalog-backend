@@ -62,6 +62,9 @@ class ResourceRequest(BaseModel):
     )
     type: ResourceType
     main_category: str = Field(description="Main category of the resource")
+    deprecated: bool = Field(
+        default=False, nullable=False, description="True if the resource is deprecated"
+    )
     additional_categories: Optional[List[str]] = Field(
         default=None, nullable=True, description="List of relevant categories"
     )
@@ -122,6 +125,9 @@ class ResourceResponse(BaseModel):
         default=None, nullable=True, description="The version of this resource"
     )
     type: ResourceType = Field(description="Type of the resource")
+    deprecated: bool = Field(
+        default=False, nullable=False, description="True if the resource is deprecated"
+    )
     categories: List[ResourceCategoryResponse] = Field(
         default=None, nullable=True, description="List of categories"
     )
