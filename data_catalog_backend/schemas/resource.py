@@ -41,7 +41,7 @@ class ResourceRequest(BaseModel):
         default=None, nullable=True, description="link to github"
     )
     data_hub_url: Optional[str] = Field(
-        default=None, nullable=True, description="link yo data hub"
+        default=None, nullable=True, description="link to data hub"
     )
     research_paper_url: Optional[str] = Field(
         default=None, nullable=True, description="link to research paper"
@@ -108,7 +108,7 @@ class ResourceResponse(BaseModel):
         default=None, nullable=True, description="link to github"
     )
     data_hub_url: Optional[str] = Field(
-        default=None, nullable=True, description="link yo data hub"
+        default=None, nullable=True, description="link to data hub"
     )
     research_paper_url: Optional[str] = Field(
         default=None, nullable=True, description="link to research paper"
