@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Optional, List
 
 from geojson_pydantic import Feature
@@ -16,6 +17,7 @@ class ResourceQueryRequest(BaseModel):
     categories: Optional[List[uuid.UUID]] = None
     providers: Optional[List[uuid.UUID]] = None
     tags: Optional[List[str]] = None
+    years: Optional[List[str]] = None
 
 
 class ResourceQuerySpatialResponse(ResourceSummaryResponse):
