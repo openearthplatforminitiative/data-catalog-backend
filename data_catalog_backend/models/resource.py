@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Optional
-from sqlalchemy import UUID, ForeignKey, String, Date, ARRAY, Index
+from sqlalchemy import UUID, ForeignKey, String, Date, ARRAY, Index, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from data_catalog_backend.database import Base
 from enum import StrEnum as PyStrEnum
@@ -60,6 +60,7 @@ class Resource(Base):
         String, nullable=True, doc="resource version"
     )
     type: Mapped[str] = mapped_column(String, nullable=True, doc="type")
+    deprecated: Mapped[bool] = mapped_column(Boolean, nullable=True, doc="deprecated")
     license_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("licenses.id"), nullable=False
     )
