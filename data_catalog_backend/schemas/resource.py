@@ -40,6 +40,12 @@ class ResourceRequest(BaseModel):
     git_url: Optional[str] = Field(
         default=None, nullable=True, description="link to github"
     )
+    data_hub_url: Optional[str] = Field(
+        default=None, nullable=True, description="link yo data hub"
+    )
+    research_paper_url: Optional[str] = Field(
+        default=None, nullable=True, description="link to research paper"
+    )
     openapi_url: Optional[str] = Field(
         default=None, nullable=True, description="link to openAPI specification"
     )
