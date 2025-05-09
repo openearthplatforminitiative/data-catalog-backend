@@ -11,6 +11,7 @@ from data_catalog_backend.schemas.code import CodeExampleRequest, CodeExampleRes
 from data_catalog_backend.schemas.example import ExampleResponse, ExampleRequest
 from data_catalog_backend.schemas.license import LicenseResponse
 from data_catalog_backend.schemas.provider import ProviderSummaryResponse
+from data_catalog_backend.schemas.resource_summary import ResourceSummaryResponse
 from data_catalog_backend.schemas.spatial_extent import (
     SpatialExtentRequest,
     SpatialExtentResponse,
@@ -75,8 +76,8 @@ class ResourceRequest(BaseModel):
 
 
 class ResourceRelationRequest(BaseModel):
-    used_by: str = Field(description="The resource it belongs to")
-    based_on: str = Field(description="The resource it is based on")
+    parent: str = Field(description="The resource it belongs to")
+    child: str = Field(description="The resource it is based on")
 
 
 class ResourceRelationResponse(BaseModel):
@@ -131,4 +132,10 @@ class ResourceResponse(BaseModel):
     providers: List[ResourceProviderResponse] = Field(description="List of providers")
     examples: Optional[List[ExampleResponse]] = Field(
         default=None, nullable=True, description="examples of the resource"
+    )
+    parents: Optional[List[ResourceSummaryResponse]] = Field(
+        default=None, nullable=True, description="Parent resources"
+    )
+    children: Optional[List[ResourceSummaryResponse]] = Field(
+        default=None, nullable=True, description="Child resources"
     )

@@ -134,6 +134,7 @@ async def get_resource(
             extent.geometry = extent.geom  # Convert WKB to GeoJSON
 
         converted = ResourceResponse.model_validate(resource)
+        logging.info(converted)
         return converted
     except Exception as e:
         logging.error(e)

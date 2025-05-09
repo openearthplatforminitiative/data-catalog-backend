@@ -5,7 +5,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from data_catalog_backend.database import Base
 from enum import StrEnum as PyStrEnum
 
-from data_catalog_backend.models.resource_resource import ResourceResource
+from data_catalog_backend.models.resource_resource import (
+    resource_relation,
+)
 
 
 class ResourceType(PyStrEnum):
@@ -70,18 +72,19 @@ class Resource(Base):
     temporal_extent: Mapped[List["TemporalExtent"]] = relationship(
         back_populates="resource"
     )
-    used_by: Mapped[list["ResourceResource"]] = relationship(
-        "ResourceResource",
-        foreign_keys=[ResourceResource.based_on],
-        back_populates="based_on_resource",
-        overlaps="based_on_resource",
+    parents: Mapped[List["Resource"]] = relationship(
+        "Resource",
+        secondary=resource_relation,
+        primaryjoin=id == resource_relation.c.child_id,
+        secondaryjoin=id == resource_relation.c.parent_id,
+        back_populates="children",
     )
-
-    based_on: Mapped[list["ResourceResource"]] = relationship(
-        "ResourceResource",
-        foreign_keys=[ResourceResource.used_by],
-        back_populates="used_by_resource",
-        overlaps="used_by_resource",
+    children: Mapped[List["Resource"]] = relationship(
+        "Resource",
+        secondary=resource_relation,
+        primaryjoin=id == resource_relation.c.parent_id,
+        secondaryjoin=id == resource_relation.c.child_id,
+        back_populates="parents",
     )
     categories: Mapped[List["ResourceCategory"]] = relationship(
         "ResourceCategory", back_populates="resource"
