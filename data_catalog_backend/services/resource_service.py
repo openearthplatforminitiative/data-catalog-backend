@@ -83,6 +83,7 @@ class ResourceService:
         base_stmt = query.apply_provider_filters(base_stmt, resources_req)
         base_stmt = query.apply_spatial_filters(base_stmt, resources_req)
         base_stmt = query.apply_features_filters(base_stmt, resources_req)
+        base_stmt = query.apply_temporal_filters(base_stmt, resources_req)
 
         base_stmt = base_stmt.group_by(
             Resource.id,
