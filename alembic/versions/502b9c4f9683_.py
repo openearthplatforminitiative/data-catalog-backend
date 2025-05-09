@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 0285dbd55d4d
+Revision ID: 502b9c4f9683
 Revises:
-Create Date: 2025-04-24 16:45:40.804787
+Create Date: 2025-05-09 10:51:34.370018
 
 """
 
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "0285dbd55d4d"
+revision: str = "502b9c4f9683"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -95,11 +95,12 @@ def upgrade() -> None:
     op.create_table(
         "examples",
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("type", sa.String(), nullable=True),
+        sa.Column("title", sa.String(), nullable=False),
+        sa.Column("type", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
-        sa.Column("example_url", sa.String(), nullable=True),
+        sa.Column("example_url", sa.String(), nullable=False),
         sa.Column("favicon_url", sa.String(), nullable=True),
-        sa.Column("resource_id", sa.UUID(), nullable=True),
+        sa.Column("resource_id", sa.UUID(), nullable=False),
         sa.ForeignKeyConstraint(
             ["resource_id"],
             ["resources.id"],
@@ -153,21 +154,21 @@ def upgrade() -> None:
         ),
     )
     op.create_table(
-        "resource_resource",
-        sa.Column("used_by", sa.UUID(), nullable=False),
-        sa.Column("based_on", sa.UUID(), nullable=False),
+        "resource_relation",
+        sa.Column("child_id", sa.UUID(), nullable=False),
+        sa.Column("parent_id", sa.UUID(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["based_on"],
+            ["child_id"],
             ["resources.id"],
-            name=op.f("fk_resource_resource_based_on_resources"),
+            name=op.f("fk_resource_relation_child_id_resources"),
         ),
         sa.ForeignKeyConstraint(
-            ["used_by"],
+            ["parent_id"],
             ["resources.id"],
-            name=op.f("fk_resource_resource_used_by_resources"),
+            name=op.f("fk_resource_relation_parent_id_resources"),
         ),
         sa.PrimaryKeyConstraint(
-            "used_by", "based_on", name=op.f("pk_resource_resource")
+            "child_id", "parent_id", name=op.f("pk_resource_relation")
         ),
     )
     op.create_table(
@@ -227,7 +228,7 @@ def downgrade() -> None:
     op.drop_table("code")
     op.drop_table("temporalextents")
     op.drop_table("spatial_extents")
-    op.drop_table("resource_resource")
+    op.drop_table("resource_relation")
     op.drop_table("resource_provider")
     op.drop_index(
         "only_one_main_category_per_resource",
