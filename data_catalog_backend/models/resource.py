@@ -42,6 +42,12 @@ class Resource(Base):
     git_url: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, doc="url github"
     )
+    data_hub_url: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, doc="data hub url"
+    )
+    research_paper_url: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, doc="research paper url"
+    )
     maintenance_and_update_frequency: Mapped[str] = mapped_column(
         String, nullable=True, doc="how often it updates"
     )

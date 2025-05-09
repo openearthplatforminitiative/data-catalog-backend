@@ -93,7 +93,7 @@ class ResourceResponse(BaseModel):
         description="Extended description of the resource"
     )
     resource_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to github"
+        default=None, nullable=True, description="link to resource"
     )
     documentation_url: Optional[str] = Field(
         description="link to openAPI specification"
@@ -101,6 +101,13 @@ class ResourceResponse(BaseModel):
     git_url: Optional[str] = Field(
         default=None, nullable=True, description="link to github"
     )
+    data_hub_url: Optional[str] = Field(
+        default=None, nullable=True, description="link yo data hub"
+    )
+    research_paper_url: Optional[str] = Field(
+        default=None, nullable=True, description="link to research paper"
+    )
+
     openapi_url: Optional[str] = Field(
         default=None, nullable=True, description="link to openAPI specification"
     )
