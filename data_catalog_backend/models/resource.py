@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Optional
-from sqlalchemy import UUID, ForeignKey, String, Date, ARRAY, Index
+from sqlalchemy import UUID, ForeignKey, String, Date, ARRAY, Index, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from data_catalog_backend.database import Base
 from enum import StrEnum as PyStrEnum
@@ -44,6 +44,9 @@ class Resource(Base):
     git_url: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, doc="url github"
     )
+    client_library: Mapped[Optional[bool]] = mapped_column(
+        Boolean, nullable=True, doc="can be used by our client libraries"
+    )
     maintenance_and_update_frequency: Mapped[str] = mapped_column(
         String, nullable=True, doc="how often it updates"
     )
@@ -61,7 +64,7 @@ class Resource(Base):
     )
     type: Mapped[str] = mapped_column(String, nullable=True, doc="type")
     license_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("licenses.id"), nullable=False
+        ForeignKey("licenses.id"), nullable=True
     )
 
     # Relations

@@ -9,6 +9,7 @@ from data_catalog_backend.models import (
     Category,
     ResourceCategory,
     ResourceProvider,
+    ResourceType,
 )
 from data_catalog_backend.schemas.resource import (
     ResourceRequest,
@@ -110,7 +111,7 @@ class ResourceService:
     def create_resource(self, resource_req: ResourceRequest) -> Resource:
         try:
             license = self.license_service.get_license_by_name(resource_req.license)
-            if not license:
+            if not license and resource_req.type is ResourceType.Dataset:
                 raise ValueError("License not found")
 
             providers = []
