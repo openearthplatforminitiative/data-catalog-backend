@@ -50,6 +50,9 @@ class ResourceRequest(BaseModel):
     openapi_url: Optional[str] = Field(
         default=None, nullable=True, description="link to openAPI specification"
     )
+    client_library: bool = Field(
+        default=False, description="can be used by our client libraries"
+    )
     maintenance_and_update_frequency: str = Field(
         description="Description of how often this resource is being updated"
     )
@@ -74,7 +77,9 @@ class ResourceRequest(BaseModel):
     code_examples: Optional[List[CodeExampleRequest]] = Field(
         default=None, nullable=True, description="Code examples"
     )
-    license: str = Field(description="License of the resource")
+    license: Optional[str] = Field(
+        default=None, nullable=True, description="License of the resource"
+    )
     providers: conlist(str, min_length=1) = Field(description="List of providers")
     examples: Optional[List[ExampleRequest]] = Field(
         default=None, nullable=True, description="examples of the resource"
@@ -118,6 +123,9 @@ class ResourceResponse(BaseModel):
     openapi_url: Optional[str] = Field(
         default=None, nullable=True, description="link to openAPI specification"
     )
+    client_library: Optional[bool] = Field(
+        default=False, description="can be used by our client libraries"
+    )
     maintenance_and_update_frequency: Optional[str] = Field(
         description="Description of how often this resource is being updated"
     )
@@ -141,7 +149,7 @@ class ResourceResponse(BaseModel):
     code_examples: Optional[List[CodeExampleResponse]] = Field(
         default=None, nullable=True, description="Code examples"
     )
-    license: LicenseResponse = Field(description="License of the resource")
+    license: Optional[LicenseResponse] = Field(description="License of the resource")
     providers: List[ResourceProviderResponse] = Field(description="List of providers")
     examples: Optional[List[ExampleResponse]] = Field(
         default=None, nullable=True, description="examples of the resource"
