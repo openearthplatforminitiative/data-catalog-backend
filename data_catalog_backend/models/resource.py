@@ -50,6 +50,12 @@ class Resource(Base):
     client_library: Mapped[Optional[bool]] = mapped_column(
         Boolean, nullable=True, doc="can be used by our client libraries"
     )
+    data_hub_url: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, doc="data hub url"
+    )
+    research_paper_url: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, doc="research paper url"
+    )
     maintenance_and_update_frequency: Mapped[str] = mapped_column(
         String, nullable=True, doc="how often it updates"
     )
