@@ -37,7 +37,10 @@ class ResourceRequest(BaseModel):
     resource_url: Optional[str] = Field(
         default=None, nullable=True, description="link to github"
     )
-    documentation_url: str = Field(description="link to openAPI specification")
+    documentation_url: Optional[str] = Field(
+        description="link to openAPI specification"
+    )
+    download_url: Optional[str] = Field(description="link to download")
     git_url: Optional[str] = Field(
         default=None, nullable=True, description="link to github"
     )
@@ -103,6 +106,9 @@ class ResourceResponse(BaseModel):
     )
     documentation_url: Optional[str] = Field(
         description="link to openAPI specification"
+    )
+    download_url: Optional[str] = Field(
+        default=None, nullable=True, description="link to download"
     )
     git_url: Optional[str] = Field(
         default=None, nullable=True, description="link to github"

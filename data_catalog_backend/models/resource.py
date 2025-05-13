@@ -38,6 +38,9 @@ class Resource(Base):
     documentation_url: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, doc="documentation url"
     )
+    download_url: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, doc="download url"
+    )
     openapi_url: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, doc="open api url"
     )
