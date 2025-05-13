@@ -1,10 +1,12 @@
-[tool.poetry]
+[project]
 name = "data-catalog-backend"
 version = "0.1.0"
 description = ""
-authors = ["Marie Hessen <marie.hessen@knowit.no>"]
+authors = [
+    {name = "Marie Hessen", email = "marie.hessen@knowit.no"}
+]
 readme = "README.md"
-packages = [{include = "data_catalog_backend"}]
+
 
 [tool.poetry.dependencies]
 python = "~3.11"

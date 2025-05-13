@@ -16,12 +16,10 @@ from data_catalog_backend.services.license_service import LicenseService
 
 
 def get_db() -> Session:
-    logging.info("Opening DB")
     db = SessionLocal()
     try:
         yield db
     finally:
-        logging.info("Closing DB")
         db.close()
 
 

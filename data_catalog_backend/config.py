@@ -1,13 +1,4 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from dotenv import load_dotenv
-import os
-
-# Get the root directory of the project
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-ENV_PATH = os.path.join(ROOT_DIR, ".env")
-
-load_dotenv(ENV_PATH)
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -20,18 +11,18 @@ class Settings(BaseSettings):
     api_description: str = ""
     api_domain: str = "localhost"
 
-    postgres_user: str
-    postgres_password: str
-    postgres_db: str
-    postgres_host: str
-    postgres_port: str
-    postgres_schema: str
+    log_level: str = "INFO"
+
+    postgres_user: str = "postgres"
+    postgres_password: str = "postgres"
+    postgres_db: str = "postgres"
+    postgres_host: str = "localhost"
+    postgres_port: str = "5432"
+    postgres_schema: str = "public"
 
     run_migrations: bool = True
-    alembic_directory: str = "../alembic"
-    alembic_file: str = "../alembic.ini"
-
-    model_config = SettingsConfigDict(env_file=ENV_PATH)
+    alembic_directory: str = "./alembic"
+    alembic_file: str = "./alembic.ini"
 
     @property
     def api_url(self):
@@ -48,6 +39,31 @@ class Settings(BaseSettings):
             f"{self.postgres_port}/{self.postgres_db}?"
             f"options=-csearch_path={self.postgres_schema}"
         )
+
+    @property
+    def logging_config(self) -> dict:
+        return {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "detailed": {
+                    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                },
+            },
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                    "formatter": "detailed",
+                },
+            },
+            "loggers": {
+                "data_catalog_backend": {
+                    "level": self.log_level,
+                    "handlers": ["console"],
+                    "propagate": False,
+                },
+            },
+        }
 
 
 settings = Settings()

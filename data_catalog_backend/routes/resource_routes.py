@@ -3,80 +3,16 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from data_catalog_backend.dependencies import (
-    get_resource_service,
-    get_resource_relation_service,
-)
-from data_catalog_backend.schemas.resource import (
-    ResourceRequest,
-    ResourceResponse,
-    ResourceRelationRequest,
-    ResourceRelationResponse,
-)
+from data_catalog_backend.dependencies import get_resource_service
+from data_catalog_backend.schemas.resource import ResourceResponse
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQueryResponse,
 )
-from data_catalog_backend.services.resource_relation_service import (
-    ResourceRelationService,
-)
 from data_catalog_backend.services.resource_service import ResourceService
 
 router = APIRouter()
-
-
-@router.post(
-    "/resources",
-    summary="Add a resource to the database",
-    tags=["admin"],
-    response_model=ResourceResponse,
-)
-async def add_resource(
-    resource_req: ResourceRequest,
-    resource_service: ResourceService = Depends(get_resource_service),
-) -> ResourceResponse:
-    try:
-        validated_request = ResourceRequest.model_validate(resource_req)
-        created = resource_service.create_resource(validated_request)
-
-        if created.spatial_extent is not None:
-            for extent in created.spatial_extent:
-                extent.geometry = extent.geom
-
-        converted = ResourceResponse.model_validate(created)
-        return converted
-    except Exception as e:
-        logging.error(e)
-        raise HTTPException(
-            status_code=500, detail=f"Error creating resource: {str(e)}"
-        )
-
-
-@router.post(
-    "/resources/relations",
-    summary="Add a resource relation to the database",
-    tags=["admin"],
-    response_model=ResourceRelationResponse,
-)
-async def add_resource_relation(
-    resource_relation_req: ResourceRelationRequest,
-    resource_relation_service: ResourceRelationService = Depends(
-        get_resource_relation_service
-    ),
-) -> ResourceRelationResponse:
-    try:
-        validated_request = ResourceRelationRequest.model_validate(
-            resource_relation_req
-        )
-        created = resource_relation_service.create_resource_relation(validated_request)
-
-        converted = ResourceRelationResponse.model_validate(created)
-        return converted
-    except Exception as e:
-        logging.error(e)
-        raise HTTPException(
-            status_code=500, detail=f"Error creating resource: {str(e)}"
-        )
+logger = logging.getLogger(__name__)
 
 
 @router.get(
@@ -85,6 +21,7 @@ async def add_resource_relation(
     description="Returns all locations from the metadata store",
     response_model=ResourceQueryResponse,
     response_model_exclude_none=True,
+    tags=["resources"],
 )
 async def get_resources(
     resources_req: ResourceQueryRequest,
@@ -92,8 +29,8 @@ async def get_resources(
     per_page: int = 10,
     service: ResourceService = Depends(get_resource_service),
 ) -> ResourceQueryResponse:
-    logging.info("Getting resources with non-geospatial filters")
-    logging.info(resources_req)
+    logger.info("Getting resources with non-geospatial filters")
+    logger.info(resources_req)
     resources_req.features = None
     resources_req.spatial = None
     resources = service.get_resources(page, per_page, resources_req)
@@ -106,6 +43,7 @@ async def get_resources(
     description="Search resources using all available filters, including geospatial filters.",
     response_model=ResourceQueryResponse,
     response_model_exclude_none=True,
+    tags=["resources"],
 )
 async def search_resources(
     resources_req: ResourceQueryRequest,
@@ -113,8 +51,8 @@ async def search_resources(
     per_page: int = 10,
     service: ResourceService = Depends(get_resource_service),
 ) -> ResourceQueryResponse:
-    logging.info("Searching resources with all filters")
-    logging.info(resources_req)
+    logger.info("Searching resources with all filters")
+    logger.info(resources_req)
     resources = service.get_resources(page, per_page, resources_req)
     return resources
 
@@ -124,6 +62,7 @@ async def search_resources(
     description="Returns one specific resource from the metadata store",
     response_model=ResourceResponse,
     response_model_exclude_none=True,
+    tags=["resources"],
 )
 async def get_resource(
     resource_id: uuid.UUID, service: ResourceService = Depends(get_resource_service)
@@ -134,8 +73,8 @@ async def get_resource(
             extent.geometry = extent.geom  # Convert WKB to GeoJSON
 
         converted = ResourceResponse.model_validate(resource)
-        logging.info(converted)
+        logger.info(converted)
         return converted
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
