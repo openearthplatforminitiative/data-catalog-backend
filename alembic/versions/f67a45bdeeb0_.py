@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 502b9c4f9683
+Revision ID: f67a45bdeeb0
 Revises:
-Create Date: 2025-05-09 10:51:34.370018
+Create Date: 2025-05-13 17:30:57.015926
 
 """
 
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "502b9c4f9683"
+revision: str = "f67a45bdeeb0"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -44,10 +44,10 @@ def upgrade() -> None:
     op.create_table(
         "providers",
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("name", sa.String(), nullable=True),
-        sa.Column("short_name", sa.String(), nullable=True),
-        sa.Column("provider_url", sa.String(), nullable=True),
-        sa.Column("description", sa.String(), nullable=True),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("short_name", sa.String(), nullable=False),
+        sa.Column("provider_url", sa.String(), nullable=False),
+        sa.Column("description", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_providers")),
         sa.UniqueConstraint("name", name=op.f("uq_providers_name")),
         sa.UniqueConstraint("short_name", name=op.f("uq_providers_short_name")),
@@ -60,15 +60,19 @@ def upgrade() -> None:
         sa.Column("html_content", sa.String(), nullable=True),
         sa.Column("resource_url", sa.String(), nullable=True),
         sa.Column("documentation_url", sa.String(), nullable=True),
+        sa.Column("download_url", sa.String(), nullable=True),
         sa.Column("openapi_url", sa.String(), nullable=True),
         sa.Column("git_url", sa.String(), nullable=True),
+        sa.Column("client_library", sa.Boolean(), nullable=True),
+        sa.Column("data_hub_url", sa.String(), nullable=True),
+        sa.Column("research_paper_url", sa.String(), nullable=True),
         sa.Column("maintenance_and_update_frequency", sa.String(), nullable=True),
         sa.Column("release_date", sa.Date(), nullable=True),
         sa.Column("contact", sa.String(), nullable=True),
         sa.Column("keywords", sa.ARRAY(sa.String()), nullable=True),
         sa.Column("version", sa.String(), nullable=True),
         sa.Column("type", sa.String(), nullable=True),
-        sa.Column("license_id", sa.UUID(), nullable=False),
+        sa.Column("license_id", sa.UUID(), nullable=True),
         sa.ForeignKeyConstraint(
             ["license_id"],
             ["licenses.id"],

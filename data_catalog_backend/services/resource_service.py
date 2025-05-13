@@ -10,6 +10,7 @@ from data_catalog_backend.models import (
     ResourceCategory,
     ResourceProvider,
     ResourceType,
+    Examples,
 )
 from data_catalog_backend.schemas.resource import (
     ResourceRequest,
@@ -143,7 +144,16 @@ class ResourceService:
 
             examples = []
             if resource_req.examples:
-                examples = self.example_service.create_examples(resource_req.examples)
+                for resource_example in resource_req.examples:
+                    examples.append(
+                        Examples(
+                            title=resource_example.title,
+                            type=resource_example.type,
+                            description=resource_example.description,
+                            example_url=resource_example.example_url,
+                            favicon_url=resource_example.favicon_url,
+                        )
+                    )
 
             code_examples = []
             if resource_req.code_examples:
@@ -197,15 +207,8 @@ class ResourceService:
             self.session.commit()
 
             return resource
-        except HTTPException as http_exc:
-            # Log and re-raise HTTP exceptions
-            logger.error(f"HTTP error: {http_exc.detail}")
-            raise
         except Exception as e:
             # Log unexpected errors and raise a 500 error
             logger.error(f"Unexpected error: {e}")
             self.session.rollback()
-            raise HTTPException(
-                status_code=500,
-                detail="An unexpected error occurred while creating the resource",
-            )
+            raise e

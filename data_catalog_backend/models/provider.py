@@ -17,14 +17,12 @@ class Provider(Base):
         nullable=False,
         doc="Unique identifier for provider",
     )
-    name: Mapped[str] = mapped_column(String, nullable=True, doc="Name", unique=True)
+    name: Mapped[str] = mapped_column(String, doc="Name", unique=True)
     short_name: Mapped[str] = mapped_column(
-        String, nullable=True, doc="Short unique name", unique=True
+        String, doc="Short unique name", unique=True
     )
-    provider_url: Mapped[str] = mapped_column(
-        String, nullable=True, doc="URL to providers website"
-    )
-    description: Mapped[str] = mapped_column(String, nullable=True, doc="Description")
+    provider_url: Mapped[str] = mapped_column(String, doc="URL to providers website")
+    description: Mapped[str] = mapped_column(String, doc="Description")
 
     # Relations
     resources: Mapped[List["ResourceProvider"]] = relationship(
