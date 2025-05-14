@@ -44,6 +44,9 @@ class Resource(Base):
     openapi_url: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, doc="open api url"
     )
+    api_authentication_url: Mapped[Optional[str]] = mapped_column(
+        String, nullable=True, doc="api authentication url"
+    )
     git_url: Mapped[Optional[str]] = mapped_column(
         String, nullable=True, doc="url github"
     )

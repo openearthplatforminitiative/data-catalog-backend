@@ -113,7 +113,7 @@ class ResourceService:
         try:
             license = self.license_service.get_license_by_name(resource_req.license)
             if not license and resource_req.type is ResourceType.Dataset:
-                raise ValueError("License not found")
+                raise ValueError("License not found and required for Datasets")
 
             providers = []
             for provider_short_name in resource_req.providers:

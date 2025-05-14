@@ -53,6 +53,9 @@ class ResourceRequest(BaseModel):
     openapi_url: Optional[str] = Field(
         default=None, nullable=True, description="link to openAPI specification"
     )
+    api_authentication_url: Optional[str] = Field(
+        default=None, nullable=True, description="link to api authentication"
+    )
     client_library: bool = Field(
         default=False, description="can be used by our client libraries"
     )
@@ -125,7 +128,9 @@ class ResourceResponse(BaseModel):
     research_paper_url: Optional[str] = Field(
         default=None, nullable=True, description="link to research paper"
     )
-
+    api_authentication_url: Optional[str] = Field(
+        default=None, nullable=True, description="link to api authentication"
+    )
     openapi_url: Optional[str] = Field(
         default=None, nullable=True, description="link to openAPI specification"
     )
