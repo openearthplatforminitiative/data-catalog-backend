@@ -18,11 +18,14 @@ from data_catalog_backend.models import (
 
 
 class ResourceQuery:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
     def apply_tag_filters(self, stmt, resources_req):
         if not resources_req.tags:
             return stmt
 
-        logging.info("Filtering by tags")
+        self.logger.info("Filtering by tags")
         tag_filters = []
         for tag in resources_req.tags:
             tag_filters.append(
@@ -47,14 +50,14 @@ class ResourceQuery:
         if not resources_req.types:
             return stmt
 
-        logging.info("Filtering by types")
+        self.logger.info("Filtering by types")
         return stmt.where(Resource.type.in_(resources_req.types))
 
     def apply_category_filters(self, stmt, resources_req):
         if not resources_req.categories:
             return stmt
 
-        logging.info("Filtering by categories")
+        self.logger.info("Filtering by categories")
         FilterResourceCategory = aliased(ResourceCategory)
         return stmt.outerjoin(
             FilterResourceCategory, FilterResourceCategory.resource_id == Resource.id
@@ -64,7 +67,7 @@ class ResourceQuery:
         if not resources_req.providers:
             return stmt
 
-        logging.info("Filtering by providers")
+        self.logger.info("Filtering by providers")
         return stmt.outerjoin(
             Resource.providers,
         ).where(ResourceProvider.provider_id.in_(resources_req.providers))
@@ -73,7 +76,7 @@ class ResourceQuery:
         if not resources_req.spatial:
             return stmt
 
-        logging.info("Filtering by spatial extent")
+        self.logger.info("Filtering by spatial extent")
         conditions = []
         if SpatialExtentRequestType.NonSpatial in resources_req.spatial:
             conditions.append(Resource.spatial_extent == None)
@@ -92,7 +95,7 @@ class ResourceQuery:
         if not resources_req.features:
             return stmt
 
-        logging.info("Filtering by features")
+        self.logger.info("Filtering by features")
 
         shapely_geoms = [
             from_shape(shape(feature.geometry), srid=4326)
