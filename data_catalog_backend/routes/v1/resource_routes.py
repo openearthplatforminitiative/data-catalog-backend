@@ -21,6 +21,7 @@ from data_catalog_backend.schemas.resource import (
     ResourceResponse,
     UpdateResourceRequest,
 )
+from data_catalog_backend.schemas.resource import ResourceResponse
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQueryResponse,
