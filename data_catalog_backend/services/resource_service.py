@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import select, func, and_
+from sqlalchemy.orm import joinedload
 
 from data_catalog_backend.models import (
     Resource,
@@ -215,7 +216,19 @@ class ResourceService:
             raise e
 
     def delete_resource(self, resource_id) -> Resource:
-        resource = self.get_resource(resource_id)
+        resource = (
+            self.session.query(Resource)
+            .options(
+                joinedload(Resource.categories).joinedload(ResourceCategory.category),
+                joinedload(Resource.providers).joinedload(ResourceProvider.provider),
+                joinedload(Resource.spatial_extent),
+                joinedload(Resource.examples),
+                joinedload(Resource.code_examples),
+                joinedload(Resource.license),
+            )
+            .filter_by(id=resource_id)
+            .first()
+        )
         if not resource:
             raise HTTPException(status_code=404, detail="Resource not found")
 
