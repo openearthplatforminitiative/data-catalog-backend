@@ -5,12 +5,20 @@
     name: 'data-catalog-backend',
   },
   spec: {
-    ports: [{
-      port: 80,
-      targetPort: 8000,
-    }],
     selector: {
       app: 'data-catalog-backend',
     },
+    ports: [
+      {
+        name: 'public-api',
+        port: 80,
+        targetPort: 8000,
+      },
+      {
+        name: 'admin-api',
+        port: 81,
+        targetPort: 8001,
+      },
+    ],
   },
 }

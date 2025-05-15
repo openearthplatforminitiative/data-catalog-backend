@@ -8,11 +8,11 @@ from data_catalog_backend.dependencies import get_category_service
 from data_catalog_backend.schemas.category import CategoryResponse
 from data_catalog_backend.services.category_service import CategoryService
 
-router = APIRouter()
+router = APIRouter(prefix="/categories")
 
 
 @router.get(
-    "/categories",
+    "/",
     summary="Get all categories",
     description="Returns all categories in our system",
     response_model=List[CategoryResponse],
@@ -26,7 +26,7 @@ async def get_categories(
 
 
 @router.get(
-    "/categories/{id}",
+    "/{id}",
     description="Returns specific category",
     response_model=CategoryResponse,
     response_model_exclude_none=True,

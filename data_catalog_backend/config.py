@@ -20,9 +20,20 @@ class Settings(BaseSettings):
     postgres_port: str = "5432"
     postgres_schema: str = "public"
 
-    run_migrations: bool = True
+    run_migrations: bool = False
     alembic_directory: str = "./alembic"
     alembic_file: str = "./alembic.ini"
+
+    include_admin_api: bool = False
+    include_public_api: bool = False
+
+    auth_url: str = ""
+    token_url: str = ""
+
+    auth_client_id: str = ""
+    auth_jwks_url: str = ""
+
+    auth_required_role: str = ""
 
     @property
     def api_url(self):

@@ -21,6 +21,7 @@ geoalchemy2 = "^0.17.1"
 geojson-pydantic = "^1.2.0"
 shapely = "^2.0.7"
 psycopg2-binary = "^2.9.10"
+pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 
 
 [tool.poetry.group.dev.dependencies]
