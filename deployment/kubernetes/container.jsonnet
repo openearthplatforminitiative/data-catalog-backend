@@ -19,12 +19,33 @@
         },
       },
       spec: {
+        initContainers: [{
+          name: 'migrate-database',
+          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.0.1-SNAPSHOT',
+          imagePullPolicy: 'Always',
+          envFrom: [{
+            secretRef: {
+              name: 'datacatalog-secrets',
+            },
+          }],
+          env: [
+            {
+                name: 'RUN_MIGRATIONS',
+                value: 'true'
+            },
+          ],
+        }],
         containers: [{
-          name: 'data-catalog-backend',
+          name: 'data-catalog-public-api',
           image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.0.1-SNAPSHOT',
           imagePullPolicy: 'Always',
           ports: [{
             containerPort: 8000,
+          }],
+          envFrom: [{
+            secretRef: {
+              name: 'datacatalog-secrets',
+            },
           }],
           env: [
             {
@@ -41,50 +62,53 @@
                 value: '/catalog'
             },
             {
-              name: 'POSTGRES_HOST',
-              valueFrom: {
-                secretKeyRef: {
-                  name: 'datacatalog-db',
-                  key: 'host',
-                },
-              },
+                name: 'INCLUDE_PUBLIC_API',
+                value: 'true'
             },
             {
-              name: 'POSTGRES_PORT',
+                name: 'UVICORN_PORT',
+                value: '8000'
+            }
+          ],
+        },
+        {
+          name: 'data-catalog-admin-api',
+          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.0.1-SNAPSHOT',
+          imagePullPolicy: 'Always',
+          ports: [{
+            containerPort: 8001,
+          }],
+          envFrom: [{
+            secretRef: {
+              name: 'datacatalog-secrets',
+            },
+          }],
+          env: [
+            {
+              name: 'API_DOMAIN',
               valueFrom: {
-                secretKeyRef: {
-                  name: 'datacatalog-db',
-                  key: 'port',
-                },
-              },
+                configMapKeyRef: {
+                  name: 'dev-portal-config',
+                  key: 'api_domain'
+                }
+              }
             },
             {
-              name: 'POSTGRES_DB',
-              valueFrom: {
-                secretKeyRef: {
-                  name: 'datacatalog-db',
-                  key: 'database',
-                },
-              },
+                name: 'API_ROOT_PATH',
+                value: '/catalog'
             },
             {
-              name: 'POSTGRES_USER',
-              valueFrom: {
-                secretKeyRef: {
-                  name: 'datacatalog-db',
-                  key: 'user',
-                },
-              },
+                name: 'INCLUDE_PUBLIC_API',
+                value: 'true'
             },
             {
-              name: 'POSTGRES_PASSWORD',
-              valueFrom: {
-                secretKeyRef: {
-                  name: 'datacatalog-db',
-                  key: 'password',
-                },
-              },
+                name: 'INCLUDE_ADMIN_API',
+                value: 'true'
             },
+            {
+                name: 'UVICORN_PORT',
+                value: '8001'
+            }
           ],
         }],
       },

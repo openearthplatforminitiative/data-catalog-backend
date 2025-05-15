@@ -30,11 +30,11 @@ local adminHost = std.extVar('adminHost');
     },
     {
       kind: 'Rule',
-      match: 'Host(`' + adminHost + '`) && PathPrefix(`/catalog/admin`)',
+      match: 'Host(`' + adminHost + '`) && PathPrefix(`/catalog`)',
       services: [{
         kind: 'Service',
         name: 'data-catalog-backend',
-        port: 80,
+        port: 81,
       }],
       middlewares: [
           {
@@ -43,9 +43,27 @@ local adminHost = std.extVar('adminHost');
           },
           {
             name: 'traefikmiddleware-cors@kubernetescrd'
+          }
+      ],
+    },
+    {
+      kind: 'Rule',
+      match: 'Host(`' + adminHost + '`) && (PathPrefix(`/catalog/docs`) || PathPrefix(`/catalog/openapi.json`))',
+      services: [{
+        kind: 'Service',
+        name: 'data-catalog-backend',
+        port: 81,
+      }],
+      middlewares: [
+          {
+            name: 'oauth2-proxy'
           },
           {
-            name: 'traefikmiddleware-admin-jwt@kubernetescrd'
+            name: 'stripprefix-catalog',
+            namespace: 'developer-portal',
+          },
+          {
+            name: 'traefikmiddleware-cors@kubernetescrd'
           }
       ],
     },
