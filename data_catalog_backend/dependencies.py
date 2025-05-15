@@ -1,19 +1,21 @@
 import logging
 
 from fastapi.params import Depends
+from jwt import PyJWKClient
 from sqlalchemy.orm import Session
 
+from data_catalog_backend.config import settings
 from data_catalog_backend.database import SessionLocal
 from data_catalog_backend.services.category_service import CategoryService
 from data_catalog_backend.services.code_example_service import CodeExampleService
 from data_catalog_backend.services.example_service import ExampleService
 from data_catalog_backend.services.geometry_service import GeometryService
+from data_catalog_backend.services.license_service import LicenseService
 from data_catalog_backend.services.provider_service import ProviderService
 from data_catalog_backend.services.resource_relation_service import (
     ResourceRelationService,
 )
 from data_catalog_backend.services.resource_service import ResourceService
-from data_catalog_backend.services.license_service import LicenseService
 
 
 def get_db() -> Session:
@@ -73,3 +75,7 @@ def get_resource_relation_service(
     resource_service: ResourceService = Depends(get_resource_service),
 ) -> ResourceRelationService:
     return ResourceRelationService(db, resource_service)
+
+
+def get_jwk_client() -> PyJWKClient:
+    return PyJWKClient(settings.auth_jwks_url)

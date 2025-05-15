@@ -14,12 +14,12 @@ from data_catalog_backend.schemas.resource_query import (
 )
 from data_catalog_backend.services.resource_service import ResourceService
 
-router = APIRouter()
+router = APIRouter(prefix="/resources")
 logger = logging.getLogger(__name__)
 
 
 @router.get(
-    "/resources",
+    "/",
     summary="Get all resources",
     description="Returns all locations from the metadata store",
     response_model=ResourceQueryResponse,
@@ -41,7 +41,7 @@ async def get_resources(
 
 
 @router.post(
-    "/resources/search",
+    "/search",
     summary="Search resources with all filters, including geospatial",
     description="Search resources using all available filters, including geospatial filters.",
     response_model=ResourceQueryResponse,
@@ -61,7 +61,7 @@ async def search_resources(
 
 
 @router.get(
-    "/resources/{resource_id}",
+    "/{resource_id}",
     description="Returns one specific resource from the metadata store",
     response_model=ResourceResponse,
     response_model_exclude_none=True,
