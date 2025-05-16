@@ -96,7 +96,8 @@ class Resource(Base):
 
     # Computed properties
     has_spatial_extent: Mapped[bool] = column_property(
-        select(exists().where(SpatialExtent.resource_id == id))
+        select(func.count(SpatialExtent.id) > 0)
+        .where(SpatialExtent.resource_id == id)
         .correlate_except(SpatialExtent)
         .scalar_subquery()
     )
