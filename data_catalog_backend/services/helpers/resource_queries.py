@@ -5,6 +5,7 @@ from geoalchemy2.shape import from_shape
 from shapely.geometry.geo import shape
 from sqlalchemy import or_, case, and_, func, select, literal_column, exists
 from sqlalchemy.orm import aliased
+from datetime import datetime
 
 from data_catalog_backend.models import (
     Resource,
@@ -138,3 +139,25 @@ class ResourceQuery:
                 *covers_conditions,
             )
         )
+
+    def apply_temporal_filters(self, stmt, resources_req):
+        if not resources_req.years:
+            return stmt
+
+        logging.info("Filtering by temporal extent")
+
+        dates = []
+        for year in resources_req.years:
+            dates.append(datetime.strptime(year, "%Y"))
+
+        # check if release_date is not null and get all between all start and end dates
+        stmt = stmt.where(
+            and_(
+                Resource.release_date != None,
+                func.date_part("year", Resource.release_date).in_(
+                    [date.year for date in dates]
+                ),
+            )
+        )
+
+        return stmt
