@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, case
 from sqlalchemy.orm import joinedload
 
 from data_catalog_backend.models import (
@@ -62,11 +62,13 @@ class ResourceService:
     ):
         base_stmt = (
             select(
-                Resource.id.label("id"),
+                Resource.id,
                 Resource.title,
+                Resource.abstract,
                 Resource.type,
                 Category.icon.label("icon"),
-                (Resource.spatial_extent != None).label("has_spatial_extent"),
+                Resource.has_spatial_extent,
+                Resource.spatial_extent_type,
             )
             .select_from(Resource)
             .outerjoin(Resource.spatial_extent)
@@ -97,7 +99,8 @@ class ResourceService:
             SpatialExtent.type,
             SpatialExtent.geometry,
         )
-        base_stmt = base_stmt.distinct(Resource.id)
+        base_stmt = base_stmt.distinct(Resource.title)
+        base_stmt = base_stmt.order_by(Resource.title)
 
         total_stmt = select(func.count()).select_from(base_stmt.subquery())
         total = self.session.execute(total_stmt).scalar()
