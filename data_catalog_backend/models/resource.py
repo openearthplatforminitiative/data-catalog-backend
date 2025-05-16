@@ -75,6 +75,7 @@ class Resource(Base):
         String, nullable=True, doc="resource version"
     )
     type: Mapped[str] = mapped_column(String, nullable=True, doc="type")
+    deprecated: Mapped[bool] = mapped_column(Boolean, nullable=True, doc="deprecated")
     license_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("licenses.id"), nullable=True
     )
