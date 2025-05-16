@@ -1,7 +1,9 @@
 import logging
 from typing import Optional
 
+from fastapi import HTTPException
 from sqlalchemy import select, func, and_
+from sqlalchemy.orm import joinedload
 
 from data_catalog_backend.models import (
     Resource,
@@ -213,3 +215,44 @@ class ResourceService:
             logger.error(f"Unexpected error: {e}")
             self.session.rollback()
             raise e
+
+    def delete_resource(self, resource_id) -> Resource:
+        resource = (
+            self.session.query(Resource)
+            .options(
+                joinedload(Resource.categories).joinedload(ResourceCategory.category),
+                joinedload(Resource.providers).joinedload(ResourceProvider.provider),
+                joinedload(Resource.spatial_extent),
+                joinedload(Resource.examples),
+                joinedload(Resource.code_examples),
+                joinedload(Resource.license),
+            )
+            .filter_by(id=resource_id)
+            .first()
+        )
+        if not resource:
+            raise HTTPException(status_code=404, detail="Resource not found")
+
+        try:
+            for category in resource.categories:
+                self.session.delete(category)
+            for provider in resource.providers:
+                self.session.delete(provider)
+            for extent in resource.spatial_extent:
+                self.session.delete(extent)
+            for example in resource.examples:
+                self.session.delete(example)
+            for code_example in resource.code_examples:
+                self.session.delete(code_example)
+
+            self.session.delete(resource)
+            self.session.commit()
+
+            return resource
+
+        except Exception as e:
+            self.session.rollback()
+            logger.error(f"Error deleting resource: {e}")
+            raise HTTPException(
+                status_code=500, detail="An error occurred while deleting the resource"
+            )
