@@ -7,6 +7,7 @@ from data_catalog_backend.database import SessionLocal
 from data_catalog_backend.services.category_service import CategoryService
 from data_catalog_backend.services.code_example_service import CodeExampleService
 from data_catalog_backend.services.example_service import ExampleService
+from data_catalog_backend.services.geometry_service import GeometryService
 from data_catalog_backend.services.provider_service import ProviderService
 from data_catalog_backend.services.resource_relation_service import (
     ResourceRelationService,
@@ -35,6 +36,10 @@ def get_license_service(db: Session = Depends(get_db)) -> LicenseService:
     return LicenseService(db)
 
 
+def get_geometry_service(db: Session = Depends(get_db)) -> GeometryService:
+    return GeometryService(db)
+
+
 def get_examples_service(db: Session = Depends(get_db)) -> ExampleService:
     return ExampleService(db)
 
@@ -49,6 +54,7 @@ def get_resource_service(
     provider_service: ProviderService = Depends(get_provider_service),
     category_service: CategoryService = Depends(get_category_service),
     example_service: ExampleService = Depends(get_examples_service),
+    geometry_service: GeometryService = Depends(get_geometry_service),
     code_example_service: CodeExampleService = Depends(get_code_example_service),
 ) -> ResourceService:
     return ResourceService(
@@ -57,6 +63,7 @@ def get_resource_service(
         provider_service,
         category_service,
         example_service,
+        geometry_service,
         code_example_service,
     )
 

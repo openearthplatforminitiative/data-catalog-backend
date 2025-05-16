@@ -14,7 +14,7 @@ class SpatialExtentRequest(BaseModel):
     details: Optional[str] = Field(
         None, description="addition information about the region"
     )
-    geometry: Optional[List[Feature]] = None
+    geometries: Optional[List[str]] = None
     spatial_resolution: Optional[str] = Field(
         None, description="description of the resolution of the data. ex: 5mx5m"
     )
