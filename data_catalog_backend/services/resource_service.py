@@ -379,3 +379,4 @@ class ResourceService:
             logger.error(f"Unexpected error: {e}")
             self.session.rollback()
             raise e
+
