@@ -213,3 +213,15 @@ class ResourceService:
             logger.error(f"Unexpected error: {e}")
             self.session.rollback()
             raise e
+
+    def update_resource(self, resource_id, update_dict) -> Resource:
+        resource = self.get_resource(resource_id)
+        if not resource:
+            raise ValueError("Resource not found")
+
+        for key, value in update_dict.items():
+            if hasattr(resource, key):
+                setattr(resource, key, value)
+
+        self.session.commit()
+        return resource

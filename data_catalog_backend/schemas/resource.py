@@ -171,3 +171,31 @@ class ResourceResponse(BaseModel):
     children: Optional[List[ResourceSummaryResponse]] = Field(
         default=None, nullable=True, description="Child resources"
     )
+
+
+class UpdateResourceRequest(BaseModel):
+    title: Optional[str] = None
+    abstract: Optional[str] = None
+    html_content: Optional[str] = None
+    resource_url: Optional[str] = None
+    documentation_url: Optional[str] = None
+    download_url: Optional[str] = None
+    git_url: Optional[str] = None
+    data_hub_url: Optional[str] = None
+    research_paper_url: Optional[str] = None
+    openapi_url: Optional[str] = None
+    client_library: Optional[bool] = False
+    api_authentication_url: Optional[str] = None
+    maintenance_and_update_frequency: Optional[str] = None
+    release_date: Optional[datetime.date] = None
+    spatial_extent: Optional[List[SpatialExtentRequest]] = None
+    contact: Optional[str] = None
+    keywords: List[str] = None
+    version: Optional[str] = None
+    type: Optional[ResourceType] = None
+    main_category: Optional[str] = None
+    additional_categories: Optional[List[str]] = None
+    code_examples: Optional[List[CodeExampleRequest]] = None
+    license: Optional[str] = None
+    providers: Optional[conlist(str, min_length=1)] = None
+    examples: Optional[List[ExampleRequest]] = None
