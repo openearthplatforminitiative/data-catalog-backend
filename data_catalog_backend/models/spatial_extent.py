@@ -1,19 +1,19 @@
 import uuid
+from enum import StrEnum as PyStrEnum
 from typing import Optional, List
+
 from geoalchemy2 import WKBElement
-from geoalchemy2.shape import to_shape, from_shape
+from geoalchemy2.shape import to_shape
 from geojson_pydantic import Feature
-from shapely.geometry.geo import mapping, shape
-from pydantic import ValidationError
+from shapely.geometry.geo import mapping
 from sqlalchemy import UUID, String, ForeignKey, select, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
-from data_catalog_backend.database import Base
-from enum import StrEnum as PyStrEnum
 
+from data_catalog_backend.database import Base
+from data_catalog_backend.models.geometry import Geometry
 from data_catalog_backend.models.spatial_extent_geometry_relation import (
     spatial_extent_geometry_relation,
 )
-from data_catalog_backend.models.geometry import Geometry
 
 
 class SpatialExtentRequestType(PyStrEnum):
@@ -82,25 +82,3 @@ class SpatialExtent(Base):
                 for g in geojson.get("geometries", [])
             ]
         return [Feature(geometry=geojson, properties={}, type="Feature")]
-
-    # GeoJSON to WKBElement
-    @geom.setter
-    def geom(self, new_value):
-        from shapely.geometry import GeometryCollection
-
-        try:
-            if new_value is not None:
-                geometries = [
-                    (
-                        shape(g.geometry if hasattr(g, "geometry") else g["geometry"])
-                        if (hasattr(g, "type") and g.type == "Feature")
-                        or (isinstance(g, dict) and g.get("type") == "Feature")
-                        else shape(g)
-                    )
-                    for g in new_value
-                ]
-                shapely_geometry = GeometryCollection(geometries)
-
-                self.geometry = from_shape(shapely_geometry, srid=4326)
-        except (ValidationError, ValueError, TypeError, AttributeError) as e:
-            raise ValueError("Invalid geometry value.") from e
