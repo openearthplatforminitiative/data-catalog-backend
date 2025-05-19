@@ -3,7 +3,11 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 
-from data_catalog_backend.dependencies import get_category_service, get_provider_service
+from data_catalog_backend.dependencies import (
+    get_category_service,
+    get_provider_service,
+    get_geometry_service,
+)
 from data_catalog_backend.dependencies import get_license_service
 from data_catalog_backend.dependencies import (
     get_resource_service,
@@ -11,6 +15,7 @@ from data_catalog_backend.dependencies import (
 )
 from data_catalog_backend.models import Provider
 from data_catalog_backend.schemas.category import CategoryResponse, CategoryRequest
+from data_catalog_backend.schemas.geometry import GeometryRequest
 from data_catalog_backend.schemas.license import LicenseResponse, LicenseRequest
 from data_catalog_backend.schemas.provider import ProviderRequest, ProviderResponse
 from data_catalog_backend.schemas.resource import (
@@ -20,6 +25,7 @@ from data_catalog_backend.schemas.resource import (
     ResourceRelationResponse,
 )
 from data_catalog_backend.services.category_service import CategoryService
+from data_catalog_backend.services.geometry_service import GeometryService
 from data_catalog_backend.services.license_service import LicenseService
 from data_catalog_backend.services.provider_service import ProviderService
 from data_catalog_backend.services.resource_relation_service import (
@@ -51,6 +57,23 @@ async def add_category(
         created = category_service.create_category(category_req)
         converted = CategoryResponse.model_validate(created)
         return converted
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/geometries",
+    summary="Add a geometry to the database",
+    tags=["admin"],
+    include_in_schema=False,
+)
+async def add_geometry(
+    geometry_req: GeometryRequest,
+    geometry_service: GeometryService = Depends(get_geometry_service),
+) -> None:
+    try:
+        geometry_service.create_geometry(geometry_req)
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -114,7 +137,7 @@ async def update_provider(
 
 
 @router.post(
-    "/resources",
+    "/resource",
     summary="Add a resource to the database",
     tags=["admin"],
     response_model=ResourceResponse,

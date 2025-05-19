@@ -1,10 +1,25 @@
 import uuid
 from typing import List, Optional
-from sqlalchemy import UUID, ForeignKey, String, Date, ARRAY, Index, Boolean
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    UUID,
+    ForeignKey,
+    String,
+    Date,
+    case,
+    literal_column,
+    ARRAY,
+    Index,
+    Boolean,
+    select,
+    func,
+    exists,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
 from data_catalog_backend.database import Base
 from enum import StrEnum as PyStrEnum
 
+from data_catalog_backend.models import ResourceCategory, Category
+from data_catalog_backend.models.spatial_extent import SpatialExtent
 from data_catalog_backend.models.resource_resource import (
     resource_relation,
 )
@@ -79,6 +94,40 @@ class Resource(Base):
         ForeignKey("licenses.id"), nullable=True
     )
 
+    # Computed properties
+    has_spatial_extent: Mapped[bool] = column_property(
+        select(func.count(SpatialExtent.id) > 0)
+        .where(SpatialExtent.resource_id == id)
+        .correlate_except(SpatialExtent)
+        .scalar_subquery()
+    )
+
+    spatial_extent_type: Mapped[Optional[str]] = column_property(
+        select(
+            case(
+                (
+                    func.bool_or(SpatialExtent.type == "GLOBAL"),
+                    literal_column("'GLOBAL'"),
+                ),
+                (func.count(SpatialExtent.id) > 0, literal_column("'REGION'")),
+            )
+        )
+        .where(SpatialExtent.resource_id == id)
+        .correlate_except(SpatialExtent)
+        .scalar_subquery()
+    )
+
+    icon: Mapped[Optional[str]] = column_property(
+        select(Category.icon)
+        .join(ResourceCategory, Category.id == ResourceCategory.category_id)
+        .where(
+            ResourceCategory.resource_id == id,
+            ResourceCategory.is_main_category.is_(True),
+        )
+        .correlate_except(ResourceCategory)
+        .scalar_subquery()
+    )
+
     # Relations
     license: Mapped["License"] = relationship(back_populates="resources")
     spatial_extent: Mapped[List["SpatialExtent"]] = relationship(
@@ -111,19 +160,6 @@ class Resource(Base):
         back_populates="resource"
     )
     examples: Mapped[List["Examples"]] = relationship(back_populates="resource")
-
-    @property
-    def icon(self) -> Optional[str]:
-        main_icon_generator = (
-            rc.category.icon
-            for rc in self.categories
-            if rc.is_main_category and rc.category
-        )
-        return next(main_icon_generator, None)
-
-    @property
-    def has_spatial_extent(self) -> bool:
-        return bool(self.spatial_extent)
 
     __table_args__ = (
         Index("unique_resource_title_type", "title", "type", unique=True),

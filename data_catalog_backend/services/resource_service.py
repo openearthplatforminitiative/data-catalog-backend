@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, case
 
 from data_catalog_backend.models import (
     Resource,
@@ -11,6 +11,7 @@ from data_catalog_backend.models import (
     ResourceProvider,
     ResourceType,
     Examples,
+    SpatialExtentType,
 )
 from data_catalog_backend.schemas.resource import (
     ResourceRequest,
@@ -23,6 +24,7 @@ from data_catalog_backend.schemas.resource_query import (
 from data_catalog_backend.services.category_service import CategoryService
 from data_catalog_backend.services.code_example_service import CodeExampleService
 from data_catalog_backend.services.example_service import ExampleService
+from data_catalog_backend.services.geometry_service import GeometryService
 from data_catalog_backend.services.helpers.resource_queries import ResourceQuery
 from data_catalog_backend.services.license_service import LicenseService
 from data_catalog_backend.services.provider_service import ProviderService
@@ -38,6 +40,7 @@ class ResourceService:
         provider_service: ProviderService,
         category_service: CategoryService,
         example_service: ExampleService,
+        geometry_service: GeometryService,
         code_example_service: CodeExampleService,
     ):
         self.session = session
@@ -45,6 +48,7 @@ class ResourceService:
         self.provider_service = provider_service
         self.category_service = category_service
         self.example_service = example_service
+        self.geometry_service = geometry_service
         self.code_example_service = code_example_service
 
     def find_entity_with_name(self, title) -> Optional[Resource]:
@@ -56,11 +60,13 @@ class ResourceService:
     ):
         base_stmt = (
             select(
-                Resource.id.label("id"),
+                Resource.id,
                 Resource.title,
+                Resource.abstract,
                 Resource.type,
                 Category.icon.label("icon"),
-                (Resource.spatial_extent != None).label("has_spatial_extent"),
+                Resource.has_spatial_extent,
+                Resource.spatial_extent_type,
             )
             .select_from(Resource)
             .outerjoin(Resource.spatial_extent)
@@ -91,7 +97,8 @@ class ResourceService:
             SpatialExtent.type,
             SpatialExtent.geometry,
         )
-        base_stmt = base_stmt.distinct(Resource.id)
+        base_stmt = base_stmt.distinct(Resource.title)
+        base_stmt = base_stmt.order_by(Resource.title)
 
         total_stmt = select(func.count()).select_from(base_stmt.subquery())
         total = self.session.execute(total_stmt).scalar()
@@ -165,14 +172,28 @@ class ResourceService:
             spatial_extent_objects = []
             if resource_req.spatial_extent is not None:
                 for extent in resource_req.spatial_extent:
+                    geometries = []
+                    if (
+                        extent.type == SpatialExtentType.Region
+                        and len(extent.geometries) <= 0
+                    ):
+                        raise ValueError("Region type requires geometries")
+                    if extent.geometries:
+                        for geometry_name in extent.geometries:
+                            geometry = self.geometry_service.get_geometry_by_name(
+                                geometry_name
+                            )
+                            if geometry:
+                                geometries.append(geometry)
+                            else:
+                                raise ValueError("Geometry not found")
                     spa = SpatialExtent(
                         type=extent.type,
                         region=extent.region if extent.region else None,
                         details=extent.details if extent.details else None,
                         spatial_resolution=extent.spatial_resolution,
+                        geometries=geometries,
                     )
-                    if extent.geometry:
-                        spa.geom = extent.geometry
                     spatial_extent_objects.append(spa)
 
             keywords = []
@@ -194,9 +215,7 @@ class ResourceService:
                     }
                 ),
             )
-            categories = categories
             resource.categories = categories
-
             resource.providers = providers
             resource.license = license
             resource.spatial_extent = spatial_extent_objects
