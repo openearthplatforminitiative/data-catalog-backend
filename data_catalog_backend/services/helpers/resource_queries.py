@@ -45,7 +45,7 @@ class ResourceQuery:
                     Resource.spatial_extent.any(SpatialExtent.region.ilike(f"%{tag}%")),
                 )
             )
-        return stmt.where(or_(*tag_filters))
+        return stmt.where(and_(*tag_filters))
 
     def apply_type_filters(self, stmt, resources_req):
         if not resources_req.types:
