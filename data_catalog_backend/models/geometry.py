@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional, List
+from typing import List
 
 from geoalchemy2 import Geometry, WKBElement
 from sqlalchemy import String, UUID
@@ -24,7 +24,7 @@ class Geometry(Base):
     name: Mapped[str] = mapped_column(
         String, nullable=False, doc="Unique name for Geometry", unique=True
     )
-    geometry: Mapped[Optional[WKBElement]] = mapped_column(
+    geometry: Mapped[WKBElement] = mapped_column(
         Geometry(geometry_type="GEOMETRY", srid=4326),
         nullable=False,
         doc="geometry value",
