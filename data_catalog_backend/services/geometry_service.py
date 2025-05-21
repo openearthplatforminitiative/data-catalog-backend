@@ -3,6 +3,7 @@ import logging
 from sqlalchemy import select
 
 from data_catalog_backend.models import Geometry
+from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.geometry import GeometryRequest
 
 from shapely.geometry import shape, GeometryCollection
@@ -15,7 +16,7 @@ class GeometryService:
     def __init__(self, session):
         self.session = session
 
-    def create_geometry(self, geometry_req: GeometryRequest) -> None:
+    def create_geometry(self, geometry_req: GeometryRequest, user: User) -> None:
         feature_collection = geometry_req.geometry
 
         if feature_collection.type != "FeatureCollection":
@@ -34,6 +35,7 @@ class GeometryService:
         geometry = Geometry(
             name=geometry_req.name,
             geometry=wkb_element,
+            created_by=user.email,
         )
         self.session.add(geometry)
         try:

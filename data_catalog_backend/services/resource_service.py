@@ -14,6 +14,7 @@ from data_catalog_backend.models import (
     SpatialExtentType,
     TemporalExtent,
 )
+from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.resource import (
     ResourceRequest,
 )
@@ -117,7 +118,7 @@ class ResourceService:
         stmt = select(Resource).where(Resource.id == resource_id)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def create_resource(self, resource_req: ResourceRequest) -> Resource:
+    def create_resource(self, resource_req: ResourceRequest, user: User) -> Resource:
         try:
             license = self.license_service.get_license_by_name(resource_req.license)
             if not license and resource_req.type is ResourceType.Dataset:
@@ -130,7 +131,9 @@ class ResourceService:
                 )
                 if not provider:
                     raise ValueError("Provider not found")
-                providers.append(ResourceProvider(role="", provider=provider))
+                providers.append(
+                    ResourceProvider(role="", provider=provider, created_by=user.email)
+                )
 
             main_category = self.category_service.get_category_by_title(
                 resource_req.main_category
@@ -139,7 +142,9 @@ class ResourceService:
                 raise ValueError("Main category not found")
 
             categories = [
-                ResourceCategory(is_main_category=True, category=main_category)
+                ResourceCategory(
+                    is_main_category=True, category=main_category, created_by=user.email
+                )
             ]
             if resource_req.additional_categories:
                 for category_title in resource_req.additional_categories:
@@ -147,7 +152,9 @@ class ResourceService:
                     if not cat:
                         raise ValueError("Category not found")
                     categories.append(
-                        ResourceCategory(is_main_category=False, category=cat)
+                        ResourceCategory(
+                            is_main_category=False, category=cat, created_by=user.email
+                        )
                     )
 
             examples = []
@@ -160,6 +167,7 @@ class ResourceService:
                             description=resource_example.description,
                             example_url=resource_example.example_url,
                             favicon_url=resource_example.favicon_url,
+                            created_by=user.email,
                         )
                     )
 
@@ -172,13 +180,14 @@ class ResourceService:
                         TemporalExtent(
                             start_date=temporal_extent.start_date,
                             end_date=temporal_extent.end_date,
+                            created_by=user.email,
                         )
                     )
 
             code_examples = []
             if resource_req.code_examples:
                 code_examples = self.code_example_service.create_code_examples(
-                    resource_req.code_examples
+                    resource_req.code_examples, user=user
                 )
 
             spatial_extent_objects = []
@@ -205,6 +214,7 @@ class ResourceService:
                         details=extent.details if extent.details else None,
                         spatial_resolution=extent.spatial_resolution,
                         geometries=geometries,
+                        created_by=user.email,
                     )
                     spatial_extent_objects.append(spa)
 
@@ -236,6 +246,7 @@ class ResourceService:
             resource.examples = examples
             resource.code_examples = code_examples
             resource.keywords = keywords
+            resource.created_by = user.email
 
             self.session.add(resource)
             self.session.commit()

@@ -4,6 +4,7 @@ import uuid
 from sqlalchemy import select
 
 from data_catalog_backend.models import Category
+from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.category import (
     CategoryRequest,
     CategorySummaryResponse,
@@ -28,11 +29,12 @@ class CategoryService:
         stmt = select(Category)
         return self.session.scalars(stmt).all()
 
-    def create_category(self, category: CategoryRequest) -> Category:
+    def create_category(self, category: CategoryRequest, user: User) -> Category:
         category = Category(
             title=category.title,
             abstract=category.abstract,
             icon=category.icon,
+            created_by=user.email,
         )
         self.session.add(category)
         try:
