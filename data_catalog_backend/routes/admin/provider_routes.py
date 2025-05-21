@@ -28,7 +28,9 @@ async def add_provider(
 ) -> ProviderResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a provider")
-        created = service.create_provider(Provider(**provider_req.model_dump()))
+        created = service.create_provider(
+            Provider(**provider_req.model_dump()), current_user
+        )
         converted = ProviderResponse.model_validate(created)
         return converted
     except Exception as e:
@@ -50,4 +52,4 @@ async def update_provider(
     service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponse:
     logger.info(f"User {current_user.preferred_username} is updating a provider")
-    return service.update_provider(id, provider_req)
+    return service.update_provider(id, provider_req, current_user)

@@ -27,7 +27,7 @@ async def add_geometry(
 ) -> None:
     try:
         logger.info(f"User {current_user.email} is adding a geometry")
-        geometry_service.create_geometry(geometry_req)
+        geometry_service.create_geometry(geometry_req, current_user)
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
