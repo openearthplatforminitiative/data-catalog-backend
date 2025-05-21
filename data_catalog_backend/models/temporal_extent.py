@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 
 from sqlalchemy import UUID, ForeignKey, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -17,7 +18,9 @@ class TemporalExtent(Base):
         doc="Unique identifier for temporal extent",
     )
     start_date: Mapped[Date] = mapped_column(Date, nullable=False, doc="start date")
-    end_date: Mapped[Date] = mapped_column(Date, nullable=True, doc="end date")
+    end_date: Mapped[Optional[Date]] = mapped_column(
+        Date, nullable=True, doc="end date"
+    )
     resource_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("resources.id"), nullable=False
     )

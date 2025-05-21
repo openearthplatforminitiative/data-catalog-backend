@@ -213,7 +213,7 @@ def upgrade() -> None:
         "temporalextents",
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("start_date", sa.Date(), nullable=False),
-        sa.Column("end_date", sa.Date(), nullable=False),
+        sa.Column("end_date", sa.Date(), nullable=True),
         sa.Column("resource_id", sa.UUID(), nullable=False),
         sa.ForeignKeyConstraint(
             ["resource_id"],
