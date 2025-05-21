@@ -4,10 +4,16 @@ from typing import Optional, List
 
 from geoalchemy2 import WKBElement
 from geoalchemy2.shape import to_shape
-from geojson_pydantic import Feature
+from geojson_pydantic import FeatureCollection, Feature
 from shapely.geometry.geo import mapping
 from sqlalchemy import UUID, String, ForeignKey, select, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+    relationship,
+    column_property,
+    deferred,
+)
 
 from data_catalog_backend.database import Base
 from data_catalog_backend.models.geometry import Geometry
@@ -53,23 +59,26 @@ class SpatialExtent(Base):
         "Geometry",
         secondary=spatial_extent_geometry_relation,
         back_populates="spatial_extents",
+        lazy="noload",
     )
 
-    geometry: Mapped[Optional[WKBElement]] = column_property(
-        select(func.ST_Union(Geometry.geometry))
-        .select_from(Geometry)
-        .join(
-            spatial_extent_geometry_relation,
-            spatial_extent_geometry_relation.c.geometry_id == Geometry.id,
+    geometry: Mapped[Optional[WKBElement]] = deferred(
+        column_property(
+            select(func.ST_Union(func.ST_MakeValid(Geometry.geometry)))
+            .select_from(Geometry)
+            .join(
+                spatial_extent_geometry_relation,
+                spatial_extent_geometry_relation.c.geometry_id == Geometry.id,
+            )
+            .where(spatial_extent_geometry_relation.c.spatial_extent_id == id)
+            .correlate_except(Geometry)
+            .scalar_subquery()
         )
-        .where(spatial_extent_geometry_relation.c.spatial_extent_id == id)
-        .correlate_except(Geometry)
-        .scalar_subquery()
     )
 
     # WKBElement to GeoJSON
     @property
-    def geom(self) -> Optional[List[Feature]]:
+    def geom(self) -> Optional[FeatureCollection]:
         if not isinstance(self.geometry, WKBElement):
             return None
 
@@ -77,8 +86,11 @@ class SpatialExtent(Base):
         geojson = mapping(shapely_geom)
 
         if geojson.get("type") == "GeometryCollection":
-            return [
+            features = [
                 Feature(geometry=g, properties={}, type="Feature")
                 for g in geojson.get("geometries", [])
             ]
-        return [Feature(geometry=geojson, properties={}, type="Feature")]
+        else:
+            features = [Feature(geometry=geojson, properties={}, type="Feature")]
+
+        return FeatureCollection(type="FeatureCollection", features=features)
