@@ -12,6 +12,7 @@ from data_catalog_backend.models import (
     ResourceType,
     Examples,
     SpatialExtentType,
+    TemporalExtent,
 )
 from data_catalog_backend.schemas.resource import (
     ResourceRequest,
@@ -69,7 +70,6 @@ class ResourceService:
                 Resource.spatial_extent_type,
             )
             .select_from(Resource)
-            .outerjoin(Resource.spatial_extent)
             .join(
                 ResourceCategory,
                 and_(
@@ -94,8 +94,8 @@ class ResourceService:
             Resource.title,
             Resource.type,
             Category.icon,
-            SpatialExtent.type,
-            SpatialExtent.geometry,
+            Resource.has_spatial_extent,
+            Resource.spatial_extent_type,
         )
         base_stmt = base_stmt.distinct(Resource.title)
         base_stmt = base_stmt.order_by(Resource.title)
@@ -163,6 +163,18 @@ class ResourceService:
                         )
                     )
 
+            temporal_extents = []
+            if resource_req.temporal_extent:
+                for temporal_extent in resource_req.temporal_extent:
+                    if not temporal_extent.start_date:
+                        raise ValueError("Start date is required in Temporal Extents")
+                    temporal_extents.append(
+                        TemporalExtent(
+                            start_date=temporal_extent.start_date,
+                            end_date=temporal_extent.end_date,
+                        )
+                    )
+
             code_examples = []
             if resource_req.code_examples:
                 code_examples = self.code_example_service.create_code_examples(
@@ -207,6 +219,7 @@ class ResourceService:
                         "examples",
                         "license",
                         "spatial_extent",
+                        "temporal_extent",
                         "code_examples",
                         "providers",
                         "main_category",
@@ -218,6 +231,7 @@ class ResourceService:
             resource.categories = categories
             resource.providers = providers
             resource.license = license
+            resource.temporal_extent = temporal_extents
             resource.spatial_extent = spatial_extent_objects
             resource.examples = examples
             resource.code_examples = code_examples

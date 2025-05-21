@@ -17,7 +17,7 @@ class TemporalExtent(Base):
         doc="Unique identifier for temporal extent",
     )
     start_date: Mapped[Date] = mapped_column(Date, nullable=False, doc="start date")
-    end_date: Mapped[Date] = mapped_column(Date, nullable=False, doc="end date")
+    end_date: Mapped[Date] = mapped_column(Date, nullable=True, doc="end date")
     resource_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("resources.id"), nullable=False
     )
