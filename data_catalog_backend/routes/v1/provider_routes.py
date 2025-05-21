@@ -9,11 +9,11 @@ from data_catalog_backend.schemas.provider import ProviderRequest, ProviderRespo
 from data_catalog_backend.services.provider_service import ProviderService
 
 
-router = APIRouter()
+router = APIRouter(prefix="/providers")
 
 
 @router.get(
-    "/providers",
+    "/",
     summary="Get all providers",
     description="Returns all providers in our system",
     response_model=List[ProviderResponse],
@@ -27,7 +27,7 @@ async def get_providers(
 
 
 @router.get(
-    "/providers/{id}",
+    "/{id}",
     description="Returns specific provider",
     response_model=ProviderResponse,
     response_model_exclude_none=True,
