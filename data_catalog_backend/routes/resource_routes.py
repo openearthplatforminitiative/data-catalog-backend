@@ -4,7 +4,10 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_resource_service
-from data_catalog_backend.schemas.resource import ResourceResponse
+from data_catalog_backend.schemas.resource import (
+    ResourceResponse,
+    UpdateResourceRequest,
+)
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQueryResponse,
@@ -77,4 +80,31 @@ async def get_resource(
         return converted
     except Exception as e:
         logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put(
+    "/resources/{resource_id}",
+    description="Update a resource",
+    response_model=ResourceResponse,
+    response_model_exclude_none=True,
+    tags=["resources"],
+)
+async def update_resource(
+    resource_id: uuid.UUID,
+    update_data: UpdateResourceRequest,
+    service: ResourceService = Depends(get_resource_service),
+) -> ResourceResponse:
+    resource = service.get_resource(resource_id)
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+
+    try:
+        update_dict = update_data.model_dump(exclude_unset=True)
+        updated_resource = service.update_resource(resource_id, update_dict)
+
+        return ResourceResponse.model_validate(updated_resource)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
