@@ -25,10 +25,6 @@ from data_catalog_backend.schemas.temporal_extent import (
     TemporalExtentRequest,
     TemporalExtentResponse,
 )
-from data_catalog_backend.schemas.temporal_extent import (
-    TemporalExtentRequest,
-    TemporalExtentResponse,
-)
 
 
 class ResourceCategoryResponse(BaseModel):

@@ -225,6 +225,8 @@ class ResourceService:
                         geometries=geometries,
                         created_by=current_user.email,
                     )
+                    if extent.geometry:
+                        spa.geom = extent.geometry
                     spatial_extent_objects.append(spa)
 
             keywords = []
