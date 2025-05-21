@@ -78,7 +78,11 @@ class ResourceQuery:
             return stmt
 
         self.logger.info("Filtering by spatial extent")
+
+        stmt = stmt.outerjoin(SpatialExtent)
+
         conditions = []
+
         if SpatialExtentRequestType.NonSpatial in resources_req.spatial:
             conditions.append(Resource.spatial_extent == None)
         other_types = [
@@ -109,32 +113,20 @@ class ResourceQuery:
             ST_Intersects(SpatialExtent.geometry, geom) for geom in shapely_geoms
         ]
 
+        stmt = stmt.outerjoin(SpatialExtent)
+
+        is_global = Resource.spatial_extent_type == SpatialExtentRequestType.Global
+
         stmt = stmt.add_columns(
-            case(
-                (SpatialExtent.type == SpatialExtentRequestType.Global, True),
-                (or_(*covers_conditions), True),
-                else_=False,
-            ).label("covers_some"),
-            case(
-                (SpatialExtent.type == SpatialExtentRequestType.Global, True),
-                (and_(*covers_conditions), True),
-                else_=False,
-            ).label("covers_all"),
-            case(
-                (SpatialExtent.type == SpatialExtentRequestType.Global, True),
-                (or_(*intersects_conditions), True),
-                else_=False,
-            ).label("intersects_some"),
-            case(
-                (SpatialExtent.type == SpatialExtentRequestType.Global, True),
-                (and_(*intersects_conditions), True),
-                else_=False,
-            ).label("intersects_all"),
+            or_(is_global, *covers_conditions).label("covers_some"),
+            or_(is_global, and_(*covers_conditions)).label("covers_all"),
+            or_(is_global, *intersects_conditions).label("intersects_some"),
+            or_(is_global, and_(*intersects_conditions)).label("intersects_all"),
         )
 
         return stmt.where(
             or_(
-                (SpatialExtent.type == SpatialExtentRequestType.Global),
+                is_global,
                 *intersects_conditions,
                 *covers_conditions,
             )
@@ -146,18 +138,40 @@ class ResourceQuery:
 
         logging.info("Filtering by temporal extent")
 
+        from data_catalog_backend.models import TemporalExtent
+
+        TemporalExtentAlias = aliased(TemporalExtent)
+
         dates = []
         for year in resources_req.years:
             dates.append(datetime.strptime(year, "%Y"))
 
-        # check if release_date is not null and get all between all start and end dates
-        stmt = stmt.where(
-            and_(
-                Resource.release_date != None,
-                func.date_part("year", Resource.release_date).in_(
-                    [date.year for date in dates]
-                ),
-            )
+        current_year = datetime.today().year
+
+        # Outer join TemporalExtent to Resource
+        stmt = stmt.outerjoin(
+            TemporalExtentAlias, TemporalExtentAlias.resource_id == Resource.id
         )
+
+        # Extract years from request
+        request_years = [date.year for date in dates]
+
+        # Build a list of year range checks
+        year_within_extent_conditions = []
+        for year in request_years:
+            start_check = func.extract("year", TemporalExtentAlias.start_date) <= year
+            end_check = (
+                func.extract(
+                    "year",
+                    func.coalesce(
+                        TemporalExtentAlias.end_date, datetime(current_year, 1, 1)
+                    ),
+                )
+                >= year
+            )
+            year_within_extent_conditions.append(and_(start_check, end_check))
+
+        # Filter resources where any of the extents match at least one year
+        stmt = stmt.where(or_(*year_within_extent_conditions))
 
         return stmt
