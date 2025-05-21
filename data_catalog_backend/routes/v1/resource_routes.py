@@ -4,6 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_resource_service
+from data_catalog_backend.models import SpatialExtent, SpatialExtentType
 from data_catalog_backend.schemas.resource import (
     ResourceResponse,
     UpdateResourceRequest,
@@ -11,6 +12,10 @@ from data_catalog_backend.schemas.resource import (
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQueryResponse,
+)
+from data_catalog_backend.schemas.spatial_extent import (
+    SpatialExtentRequest,
+    UpdateSpatialExtentRequest,
 )
 from data_catalog_backend.services.resource_service import ResourceService
 
@@ -101,6 +106,24 @@ async def update_resource(
 
     try:
         update_dict = update_data.model_dump(exclude_unset=True)
+        if "spatial_extent" in update_dict:
+            spatial_extent_data = update_dict.pop("spatial_extent")
+            validated_spatial_extent = []
+
+            for extent in spatial_extent_data:
+                validated_extent = UpdateSpatialExtentRequest(**extent)
+                extent_data = validated_extent.model_dump()
+
+                extent_data["resource_id"] = resource_id
+
+                spatial_extent_instance = service.update_spatial_extent(
+                    resource_id, extent_data
+                )
+
+                validated_spatial_extent.append(spatial_extent_instance)
+
+            update_dict["spatial_extent"] = validated_spatial_extent
+
         updated_resource = service.update_resource(resource_id, update_dict)
 
         return ResourceResponse.model_validate(updated_resource)

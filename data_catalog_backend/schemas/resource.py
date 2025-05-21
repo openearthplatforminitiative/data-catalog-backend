@@ -15,6 +15,7 @@ from data_catalog_backend.schemas.resource_summary import ResourceSummaryRespons
 from data_catalog_backend.schemas.spatial_extent import (
     SpatialExtentRequest,
     SpatialExtentResponse,
+    UpdateSpatialExtentRequest,
 )
 from data_catalog_backend.schemas.temporal_extent import (
     TemporalExtentRequest,
@@ -198,7 +199,7 @@ class UpdateResourceRequest(BaseModel):
     api_authentication_url: Optional[str] = None
     maintenance_and_update_frequency: Optional[str] = None
     release_date: Optional[datetime.date] = None
-    spatial_extent: Optional[List[SpatialExtentRequest]] = None
+    spatial_extent: Optional[List[UpdateSpatialExtentRequest]] = None
     contact: Optional[str] = None
     keywords: List[str] = None
     version: Optional[str] = None

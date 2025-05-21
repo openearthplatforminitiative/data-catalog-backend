@@ -216,6 +216,8 @@ class ResourceService:
                         geometries=geometries,
                         created_by=user.email,
                     )
+                    if extent.geometry:
+                        spa.geom = extent.geometry
                     spatial_extent_objects.append(spa)
 
             keywords = []
@@ -269,3 +271,17 @@ class ResourceService:
 
         self.session.commit()
         return resource
+
+    def update_spatial_extent(self, resource_id, extent_data) -> SpatialExtent:
+        spatial_extent = self.session.get(SpatialExtent, extent_data["id"])
+        if not spatial_extent:
+            raise ValueError("Spatial extent not found")
+
+        extent_data["resource_id"] = resource_id
+
+        for key, value in extent_data.items():
+            if hasattr(spatial_extent, key):
+                setattr(spatial_extent, key, value)
+
+        self.session.commit()
+        return spatial_extent

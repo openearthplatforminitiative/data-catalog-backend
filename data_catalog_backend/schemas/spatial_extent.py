@@ -31,3 +31,16 @@ class SpatialExtentResponse(BaseModel):
     spatial_resolution: Optional[str] = Field(
         None, description="description of the resolution of the data. ex: 5mx5m"
     )
+
+
+class UpdateSpatialExtentRequest(BaseModel):
+    id: uuid.UUID
+    type: Optional[SpatialExtentType] = None
+    region: Optional[str] = None
+    details: Optional[str] = Field(
+        None, description="addition information about the region"
+    )
+    geometry: Optional[List[Feature]] = None
+    spatial_resolution: Optional[str] = Field(
+        None, description="description of the resolution of the data. ex: 5mx5m"
+    )
