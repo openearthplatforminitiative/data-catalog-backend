@@ -16,6 +16,10 @@ from data_catalog_backend.schemas.spatial_extent import (
     SpatialExtentRequest,
     SpatialExtentResponse,
 )
+from data_catalog_backend.schemas.temporal_extent import (
+    TemporalExtentRequest,
+    TemporalExtentResponse,
+)
 
 
 class ResourceCategoryResponse(BaseModel):
@@ -67,6 +71,9 @@ class ResourceRequest(BaseModel):
     )
     spatial_extent: Optional[List[SpatialExtentRequest]] = Field(
         default=None, nullable=True, description="spatial extent"
+    )
+    temporal_extent: Optional[List[TemporalExtentRequest]] = Field(
+        default=None, nullable=True, description="temporal extent"
     )
     contact: Optional[str] = Field(
         default=None, nullable=True, description="contact information"
@@ -145,6 +152,9 @@ class ResourceResponse(BaseModel):
     )
     spatial_extent: Optional[List[SpatialExtentResponse]] = Field(
         default=None, nullable=True, description="spatial extent"
+    )
+    temporal_extent: Optional[List[TemporalExtentResponse]] = Field(
+        default=None, nullable=True, description="temporal extent"
     )
     contact: Optional[str] = Field(
         default=None, nullable=True, description="contact information"
