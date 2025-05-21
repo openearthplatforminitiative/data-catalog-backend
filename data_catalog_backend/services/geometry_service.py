@@ -16,10 +16,20 @@ class GeometryService:
         self.session = session
 
     def create_geometry(self, geometry_req: GeometryRequest) -> None:
-        features = geometry_req.geometry
-        geometries = [shape(feature.geometry) for feature in features]
-        combined_geometry = GeometryCollection(geometries)
-        wkb_element = from_shape(combined_geometry, srid=4326)
+        feature_collection = geometry_req.geometry
+
+        if feature_collection.type != "FeatureCollection":
+            raise ValueError("Invalid GeoJSON: must be a FeatureCollection")
+
+        if not feature_collection.features:
+            raise ValueError("FeatureCollection must contain at least one feature")
+
+        geometries = [
+            shape(feature.geometry) for feature in feature_collection.features
+        ]
+
+        geometry_collection = GeometryCollection(geometries)
+        wkb_element = from_shape(geometry_collection, srid=4326)
 
         geometry = Geometry(
             name=geometry_req.name,
