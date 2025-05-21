@@ -1,7 +1,7 @@
 from typing import Optional, List
 import uuid
 
-from geojson_pydantic import Feature
+from geojson_pydantic import FeatureCollection
 from pydantic import Field
 
 from data_catalog_backend.models import SpatialExtentType
@@ -14,7 +14,7 @@ class SpatialExtentRequest(BaseModel):
     details: Optional[str] = Field(
         None, description="addition information about the region"
     )
-    geometries: Optional[List[str]] = None
+    geometries: Optional[List[str]] = Field(None, description="List of geometry names")
     spatial_resolution: Optional[str] = Field(
         None, description="description of the resolution of the data. ex: 5mx5m"
     )
@@ -27,7 +27,7 @@ class SpatialExtentResponse(BaseModel):
     details: Optional[str] = Field(
         None, description="addition information about the region"
     )
-    geometry: Optional[List[Feature]] = None
+    geometry: Optional[FeatureCollection] = None
     spatial_resolution: Optional[str] = Field(
         None, description="description of the resolution of the data. ex: 5mx5m"
     )
