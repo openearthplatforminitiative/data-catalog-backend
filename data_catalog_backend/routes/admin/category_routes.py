@@ -28,7 +28,7 @@ async def add_category(
 ) -> CategoryResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a category")
-        created = category_service.create_category(category_req)
+        created = category_service.create_category(category_req, current_user)
         converted = CategoryResponse.model_validate(created)
         return converted
     except Exception as e:

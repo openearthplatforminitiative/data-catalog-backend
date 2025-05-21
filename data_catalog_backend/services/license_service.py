@@ -4,6 +4,7 @@ from typing import List
 from sqlalchemy import select
 
 from data_catalog_backend.models import License
+from data_catalog_backend.schemas.User import User
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,10 @@ class LicenseService:
         stmt = select(License)
         return self.session.scalars(stmt).unique().all()
 
-    def create_license(self, license: License) -> License:
-        license = License(name=license.name, url=str(license.url))
+    def create_license(self, license: License, user: User) -> License:
+        license = License(
+            name=license.name, url=str(license.url), created_by=user.email
+        )
         self.session.add(license)
         try:
             self.session.commit()

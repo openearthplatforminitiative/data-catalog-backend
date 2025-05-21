@@ -1,7 +1,8 @@
 import uuid
 from typing import Optional
+from datetime import datetime
 
-from sqlalchemy import UUID, ForeignKey, Date
+from sqlalchemy import UUID, ForeignKey, Date, String, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from data_catalog_backend.database import Base
@@ -23,6 +24,15 @@ class TemporalExtent(Base):
     )
     resource_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("resources.id"), nullable=False
+    )
+
+    created_by: Mapped[str] = mapped_column(String, nullable=False, doc="created by")
+    updated_by: Mapped[str] = mapped_column(String, nullable=True, doc="updated by")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=func.now(), doc="created at"
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=func.now(), doc="updated at"
     )
 
     # Relations
