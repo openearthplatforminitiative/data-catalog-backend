@@ -284,16 +284,3 @@ class ResourceService:
 
         self.session.commit()
         return spatial_extent
-
-    def create_spatial_extent(self, resource_id, extent_data) -> SpatialExtent:
-        extent_data["resource_id"] = resource_id
-
-        required_fields = ["type"]
-        for field in required_fields:
-            if field not in extent_data:
-                raise ValueError(f"Missing required field: {field}")
-
-        spatial_extent = SpatialExtent(**extent_data)
-        self.session.add(spatial_extent)
-        self.session.commit()
-        return spatial_extent

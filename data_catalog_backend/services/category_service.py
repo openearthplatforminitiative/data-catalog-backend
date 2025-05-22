@@ -44,12 +44,14 @@ class CategoryService:
             raise e
         return category
 
-    def update_category(self, category) -> Category:
-        existing_category = self.session.get(Category, category["id"])
+    def update_category(self, category, category_id: uuid.UUID) -> Category:
+        existing_category = self.get_category(category_id)
         if not existing_category:
             raise ValueError("Category not found")
 
-        for key, value in category.items():
+        category_data = category.dict()
+
+        for key, value in category_data.items():
             if hasattr(existing_category, key):
                 setattr(existing_category, key, value)
 
@@ -58,4 +60,5 @@ class CategoryService:
         except Exception as e:
             self.session.rollback()
             raise e
+
         return existing_category
