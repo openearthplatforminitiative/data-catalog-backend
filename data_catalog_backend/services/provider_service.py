@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 
 from data_catalog_backend.models import Provider
+from data_catalog_backend.schemas.User import User
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,8 @@ class ProviderService:
         stmt = select(Provider).where(Provider.id == id)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def create_provider(self, provider: Provider) -> Provider:
+    def create_provider(self, provider: Provider, user: User) -> Provider:
+        provider.created_by = user.email
         self.session.add(provider)
         try:
             self.session.commit()
@@ -41,13 +43,15 @@ class ProviderService:
             raise e
         return provider
 
-    def update_provider(self, id, provider_req):
+    def update_provider(self, id, provider_req, user: User):
         provider = self.get_provider(id)
         if not provider:
             raise HTTPException(status_code=404, detail="Provider not found")
 
         for field, value in provider_req.model_dump().items():
             setattr(provider, field, value)
+
+        provider.updated_by = user.email
 
         try:
             self.session.commit()

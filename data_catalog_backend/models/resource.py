@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import (
     UUID,
@@ -13,6 +14,7 @@ from sqlalchemy import (
     select,
     func,
     exists,
+    DateTime,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
 from data_catalog_backend.database import Base
@@ -160,6 +162,15 @@ class Resource(Base):
         back_populates="resource"
     )
     examples: Mapped[List["Examples"]] = relationship(back_populates="resource")
+
+    created_by: Mapped[str] = mapped_column(String, nullable=False, doc="created by")
+    updated_by: Mapped[str] = mapped_column(String, nullable=True, doc="updated by")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=func.now(), doc="created at"
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=func.now(), doc="updated at"
+    )
 
     __table_args__ = (
         Index("unique_resource_title_type", "title", "type", unique=True),

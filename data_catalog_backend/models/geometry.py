@@ -1,8 +1,9 @@
 import uuid
+from datetime import datetime
 from typing import List
 
 from geoalchemy2 import Geometry, WKBElement
-from sqlalchemy import String, UUID
+from sqlalchemy import String, UUID, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from data_catalog_backend.database import Base
@@ -28,6 +29,14 @@ class Geometry(Base):
         Geometry(geometry_type="GEOMETRY", srid=4326),
         nullable=False,
         doc="geometry value",
+    )
+    created_by: Mapped[str] = mapped_column(String, nullable=False, doc="created by")
+    updated_by: Mapped[str] = mapped_column(String, nullable=True, doc="updated by")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=func.now(), doc="created at"
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=func.now(), doc="updated at"
     )
 
     # Relations
