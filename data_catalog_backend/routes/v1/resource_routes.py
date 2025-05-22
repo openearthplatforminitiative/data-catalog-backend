@@ -82,6 +82,7 @@ async def get_resource(
     resource_id: uuid.UUID, service: ResourceService = Depends(get_resource_service)
 ) -> ResourceResponse:
     resource = service.get_resource(resource_id)
+    print("getting resource", resource_id)
     try:
         for extent in resource.spatial_extent:
             extent.geometry = extent.geom  # Convert WKB to GeoJSON
@@ -108,10 +109,12 @@ async def update_resource(
 ) -> ResourceResponse:
     resource = service.get_resource(resource_id)
     if not resource:
+        print("Resource not found hello hello")
         raise HTTPException(status_code=404, detail="Resource not found")
 
     try:
         update_dict = update_data.model_dump(exclude_unset=True)
+        """
         if "spatial_extent" in update_dict:
             spatial_extent_data = update_dict.pop("spatial_extent")
             validated_spatial_extent = []
@@ -146,8 +149,10 @@ async def update_resource(
 
                 validated_code_examples.append(code_example_instance)
 
+            
             print("update_dict[code_examples]", update_dict["code_examples"])
             update_dict["code_examples"] = validated_code_examples
+           
         print(update_dict.keys())
         print(update_dict.values())
         # main_category or additional_categories
@@ -167,7 +172,7 @@ async def update_resource(
                 validated_categories.append(category_instance)
 
             update_dict["categories"] = validated_categories
-
+        """
         updated_resource = service.update_resource(resource_id, update_dict)
 
         return ResourceResponse.model_validate(updated_resource)
@@ -226,11 +231,3 @@ async def update_spatial_extent(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@router.delete(
-    "/resources/{resource_id}/{spatial_extent_id}",
-    description="Delete a spatial extent from a resource",
-    response_model=SpatialExtentResponse,
-    response_model_exclude_none=True,
-    tags=["resources"],
-)
