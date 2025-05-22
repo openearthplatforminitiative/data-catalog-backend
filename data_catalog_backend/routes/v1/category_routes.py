@@ -36,3 +36,31 @@ async def get_category(
     id: uuid.UUID, service: CategoryService = Depends(get_category_service)
 ) -> CategoryResponse:
     return service.get_category(id)
+
+
+@router.post(
+    "/categories",
+    description="Create a new category",
+    response_model=CategoryResponse,
+    response_model_exclude_none=True,
+    tags=["categories"],
+)
+async def create_category(
+    category: CategoryResponse,
+    service: CategoryService = Depends(get_category_service),
+) -> CategoryResponse:
+    return service.create_category(category)
+
+
+@router.put(
+    "/categories",
+    description="Update an existing category",
+    response_model=CategoryResponse,
+    response_model_exclude_none=True,
+    tags=["categories"],
+)
+async def update_category(
+    category: CategoryResponse,
+    service: CategoryService = Depends(get_category_service),
+) -> CategoryResponse:
+    return service.update_category(category)

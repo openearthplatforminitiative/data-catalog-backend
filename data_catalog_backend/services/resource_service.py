@@ -273,15 +273,27 @@ class ResourceService:
         return resource
 
     def update_spatial_extent(self, resource_id, extent_data) -> SpatialExtent:
+        extent_data["resource_id"] = resource_id
         spatial_extent = self.session.get(SpatialExtent, extent_data["id"])
         if not spatial_extent:
             raise ValueError("Spatial extent not found")
-
-        extent_data["resource_id"] = resource_id
 
         for key, value in extent_data.items():
             if hasattr(spatial_extent, key):
                 setattr(spatial_extent, key, value)
 
+        self.session.commit()
+        return spatial_extent
+
+    def create_spatial_extent(self, resource_id, extent_data) -> SpatialExtent:
+        extent_data["resource_id"] = resource_id
+
+        required_fields = ["type"]
+        for field in required_fields:
+            if field not in extent_data:
+                raise ValueError(f"Missing required field: {field}")
+
+        spatial_extent = SpatialExtent(**extent_data)
+        self.session.add(spatial_extent)
         self.session.commit()
         return spatial_extent

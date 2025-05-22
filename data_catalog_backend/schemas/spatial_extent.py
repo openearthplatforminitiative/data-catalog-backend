@@ -34,7 +34,7 @@ class SpatialExtentResponse(BaseModel):
 
 
 class UpdateSpatialExtentRequest(BaseModel):
-    id: uuid.UUID
+    id: Optional[uuid.UUID] = None
     type: Optional[SpatialExtentType] = None
     region: Optional[str] = None
     details: Optional[str] = Field(

@@ -43,3 +43,19 @@ class CategoryService:
             self.session.rollback()
             raise e
         return category
+
+    def update_category(self, category) -> Category:
+        existing_category = self.session.get(Category, category["id"])
+        if not existing_category:
+            raise ValueError("Category not found")
+
+        for key, value in category.items():
+            if hasattr(existing_category, key):
+                setattr(existing_category, key, value)
+
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+        return existing_category

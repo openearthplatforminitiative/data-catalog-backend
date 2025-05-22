@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 from pydantic import Field
 from data_catalog_backend.schemas.basemodel import BaseModel
@@ -24,6 +24,13 @@ class CategoryRequest(BaseModel):
     title: str = Field(description="title of the category")
     abstract: str = Field(description="short description of the category")
     icon: str = Field(description="MUI icon of the category")
+
+
+class UpdateCategoryRequest(BaseModel):
+    id: Optional[uuid.UUID] = None
+    title: Optional[str] = Field(description="title of the category")
+    abstract: Optional[str] = Field(description="short description of the category")
+    icon: Optional[str] = Field(description="MUI icon of the category")
 
 
 class CategorySummaryResponse(BaseModel):

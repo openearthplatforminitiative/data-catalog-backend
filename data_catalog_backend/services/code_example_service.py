@@ -52,3 +52,29 @@ class CodeExampleService:
             .options(joinedload(CodeExamples.code))
         )
         return self.session.scalars(stmt).unique().all()
+
+    def update_code_example(self, example_data) -> CodeExamples:
+        print(example_data["id"])
+        code_example = self.session.get(CodeExamples, example_data["id"])
+        print("code_example: ", code_example)
+        if not code_example:
+            raise ValueError("Code example not found")
+
+        for key, value in example_data.items():
+            if hasattr(code_example, key):
+                print(f"Updating {key} to {value}")
+                try:
+                    if key == "code":
+                        print("ree")
+                        for code, new_code_data in zip(code_example.code, value):
+                            for code_key, code_value in new_code_data.items():
+                                if hasattr(code, code_key):
+                                    setattr(code, code_key, code_value)
+                    setattr(code_example, key, value)
+                except Exception as e:
+                    print(f"Error updating {key}: {e}")
+                    raise e
+                print(f"Updated {key}: {getattr(code_example, key)}")
+
+        self.session.commit()
+        return code_example
