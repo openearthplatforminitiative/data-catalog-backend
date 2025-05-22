@@ -5,7 +5,10 @@ from typing import List
 from fastapi import APIRouter, Depends
 
 from data_catalog_backend.dependencies import get_category_service
-from data_catalog_backend.schemas.category import CategoryResponse
+from data_catalog_backend.schemas.category import (
+    CategoryResponse,
+    UpdateCategoryRequest,
+)
 from data_catalog_backend.services.category_service import CategoryService
 
 router = APIRouter(prefix="/categories")
@@ -49,3 +52,31 @@ async def get_category(
     except Exception as e:
         logging.error(f"Error getting category {category_id}: {e}")
         raise e
+
+@router.post(
+    "/categories",
+    description="Create a new category",
+    response_model=CategoryResponse,
+    response_model_exclude_none=True,
+    tags=["categories"],
+)
+async def create_category(
+    category: CategoryResponse,
+    service: CategoryService = Depends(get_category_service),
+) -> CategoryResponse:
+    return service.create_category(category)
+
+
+@router.put(
+    "/{category_id}",
+    description="Update an existing category",
+    response_model=CategoryResponse,
+    response_model_exclude_none=True,
+    tags=["categories"],
+)
+async def update_category(
+    category: UpdateCategoryRequest,
+    category_id: uuid.UUID,
+    service: CategoryService = Depends(get_category_service),
+) -> CategoryResponse:
+    return service.update_category(category, category_id)
