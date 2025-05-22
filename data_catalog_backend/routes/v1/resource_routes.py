@@ -158,6 +158,43 @@ async def update_resource(
 
             update_dict["spatial_extent"] = validated_spatial_extent
 
+        if "code_examples" in update_dict:
+            code_examples = update_dict.pop("code_examples")
+            validated_code_examples = []
+
+            for example in code_examples:
+                validated_example = UpdateCodeExampleRequest(**example)
+                example_data = validated_example.model_dump()
+
+                example_data["resource_id"] = resource_id
+                code_example_instance = (
+                    service.code_example_service.update_code_example(example_data)
+                )
+
+                validated_code_examples.append(code_example_instance)
+
+            print("update_dict[code_examples]", update_dict["code_examples"])
+            update_dict["code_examples"] = validated_code_examples
+        print(update_dict.keys())
+        print(update_dict.values())
+        # main_category or additional_categories
+        if "categories" in update_dict:
+            categories = update_dict.pop("categories")
+            validated_categories = []
+            print("update_dict[categories]", update_dict["categories"])
+            for category in categories:
+                validated_category = UpdateCategoryRequest(**category)
+                category_data = validated_category.model_dump()
+                print("category_dATA: ", category_data)
+                category_data["resource_id"] = resource_id
+                category_instance = service.category_service.update_category(
+                    category_data
+                )
+
+                validated_categories.append(category_instance)
+
+            update_dict["categories"] = validated_categories
+
         updated_resource = service.update_resource(resource_id, update_dict)
 
         return ResourceResponse.model_validate(updated_resource)

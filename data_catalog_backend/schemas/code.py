@@ -27,6 +27,12 @@ class UpdateCodeRequest(BaseModel):
     created_by: Optional[str] = None
 
 
+class UpdateCodeRequest(BaseModel):
+    id: Optional[uuid.UUID] = None
+    language: Optional[CodeType]
+    source: Optional[str]
+
+
 class CodeExampleResponse(BaseModel):
     id: uuid.UUID
     title: str
