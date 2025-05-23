@@ -272,15 +272,51 @@ class ResourceService:
         self.session.commit()
         return resource
 
-    def update_spatial_extent(self, resource_id, extent_data) -> SpatialExtent:
-        extent_data["resource_id"] = resource_id
-        spatial_extent = self.session.get(SpatialExtent, extent_data["id"])
+    def get_spatial_extent(self, spatial_extent_id) -> SpatialExtent:
+        stmt = select(SpatialExtent).where(SpatialExtent.id == spatial_extent_id)
+        return self.session.scalars(stmt).unique().one_or_none()
+
+    def update_spatial_extent(
+        self, resource_id, extent_data, spatial_extent_id
+    ) -> SpatialExtent:
+        spatial_extent = self.get_spatial_extent(spatial_extent_id)
+        print("spatial_extent: ", spatial_extent)
+        extent_dict = extent_data.model_dump()
+        extent_dict["resource_id"] = resource_id
+        extent_dict["id"] = spatial_extent_id
+
         if not spatial_extent:
             raise ValueError("Spatial extent not found")
 
-        for key, value in extent_data.items():
+        for key, value in extent_dict.items():
             if hasattr(spatial_extent, key):
                 setattr(spatial_extent, key, value)
 
         self.session.commit()
         return spatial_extent
+
+    def create_spatial_extent(self, resource_id, spatial_extent_data) -> SpatialExtent:
+        try:
+            geometries = []
+            if spatial_extent_data.geometries:
+                for geometry_name in spatial_extent_data.geometries:
+                    geometry = self.geometry_service.get_geometry_by_name(geometry_name)
+                    if geometry:
+                        geometries.append(geometry)
+                    else:
+                        raise ValueError(f"Geometry {geometry_name} not found")
+
+            spa = SpatialExtent(**spatial_extent_data.model_dump(exclude="geometries"))
+            print(spa)
+            spa.resource_id = resource_id
+            spa.geometries = geometries
+
+            self.session.add(spa)
+            self.session.commit()
+            return spa
+
+        except Exception as e:
+            # Log unexpected errors and raise a 500 error
+            logger.error(f"Unexpected error: {e}")
+            self.session.rollback()
+            raise e
