@@ -24,6 +24,9 @@ class CodeExampleService:
                 description=code_example.description,
                 resource_id=resource_id,
                 created_by=user.email,
+                title=code_example.title,
+                description=code_example.description,
+                resource_id=resource_id,
             )
             self.session.add(new_code_example)
             self.session.commit()
