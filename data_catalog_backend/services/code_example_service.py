@@ -75,17 +75,16 @@ class CodeExampleService:
         code_example.description = example_data.description
         code_example.resource_id = resource_id
 
-        # Update nested code objects if necessary
         for new_code_data in example_data.code:
+            # Create new code object if id is None
             if not hasattr(new_code_data, "id") or new_code_data.id is None:
-                # Add new code if it doesn't have an id
                 new_code = Code(
                     language=new_code_data.language, source=new_code_data.source
                 )
                 self.session.add(new_code)
                 code_example.code.append(new_code)
             else:
-                # Update existing code
+                # Update existing code object
                 for code in code_example.code:
                     if code.id == new_code_data.id:
                         code.language = new_code_data.language
