@@ -8,6 +8,7 @@ from data_catalog_backend.dependencies import get_category_service
 from data_catalog_backend.schemas.category import (
     CategoryResponse,
     UpdateCategoryRequest,
+    CategoryRequest,
 )
 from data_catalog_backend.services.category_service import CategoryService
 
@@ -42,14 +43,14 @@ async def get_category(
 
 
 @router.post(
-    "/categories",
+    "/",
     description="Create a new category",
     response_model=CategoryResponse,
     response_model_exclude_none=True,
     tags=["categories"],
 )
 async def create_category(
-    category: CategoryResponse,
+    category: CategoryRequest,
     service: CategoryService = Depends(get_category_service),
 ) -> CategoryResponse:
     return service.create_category(category)
