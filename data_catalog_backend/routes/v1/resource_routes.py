@@ -388,5 +388,4 @@ async def add_temporal_extent(
         )
         return created_temporal_extent
     except Exception as e:
-        logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
