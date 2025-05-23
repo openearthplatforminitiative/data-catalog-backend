@@ -15,18 +15,15 @@ class CodeExampleService:
         self.session = session
 
     def create_code_examples(
-        self, code_examples: List[CodeExamples], user: User
-        self, code_examples: List[CodeExamples], resource_id: uuid.UUID
+        self, code_examples: List[CodeExamples],resource_id: uuid.UUID, user: User
     ) -> List[CodeExamples]:
         created_code_examples = []
         for code_example in code_examples:
             new_code_example = CodeExamples(
                 title=code_example.title,
                 description=code_example.description,
-                created_by=user.email,
-                title=code_example.title,
-                description=code_example.description,
                 resource_id=resource_id,
+                created_by=user.email
             )
             self.session.add(new_code_example)
             self.session.commit()
@@ -83,5 +80,19 @@ class CodeExampleService:
             code.language = new_code_data.language
             code.source = new_code_data.source
 
+        for code, new_code_data in zip(code_example.code, example_data.code):
+            if not hasattr(new_code_data, "id") or new_code_data.id is None:
+                # Add new code if it doesn't have an id
+                new_code = Code(
+                    language=new_code_data.language, source=new_code_data.source
+                )
+                self.session.add(new_code)
+                code_example.code.append(new_code)
+            else:
+                # Update existing code
+                for code in code_example.code:
+                    if code.id == new_code_data.id:
+                        code.language = new_code_data.language
+                        code.source = new_code_data.source
         self.session.commit()
         return code_example
