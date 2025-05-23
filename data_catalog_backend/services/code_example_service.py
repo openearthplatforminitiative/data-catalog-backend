@@ -76,11 +76,7 @@ class CodeExampleService:
         code_example.resource_id = resource_id
 
         # Update nested code objects if necessary
-        for code, new_code_data in zip(code_example.code, example_data.code):
-            code.language = new_code_data.language
-            code.source = new_code_data.source
-
-        for code, new_code_data in zip(code_example.code, example_data.code):
+        for new_code_data in example_data.code:
             if not hasattr(new_code_data, "id") or new_code_data.id is None:
                 # Add new code if it doesn't have an id
                 new_code = Code(
@@ -94,5 +90,11 @@ class CodeExampleService:
                     if code.id == new_code_data.id:
                         code.language = new_code_data.language
                         code.source = new_code_data.source
+                        break
+                    else:
+                        raise ValueError(
+                            f"Code with id {new_code_data.id} not found in the existing code examples"
+                        )
+
         self.session.commit()
         return code_example
