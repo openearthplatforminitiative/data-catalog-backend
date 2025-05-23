@@ -1,9 +1,15 @@
 import logging
 import uuid
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_resource_service
+from data_catalog_backend.schemas.code import (
+    CodeExampleResponse,
+    CodeExampleRequest,
+    UpdateCodeExampleRequest,
+)
 from data_catalog_backend.schemas.resource import (
     ResourceResponse,
     UpdateResourceRequest,
@@ -178,6 +184,56 @@ async def update_spatial_extent(
             resource_id, spatial_extent, spatial_extent_id
         )
         return updated_spatial_extent
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/{resource_id}/code_examples",
+    description="Add code examples to a resource",
+    response_model=List[CodeExampleResponse],
+    response_model_exclude_none=True,
+    tags=["resources"],
+)
+async def add_code_examples(
+    resource_id: uuid.UUID,
+    code_examples: List[CodeExampleRequest],
+    service: ResourceService = Depends(get_resource_service),
+) -> List[CodeExampleResponse]:
+    try:
+        created_code_examples = service.code_example_service.create_code_examples(
+            code_examples, resource_id
+        )
+        return [
+            CodeExampleResponse.model_validate(example).model_dump()
+            for example in created_code_examples
+        ]
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put(
+    "/{resource_id}/code_examples/{code_example_id}",
+    description="Update a code example of a resource",
+    response_model=CodeExampleResponse,
+    response_model_exclude_none=True,
+    tags=["resources"],
+)
+async def update_code_example(
+    resource_id: uuid.UUID,
+    code_example_id: uuid.UUID,
+    code_example: UpdateCodeExampleRequest,
+    service: ResourceService = Depends(get_resource_service),
+) -> CodeExampleResponse:
+    try:
+        updated_code_example = service.code_example_service.update_code_example(
+            resource_id=resource_id,
+            code_example_id=code_example_id,
+            example_data=code_example,
+        )
+        return CodeExampleResponse.model_validate(updated_code_example).model_dump()
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
