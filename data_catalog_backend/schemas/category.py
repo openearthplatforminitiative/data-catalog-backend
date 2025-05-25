@@ -56,6 +56,9 @@ class UpdateCategoryRequest(BaseModel):
     title: Optional[str] = Field(description="title of the category")
     abstract: Optional[str] = Field(description="short description of the category")
     icon: Optional[str] = Field(description="MUI icon of the category")
+    created_by: Optional[str] = Field(
+        description="email of the user who created the data"
+    )
 
 
 class CategorySummaryResponse(BaseModel):

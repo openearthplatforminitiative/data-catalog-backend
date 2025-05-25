@@ -6,10 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from data_catalog_backend.dependencies import get_resource_service
 from data_catalog_backend.models import SpatialExtent, SpatialExtentType
-from data_catalog_backend.schemas.code import (
-    UpdateCodeExampleRequest,
-    UpdateCodeRequest,
-)
+
 from data_catalog_backend.schemas.resource import (
     ResourceResponse,
     UpdateResourceRequest,
@@ -24,6 +21,7 @@ from data_catalog_backend.schemas.spatial_extent import (
     UpdateSpatialExtentRequest,
     SpatialExtentResponse,
 )
+from data_catalog_backend.schemas.temporal_extent import TemporalExtentResponse
 from data_catalog_backend.services.resource_service import ResourceService
 
 router = APIRouter(prefix="/resources")
