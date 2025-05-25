@@ -8,9 +8,11 @@ from data_catalog_backend.schemas.basemodel import BaseModel
 class TemporalExtentRequest(BaseModel):
     start_date: PastDate
     end_date: Optional[PastDate]
+    created_by: Optional[str]
 
 
 class TemporalExtentResponse(BaseModel):
     id: uuid.UUID
     start_date: PastDate
     end_date: Optional[PastDate]
+    created_by: Optional[str]

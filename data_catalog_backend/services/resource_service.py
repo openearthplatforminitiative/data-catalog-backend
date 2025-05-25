@@ -319,3 +319,22 @@ class ResourceService:
             logger.error(f"Unexpected error: {e}")
             self.session.rollback()
             raise e
+
+    def create_temporal_extent(
+        self, resource_id, temporal_extent_data
+    ) -> TemporalExtent:
+        try:
+            temporal_extent = TemporalExtent(
+                **temporal_extent_data.model_dump(exclude_none=True)
+            )
+            temporal_extent.resource_id = resource_id
+
+            self.session.add(temporal_extent)
+            self.session.commit()
+            return temporal_extent
+
+        except Exception as e:
+            # Log unexpected errors and raise a 500 error
+            logger.error(f"Unexpected error: {e}")
+            self.session.rollback()
+            raise e

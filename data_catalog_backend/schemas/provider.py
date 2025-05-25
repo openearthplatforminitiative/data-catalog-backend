@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import uuid
 
 from pydantic import Field, HttpUrl
@@ -16,6 +16,8 @@ class ProviderRequest(BaseModel):
     short_name: str = Field(description="short name of provider")
     provider_url: str = Field(description="url to the providers website")
     description: str = Field(description="description of the provider")
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
 
 
 class ProviderSummaryResponse(BaseModel):
@@ -24,7 +26,11 @@ class ProviderSummaryResponse(BaseModel):
     short_name: str = Field(description="short name of provider")
     provider_url: str = Field(description="url to the providers website")
     description: str = Field(description="description of the provider")
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
 
 
 class ProviderResponse(ProviderSummaryResponse):
     resources: List[ResourceProviderResponse]
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None

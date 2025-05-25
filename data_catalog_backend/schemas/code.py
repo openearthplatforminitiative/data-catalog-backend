@@ -10,17 +10,20 @@ class CodeResponse(BaseModel):
     id: uuid.UUID
     language: CodeType
     source: str
+    created_by: Optional[str] = None
 
 
 class CodeRequest(BaseModel):
     language: CodeType
     source: str
+    created_by: Optional[str] = None
 
 
 class UpdateCodeRequest(BaseModel):
     id: Optional[uuid.UUID] = None
     language: Optional[CodeType]
     source: Optional[str]
+    created_by: Optional[str] = None
 
 
 class CodeExampleResponse(BaseModel):
@@ -28,12 +31,14 @@ class CodeExampleResponse(BaseModel):
     title: str
     description: str
     code: Optional[List[CodeResponse]]
+    created_by: Optional[str] = None
 
 
 class CodeExampleRequest(BaseModel):
     title: str
     description: str
     code: List[CodeRequest]
+    created_by: Optional[str] = None
 
 
 class UpdateCodeExampleRequest(BaseModel):
@@ -41,3 +46,4 @@ class UpdateCodeExampleRequest(BaseModel):
     title: Optional[str]
     description: Optional[str]
     code: Optional[List[UpdateCodeRequest]]
+    created_by: Optional[str] = None

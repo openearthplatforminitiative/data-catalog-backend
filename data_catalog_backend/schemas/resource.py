@@ -30,6 +30,8 @@ from data_catalog_backend.schemas.temporal_extent import (
 class ResourceCategoryResponse(BaseModel):
     category: CategorySummaryResponse = Field(description="Category")
     is_main_category: bool = Field(description="Role of the provider")
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
 
 
 class ResourceProviderResponse(BaseModel):

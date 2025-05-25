@@ -11,6 +11,8 @@ class ExampleResponse(BaseModel):
     description: Optional[str] = None
     example_url: str = None
     favicon_url: Optional[str] = None
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
 
 
 class ExampleRequest(BaseModel):
@@ -19,6 +21,8 @@ class ExampleRequest(BaseModel):
     description: Optional[str] = None
     example_url: str = None
     favicon_url: Optional[str] = None
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
 
 
 class UpdateExampleRequest(BaseModel):
@@ -27,3 +31,5 @@ class UpdateExampleRequest(BaseModel):
     description: Optional[str] = None
     example_url: Optional[str] = None
     favicon_url: Optional[str] = None
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None

@@ -20,3 +20,5 @@ class ResourceSummaryResponse(BaseModel):
         default=None,
         description="If the resource has a spatial extent, the type of the spatial extent",
     )
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None

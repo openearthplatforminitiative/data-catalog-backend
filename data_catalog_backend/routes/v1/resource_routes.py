@@ -5,6 +5,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_resource_service
+from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.code import (
     CodeExampleResponse,
     CodeExampleRequest,
@@ -28,6 +29,7 @@ from data_catalog_backend.schemas.spatial_extent import (
     SpatialExtentRequest,
     UpdateSpatialExtentRequest,
 )
+from data_catalog_backend.schemas.temporal_extent import TemporalExtentResponse
 from data_catalog_backend.services.resource_service import ResourceService
 
 router = APIRouter(prefix="/resources")
@@ -257,8 +259,10 @@ async def add_examples(
     service: ResourceService = Depends(get_resource_service),
 ) -> List[ExampleResponse]:
     try:
+        user = User(email="system", roles=["datacatalog_admin"])
+
         created_examples = service.example_service.create_examples(
-            examples, resource_id
+            examples, resource_id, user=user
         )
         logger.info(f"Response data: {created_examples}")
         return [
@@ -287,6 +291,28 @@ async def update_example(
             example_id=example_id, example_data=example
         )
         return ExampleResponse.model_validate(updated_example).model_dump()
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/{resource_id}/temporal_extent",
+    description="Add a temporal extent to a resource",
+    response_model=List[TemporalExtentResponse],
+    response_model_exclude_none=True,
+    tags=["resources"],
+)
+async def add_temporal_extent(
+    resource_id: uuid.UUID,
+    temporal_extent: TemporalExtentResponse,
+    service: ResourceService = Depends(get_resource_service),
+) -> List[TemporalExtentResponse]:
+    try:
+        created_temporal_extent = service.create_temporal_extent(
+            resource_id, temporal_extent
+        )
+        return created_temporal_extent
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
