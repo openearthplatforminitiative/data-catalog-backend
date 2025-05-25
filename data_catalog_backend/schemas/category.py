@@ -49,6 +49,7 @@ class UpdateCategoryRequest(BaseModel):
     icon: Optional[str] = Field(description="MUI icon of the category")
 
 
+
 class CategorySummaryResponse(BaseModel):
     id: uuid.UUID
     title: str = Field(description="title of the category")

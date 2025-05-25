@@ -7,6 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from data_catalog_backend.dependencies import get_resource_service
 from data_catalog_backend.routes.admin.authentication import dummy_user
 from data_catalog_backend.schemas.User import User
+from data_catalog_backend.models import ResourceType, SpatialExtent, SpatialExtentType
+from data_catalog_backend.schemas.category import UpdateCategoryRequest
+from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.code import (
     CodeExampleResponse,
     CodeExampleRequest,
@@ -393,4 +396,5 @@ async def add_temporal_extent(
         )
         return created_temporal_extent
     except Exception as e:
+        logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
