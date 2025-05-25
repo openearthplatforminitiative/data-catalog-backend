@@ -19,3 +19,11 @@ class ExampleRequest(BaseModel):
     description: Optional[str] = None
     example_url: str = None
     favicon_url: Optional[str] = None
+
+
+class UpdateExampleRequest(BaseModel):
+    title: Optional[str] = None
+    type: Optional[str] = None
+    description: Optional[str] = None
+    example_url: Optional[str] = None
+    favicon_url: Optional[str] = None

@@ -280,7 +280,6 @@ class ResourceService:
         self, resource_id, extent_data, spatial_extent_id
     ) -> SpatialExtent:
         spatial_extent = self.get_spatial_extent(spatial_extent_id)
-        print("spatial_extent: ", spatial_extent)
         extent_dict = extent_data.model_dump()
         extent_dict["resource_id"] = resource_id
         extent_dict["id"] = spatial_extent_id

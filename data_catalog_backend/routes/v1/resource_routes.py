@@ -10,6 +10,11 @@ from data_catalog_backend.schemas.code import (
     CodeExampleRequest,
     UpdateCodeExampleRequest,
 )
+from data_catalog_backend.schemas.example import (
+    ExampleRequest,
+    ExampleResponse,
+    UpdateExampleRequest,
+)
 from data_catalog_backend.schemas.resource import (
     ResourceResponse,
     UpdateResourceRequest,
@@ -124,7 +129,7 @@ async def update_resource(
 
 
 @router.get(
-    "/{spatial_extent_id}",
+    "/spatial_extent/{spatial_extent_id}",
     description="Get spatial extent from metadata store",
     response_model=SpatialExtentResponse,
     response_model_exclude_none=True,
@@ -167,7 +172,7 @@ async def add_spatial_extent(
 
 
 @router.put(
-    "/{resource_id}/{spatial_extent_id}",
+    "/{resource_id}/spatial_extent/{spatial_extent_id}",
     description="Update a spatial extent of a resource",
     response_model=SpatialExtentResponse,
     response_model_exclude_none=True,
@@ -234,6 +239,54 @@ async def update_code_example(
             example_data=code_example,
         )
         return CodeExampleResponse.model_validate(updated_code_example).model_dump()
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/{resource_id}/examples",
+    description="Add examples to a resource",
+    response_model=List[ExampleResponse],
+    response_model_exclude_none=True,
+    tags=["resources"],
+)
+async def add_examples(
+    resource_id: uuid.UUID,
+    examples: List[ExampleRequest],
+    service: ResourceService = Depends(get_resource_service),
+) -> List[ExampleResponse]:
+    try:
+        created_examples = service.example_service.create_examples(
+            examples, resource_id
+        )
+        logger.info(f"Response data: {created_examples}")
+        return [
+            ExampleResponse.model_validate(example).model_dump()
+            for example in created_examples
+        ]
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put(
+    "/{resource_id}/examples/{example_id}",
+    description="Update an example of a resource",
+    response_model=ExampleResponse,
+    response_model_exclude_none=True,
+    tags=["resources"],
+)
+async def update_example(
+    example_id: uuid.UUID,
+    example: UpdateExampleRequest,
+    service: ResourceService = Depends(get_resource_service),
+) -> ExampleResponse:
+    try:
+        updated_example = service.example_service.update_example(
+            example_id=example_id, example_data=example
+        )
+        return ExampleResponse.model_validate(updated_example).model_dump()
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
