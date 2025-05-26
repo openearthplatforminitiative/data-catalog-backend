@@ -98,7 +98,7 @@ async def get_resource(
 
 
 @router.delete(
-    "/resources/{resource_id}",
+    "/{resource_id}",
     description="Delete a resource from the metadata store",
     tags=["admin"],
     response_model=ResourceResponse,

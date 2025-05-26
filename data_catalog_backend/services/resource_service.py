@@ -275,7 +275,7 @@ class ResourceService:
                 joinedload(Resource.code_examples),
                 joinedload(Resource.license),
             )
-            .filter_by(id=resource_id)
+            .where(Resource.id == resource_id)
             .first()
         )
         if not resource:
