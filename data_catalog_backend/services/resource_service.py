@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 
 from sqlalchemy import select, func, and_, case
+from sqlalchemy.sql.functions import user
 
 from data_catalog_backend.models import (
     Resource,
@@ -283,6 +284,7 @@ class ResourceService:
         extent_dict = extent_data.model_dump()
         extent_dict["resource_id"] = resource_id
         extent_dict["id"] = spatial_extent_id
+        extent_dict["created_by"] = spatial_extent.created_by
 
         if not spatial_extent:
             raise ValueError("Spatial extent not found")
@@ -294,7 +296,9 @@ class ResourceService:
         self.session.commit()
         return spatial_extent
 
-    def create_spatial_extent(self, resource_id, spatial_extent_data) -> SpatialExtent:
+    def create_spatial_extent(
+        self, resource_id, spatial_extent_data, user: User
+    ) -> SpatialExtent:
         try:
             geometries = []
             if spatial_extent_data.geometries:
@@ -307,6 +311,7 @@ class ResourceService:
 
             spa = SpatialExtent(**spatial_extent_data.model_dump(exclude="geometries"))
             print(spa)
+            spa.created_by = user.email
             spa.resource_id = resource_id
             spa.geometries = geometries
 
@@ -321,13 +326,14 @@ class ResourceService:
             raise e
 
     def create_temporal_extent(
-        self, resource_id, temporal_extent_data
+        self, resource_id, temporal_extent_data, user: User
     ) -> TemporalExtent:
         try:
             temporal_extent = TemporalExtent(
                 **temporal_extent_data.model_dump(exclude_none=True)
             )
             temporal_extent.resource_id = resource_id
+            temporal_extent.created_by = user.email
 
             self.session.add(temporal_extent)
             self.session.commit()

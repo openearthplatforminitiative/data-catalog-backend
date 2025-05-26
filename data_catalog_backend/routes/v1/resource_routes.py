@@ -5,6 +5,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_resource_service
+from data_catalog_backend.routes.admin.authentication import dummy_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.code import (
     CodeExampleResponse,
@@ -165,7 +166,7 @@ async def add_spatial_extent(
 ) -> None:
     try:
         created_spatial_extent = service.create_spatial_extent(
-            resource_id, spatial_extent
+            resource_id, spatial_extent, user=dummy_user
         )
         return created_spatial_extent
     except Exception as e:
@@ -210,7 +211,7 @@ async def add_code_examples(
 ) -> List[CodeExampleResponse]:
     try:
         created_code_examples = service.code_example_service.create_code_examples(
-            code_examples, resource_id
+            code_examples, resource_id, user=dummy_user
         )
         return [
             CodeExampleResponse.model_validate(example).model_dump()
@@ -239,6 +240,7 @@ async def update_code_example(
             resource_id=resource_id,
             code_example_id=code_example_id,
             example_data=code_example,
+            user=dummy_user,
         )
         return CodeExampleResponse.model_validate(updated_code_example).model_dump()
     except Exception as e:
@@ -259,10 +261,9 @@ async def add_examples(
     service: ResourceService = Depends(get_resource_service),
 ) -> List[ExampleResponse]:
     try:
-        user = User(email="system", roles=["datacatalog_admin"])
 
         created_examples = service.example_service.create_examples(
-            examples, resource_id, user=user
+            examples, resource_id, user=dummy_user
         )
         logger.info(f"Response data: {created_examples}")
         return [
