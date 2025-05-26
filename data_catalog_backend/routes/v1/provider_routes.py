@@ -37,3 +37,19 @@ async def get_provider(
     id: uuid.UUID, service: ProviderService = Depends(get_provider_service)
 ) -> ProviderResponse:
     return service.get_provider(id)
+
+
+@router.delete(
+    "/{id}",
+    description="Delete a provider",
+    response_model=ProviderResponse,
+    response_model_exclude_none=True,
+    tags=["providers"],
+)
+async def delete_provider(
+    id: uuid.UUID, service: ProviderService = Depends(get_provider_service)
+) -> ProviderResponse:
+    provider = service.get_provider(id)
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    return service.delete_provider(id)
