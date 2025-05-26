@@ -100,7 +100,7 @@ class ResourceService:
             Resource.has_spatial_extent,
             Resource.spatial_extent_type,
         ]
-        if len(resources_req.features) > 0:
+        if resources_req.features and len(resources_req.features) > 0:
             group_by.append(SpatialExtent.id)
 
         base_stmt = base_stmt.group_by(*group_by)
