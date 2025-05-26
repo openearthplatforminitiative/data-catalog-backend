@@ -1,8 +1,8 @@
 import logging
 import uuid
-from typing import List
+from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from data_catalog_backend.dependencies import get_resource_service
 from data_catalog_backend.routes.admin.authentication import dummy_user
@@ -21,6 +21,7 @@ from data_catalog_backend.schemas.resource import (
     ResourceResponse,
     UpdateResourceRequest,
 )
+from data_catalog_backend.models import ResourceType, SpatialExtentRequestType
 from data_catalog_backend.schemas.resource import ResourceResponse
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
@@ -47,15 +48,30 @@ logger = logging.getLogger(__name__)
     tags=["resources"],
 )
 async def get_resources(
-    resources_req: ResourceQueryRequest,
-    page: int = 0,
-    per_page: int = 10,
+    types: Optional[List[ResourceType]] = Query(
+        None, description="Filter by resource types"
+    ),
+    spatial: Optional[List[SpatialExtentRequestType]] = Query(
+        None, description="Filter by spatial extent types"
+    ),
+    tags: Optional[List[str]] = Query(None, description="Filter by tags"),
+    years: Optional[List[str]] = Query(None, description="Filter by years"),
+    page: int = Query(0, description="Page number for pagination"),
+    per_page: int = Query(10, description="Number of items per page"),
     service: ResourceService = Depends(get_resource_service),
 ) -> ResourceQueryResponse:
+    resources_req = ResourceQueryRequest(
+        types=types,
+        spatial=spatial,
+        categories=None,
+        providers=None,
+        tags=tags,
+        years=years,
+        features=None,  # Explicitly set to None for GET endpoint
+    )
+
     logger.info("Getting resources with non-geospatial filters")
     logger.info(resources_req)
-    resources_req.features = None
-    resources_req.spatial = None
     resources = service.get_resources(page, per_page, resources_req)
     return resources
 
@@ -91,7 +107,6 @@ async def get_resource(
     resource_id: uuid.UUID, service: ResourceService = Depends(get_resource_service)
 ) -> ResourceResponse:
     resource = service.get_resource(resource_id)
-    print("getting resource", resource_id)
     try:
         for extent in resource.spatial_extent:
             extent.geometry = extent.geom  # Convert WKB to GeoJSON
