@@ -92,14 +92,18 @@ class ResourceService:
         base_stmt = query.apply_features_filters(base_stmt, resources_req)
         base_stmt = query.apply_temporal_filters(base_stmt, resources_req)
 
-        base_stmt = base_stmt.group_by(
+        group_by = [
             Resource.id,
             Resource.title,
             Resource.type,
             Category.icon,
             Resource.has_spatial_extent,
             Resource.spatial_extent_type,
-        )
+        ]
+        if len(resources_req.features) > 0:
+            group_by.append(SpatialExtent.id)
+
+        base_stmt = base_stmt.group_by(*group_by)
         base_stmt = base_stmt.distinct(Resource.title)
         base_stmt = base_stmt.order_by(Resource.title)
 
