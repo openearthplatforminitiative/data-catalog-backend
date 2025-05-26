@@ -9,6 +9,7 @@ from data_catalog_backend.routes.admin.authentication import dummy_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.models import ResourceType, SpatialExtent, SpatialExtentType
 from data_catalog_backend.schemas.category import UpdateCategoryRequest
+from data_catalog_backend.routes.admin.authentication import dummy_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.code import (
     CodeExampleResponse,

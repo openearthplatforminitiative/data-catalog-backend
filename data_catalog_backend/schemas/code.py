@@ -31,6 +31,7 @@ class UpdateCodeRequest(BaseModel):
     id: Optional[uuid.UUID] = None
     language: Optional[CodeType]
     source: Optional[str]
+    updated_by: Optional[str] = None
     created_by: Optional[str] = None
 
 
