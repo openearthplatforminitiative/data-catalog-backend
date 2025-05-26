@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import select, func, and_, case
-from sqlalchemy.sql.functions import user, current_user
 
 from data_catalog_backend.models import (
     Resource,
@@ -381,4 +380,3 @@ class ResourceService:
             logger.error(f"Unexpected error: {e}")
             self.session.rollback()
             raise e
-
