@@ -5,6 +5,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 
 from data_catalog_backend.dependencies import get_category_service
+from data_catalog_backend.routes.admin.authentication import dummy_user
 from data_catalog_backend.schemas.category import (
     CategoryResponse,
     UpdateCategoryRequest,
@@ -53,7 +54,7 @@ async def create_category(
     category: CategoryRequest,
     service: CategoryService = Depends(get_category_service),
 ) -> CategoryResponse:
-    return service.create_category(category)
+    return service.create_category(category, user=dummy_user)
 
 
 @router.put(
@@ -68,4 +69,4 @@ async def update_category(
     category_id: uuid.UUID,
     service: CategoryService = Depends(get_category_service),
 ) -> CategoryResponse:
-    return service.update_category(category, category_id)
+    return service.update_category(category, category_id, user=dummy_user)
