@@ -36,3 +36,16 @@ class LicenseService:
             self.session.rollback()
             raise e
         return license
+
+    def delete_license(self, id: str) -> License:
+        license = self.get_license(id)
+        if not license:
+            raise ValueError("License not found")
+
+        self.session.delete(license)
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+        return license
