@@ -58,7 +58,6 @@ class CategoryService:
         for key, value in category_data.items():
             if hasattr(existing_category, key):
                 setattr(existing_category, key, value)
-        print("existing_category: ", existing_category)
         try:
             self.session.commit()
         except Exception as e:
