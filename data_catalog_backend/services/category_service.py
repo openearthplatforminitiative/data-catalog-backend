@@ -27,7 +27,16 @@ class CategoryService:
 
     def get_categories(self) -> list[CategorySummaryResponse]:
         stmt = select(Category)
-        return self.session.scalars(stmt).all()
+        categories = self.session.execute(stmt).scalars().all()
+        return [
+            CategorySummaryResponse(
+                id=category.id,
+                title=category.title,
+                abstract=category.abstract,
+                icon=category.icon or "",
+            )
+            for category in categories
+        ]
 
     def create_category(self, category: CategoryRequest, user: User) -> Category:
         category = Category(
@@ -42,4 +51,18 @@ class CategoryService:
         except Exception as e:
             self.session.rollback()
             raise e
+        return category
+
+    def delete_category(self, category_id: uuid.UUID) -> Category:
+        category = self.get_category(category_id)
+
+        if not category:
+            return None
+        self.session.delete(category)
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+        print(category)
         return category

@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -34,3 +35,23 @@ async def add_category(
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete(
+    "/{id}",
+    description="Delete a category",
+    response_model=CategoryResponse,
+    response_model_exclude_none=True,
+    tags=["admin"],
+)
+async def delete_category(
+    id: uuid.UUID, service: CategoryService = Depends(get_category_service)
+) -> CategoryResponse:
+    category = service.get_category(id)
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    if category.resources and len(category.resources) > 0:
+        raise HTTPException(
+            status_code=400, detail="Cannot delete category with existing resources"
+        )
+    return service.delete_category(id)
