@@ -58,6 +58,10 @@ class CategoryService:
 
         if not category:
             return None
+        if category.resources and len(category.resources) > 0:
+            raise ValueError(
+                "Cannot delete category with resources. Please remove resources first."
+            )
         self.session.delete(category)
         try:
             self.session.commit()
