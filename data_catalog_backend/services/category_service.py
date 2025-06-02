@@ -70,3 +70,24 @@ class CategoryService:
             raise e
         print(category)
         return category
+
+    def delete_resource_in_category(self, resource_id: uuid.UUID) -> Category:
+        stmt = (
+            select(Category)
+            .join(Category.resources)
+            .where(Category.resources.any(resource_id=resource_id))
+        )
+        category = self.session.scalars(stmt).unique().one_or_none()
+
+        if not category:
+            return None
+
+        category.resources = [
+            r for r in category.resources if r.resource_id != resource_id
+        ]
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+        return category

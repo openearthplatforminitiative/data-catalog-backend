@@ -264,6 +264,43 @@ class ResourceService:
             self.session.rollback()
             raise e
 
+    def delete_spatial_extent_without_geometries(self, spatial_extent_id: str):
+        try:
+            # Fetch the SpatialExtent object
+            spatial_extent = (
+                self.session.query(SpatialExtent)
+                .options(
+                    joinedload(SpatialExtent.geometries)
+                )  # Eagerly load geometries
+                .filter_by(id=spatial_extent_id)
+                .one_or_none()
+            )
+            if not spatial_extent:
+                raise ValueError(
+                    f"SpatialExtent with id {spatial_extent_id} not found."
+                )
+
+            # Remove the relationship with geometries
+            for geometry_relation in spatial_extent.geometries:
+                geometry_relation.spatial_extent_id = None
+                self.session.add(geometry_relation)
+
+            # Commit the changes to break the foreign key constraint
+            self.session.commit()
+
+            # Delete the SpatialExtent
+            self.session.delete(spatial_extent)
+
+            # Commit the transaction
+            self.session.commit()
+            logger.info(f"SpatialExtent {spatial_extent_id} deleted successfully.")
+        except Exception as e:
+            self.session.rollback()
+            logger.error(f"Error deleting SpatialExtent: {e}")
+            raise HTTPException(
+                status_code=500, detail=f"Error deleting SpatialExtent: {e}"
+            )
+
     def delete_resource(self, resource_id) -> Resource:
         resource = (
             self.session.query(Resource)
@@ -271,6 +308,7 @@ class ResourceService:
                 joinedload(Resource.categories).joinedload(ResourceCategory.category),
                 joinedload(Resource.providers).joinedload(ResourceProvider.provider),
                 joinedload(Resource.spatial_extent),
+                joinedload(Resource.temporal_extent),
                 joinedload(Resource.examples),
                 joinedload(Resource.code_examples),
                 joinedload(Resource.license),
@@ -278,21 +316,23 @@ class ResourceService:
             .where(Resource.id == resource_id)
             .first()
         )
+
         if not resource:
             raise HTTPException(status_code=404, detail="Resource not found")
 
         try:
-            for category in resource.categories:
-                self.session.delete(category)
             for provider in resource.providers:
                 self.session.delete(provider)
             for extent in resource.spatial_extent:
+                self.delete_spatial_extent_without_geometries(extent.id)
+            for extent in resource.temporal_extent:
                 self.session.delete(extent)
             for example in resource.examples:
                 self.session.delete(example)
             for code_example in resource.code_examples:
                 self.session.delete(code_example)
 
+            # Delete the resource itself
             self.session.delete(resource)
             self.session.commit()
 
