@@ -36,6 +36,7 @@ async def add_category(
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.delete(
     "/{id}",
     description="Delete a category",
@@ -54,4 +55,3 @@ async def delete_category(
             status_code=400, detail="Cannot delete category with existing resources"
         )
     return service.delete_category(id)
-
