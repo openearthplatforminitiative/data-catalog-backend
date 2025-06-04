@@ -25,7 +25,11 @@ from data_catalog_backend.schemas.resource import (
     ResourceResponse,
     UpdateResourceRequest,
 )
-from data_catalog_backend.models import ResourceType, SpatialExtent, SpatialExtentRequestType
+from data_catalog_backend.models import (
+    ResourceType,
+    SpatialExtent,
+    SpatialExtentRequestType,
+)
 from data_catalog_backend.schemas.example import (
     ExampleRequest,
     ExampleResponse,
