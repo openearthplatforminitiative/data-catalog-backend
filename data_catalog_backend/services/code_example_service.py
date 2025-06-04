@@ -101,7 +101,6 @@ class CodeExampleService:
                     language=new_code_data.language,
                     source=new_code_data.source,
                     created_by=user.email,
-                    updated_by=user.email,
                 )
                 self.session.add(new_code)
                 existing_code_example.code.append(new_code)
