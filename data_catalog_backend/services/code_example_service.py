@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import List
 
 from sqlalchemy.orm import joinedload
@@ -24,6 +25,7 @@ class CodeExampleService:
                 description=code_example.description,
                 resource_id=resource_id,
                 created_by=user.email,
+                created_at=datetime.now(),
             )
             self.session.add(new_code_example)
             self.session.commit()
@@ -34,6 +36,7 @@ class CodeExampleService:
                     source=code.source,
                     examples_id=new_code_example.id,
                     created_by=user.email,
+                    created_at=datetime.now(),
                 )
                 self.session.add(new_code)
 
@@ -83,7 +86,6 @@ class CodeExampleService:
                     language=new_code_data.language,
                     source=new_code_data.source,
                     created_by=user.email,
-                    updated_by=user.email,
                 )
                 self.session.add(new_code)
                 code_example.code.append(new_code)
@@ -93,6 +95,7 @@ class CodeExampleService:
                     if code.id == new_code_data.id:
                         code.language = new_code_data.language
                         code.source = new_code_data.source
+                        code.updated_by = user.email
                         break
                     else:
                         raise ValueError(

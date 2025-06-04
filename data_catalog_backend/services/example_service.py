@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import List
 
 from data_catalog_backend.models import Examples
@@ -6,6 +7,11 @@ from data_catalog_backend.models import Examples
 from sqlalchemy import select
 
 from data_catalog_backend.schemas.User import User
+from data_catalog_backend.schemas.example import (
+    ExampleResponse,
+    ExampleRequest,
+    UpdateExampleRequest,
+)
 
 
 class ExampleService:
@@ -13,7 +19,7 @@ class ExampleService:
         self.session = session
 
     def create_examples(
-        self, examples: List[Examples], resource_id: uuid.UUID, user: User
+        self, examples: List[ExampleRequest], resource_id: uuid.UUID, user: User
     ) -> List[Examples]:
         created_examples = []
         for example in examples:
@@ -45,7 +51,9 @@ class ExampleService:
         stmt = select(Examples).where(Examples.id == id)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def update_example(self, example_id: uuid.UUID, example_data: Examples) -> Examples:
+    def update_example(
+        self, example_id: uuid.UUID, example_data: UpdateExampleRequest, user: User
+    ) -> Examples:
         example = self.get_example(example_id)
 
         if example is None:
@@ -54,6 +62,9 @@ class ExampleService:
         for key, value in example_data.dict(exclude_unset=True).items():
             if hasattr(example, key) and value is not None:
                 setattr(example, key, value)
+
+        setattr(example, "updated_by", user.email)
+        setattr(example, "updated_at", datetime.now())
 
         self.session.commit()
         return example
