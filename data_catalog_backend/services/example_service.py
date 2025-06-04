@@ -12,8 +12,9 @@ class ExampleService:
     def __init__(self, session):
         self.session = session
 
-
-    def create_examples(self, examples: List[Examples], resource_id: uuid.UUID, user: User) -> List[Examples]:
+    def create_examples(
+        self, examples: List[Examples], resource_id: uuid.UUID, user: User
+    ) -> List[Examples]:
         created_examples = []
         for example in examples:
             new_example = Examples(
