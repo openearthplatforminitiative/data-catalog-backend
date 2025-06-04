@@ -53,7 +53,7 @@ class CategoryService:
             raise e
         return category
 
-    def delete_category(self, category_id: uuid.UUID) -> Category:
+    def delete_category(self, category_id: uuid.UUID, current_user: User) -> Category:
         category = self.get_category(category_id)
 
         if not category:

@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -32,3 +33,21 @@ async def add_license(
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete(
+    "/{id}",
+    description="Delete a license",
+    response_model=LicenseResponse,
+    response_model_exclude_none=True,
+    tags=["licenses"],
+)
+async def delete_license(
+    license_id: uuid.UUID,
+    current_user: Annotated[User, Depends(authenticate_user)],
+    service: LicenseService = Depends(get_license_service),
+) -> LicenseResponse:
+    logging.info(f"Deleting license with id {license_id}")
+    deleted_license = service.delete_license(license_id, current_user)
+    converted = LicenseResponse.model_validate(deleted_license)
+    return converted

@@ -36,22 +36,8 @@ async def get_categories(
     tags=["categories"],
 )
 async def get_category(
-    id: uuid.UUID, service: CategoryService = Depends(get_category_service)
+    category_id: uuid.UUID, service: CategoryService = Depends(get_category_service)
 ) -> CategoryResponse:
-    return service.get_category(id)
-
-
-@router.delete(
-    "/{id}",
-    description="Delete a category",
-    response_model=CategoryResponse,
-    response_model_exclude_none=True,
-    tags=["categories"],
-)
-async def delete_category(
-    id: uuid.UUID, service: CategoryService = Depends(get_category_service)
-) -> CategoryResponse:
-    category = service.get_category(id)
-    if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
-    return service.delete_category(id)
+    category = service.get_category(category_id)
+    converted = CategoryResponse.model_validate(category)
+    return converted

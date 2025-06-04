@@ -23,18 +23,6 @@ async def get_licenses(
     service: LicenseService = Depends(get_license_service),
 ) -> List[LicenseResponse]:
     logging.info("Getting licenses")
-    return service.get_licenses()
-
-
-@router.delete(
-    "/{id}",
-    description="Delete a license",
-    response_model=LicenseResponse,
-    response_model_exclude_none=True,
-    tags=["licenses"],
-)
-async def delete_license(
-    id: str, service: LicenseService = Depends(get_license_service)
-) -> LicenseResponse:
-    logging.info(f"Deleting license with id {id}")
-    return service.delete_license(id)
+    licences = service.get_licenses()
+    converted = [LicenseResponse.model_validate(lic) for lic in licences]
+    return converted

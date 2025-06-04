@@ -39,17 +39,34 @@ async def add_provider(
 
 
 @router.put(
-    "/{id}",
+    "/{provider_id}",
     summary="Update a provider",
     description="Updates a provider in the database",
     tags=["admin"],
     response_model=ProviderResponse,
 )
 async def update_provider(
-    id: uuid.UUID,
+    provider_id: uuid.UUID,
     provider_req: ProviderRequest,
     current_user: Annotated[User, Depends(authenticate_user)],
     service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponse:
     logger.info(f"User {current_user.preferred_username} is updating a provider")
-    return service.update_provider(id, provider_req, current_user)
+    return service.update_provider(provider_id, provider_req, current_user)
+
+
+@router.delete(
+    "/{id}",
+    description="Delete a provider",
+    response_model=ProviderResponse,
+    response_model_exclude_none=True,
+    tags=["admin"],
+)
+async def delete_provider(
+    provider_id: uuid.UUID,
+    current_user: Annotated[User, Depends(authenticate_user)],
+    provider_service: ProviderService = Depends(get_provider_service),
+) -> ProviderResponse:
+    deleted_provider = provider_service.delete_provider(provider_id)
+    converted = ProviderResponse.model_validate(deleted_provider)
+    return converted
