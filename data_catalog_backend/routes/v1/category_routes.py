@@ -42,7 +42,6 @@ async def get_category(
 ) -> CategoryResponse:
     return service.get_category(id)
 
-
 @router.post(
     "/",
     description="Create a new category",

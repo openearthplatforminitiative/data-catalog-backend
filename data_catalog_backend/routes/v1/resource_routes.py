@@ -35,10 +35,12 @@ from data_catalog_backend.schemas.resource import (
     ResourceResponse,
     UpdateResourceRequest,
 )
+
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQueryResponse,
 )
+
 from data_catalog_backend.schemas.spatial_extent import (
     SpatialExtentResponse,
     SpatialExtentRequest,

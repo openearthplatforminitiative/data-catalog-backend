@@ -22,3 +22,4 @@ class ResourceSummaryResponse(BaseModel):
     )
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
+
