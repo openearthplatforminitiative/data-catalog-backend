@@ -19,7 +19,7 @@ class CategoryResponse(BaseModel):
         description="list of resources in the category"
     )
     created_by: Optional[str] = Field(
-        description="email of the user who created the data"
+        default=None, description="email of the user who created the data"
     )
 
 
@@ -28,7 +28,7 @@ class CategoryRequest(BaseModel):
     abstract: str = Field(description="short description of the category")
     icon: str = Field(description="MUI icon of the category")
     created_by: Optional[str] = Field(
-        description="email of the user who created the data"
+        default=None, description="email of the user who created the data"
     )
 
 
@@ -44,10 +44,11 @@ class UpdateCategoryRequest(BaseModel):
 
 
 class UpdateCategoryRequest(BaseModel):
-    title: Optional[str] = Field(description="title of the category")
-    abstract: Optional[str] = Field(description="short description of the category")
-    icon: Optional[str] = Field(description="MUI icon of the category")
-
+    title: Optional[str] = Field(default=None, description="title of the category")
+    abstract: Optional[str] = Field(
+        default=None, description="short description of the category"
+    )
+    icon: Optional[str] = Field(default=None, description="MUI icon of the category")
 
 
 class CategorySummaryResponse(BaseModel):
@@ -56,5 +57,5 @@ class CategorySummaryResponse(BaseModel):
     abstract: str = Field(description="short description of the category")
     icon: str = Field(description="MUI icon of the category")
     created_by: Optional[str] = Field(
-        description="email of the user who created the data"
+        default=None, description="email of the user who created the data"
     )

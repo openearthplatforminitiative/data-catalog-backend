@@ -29,8 +29,8 @@ class UpdateCodeRequest(BaseModel):
 
 class UpdateCodeRequest(BaseModel):
     id: Optional[uuid.UUID] = None
-    language: Optional[CodeType]
-    source: Optional[str]
+    language: Optional[CodeType] = None
+    source: Optional[str] = None
     updated_by: Optional[str] = None
     created_by: Optional[str] = None
 
@@ -39,7 +39,7 @@ class CodeExampleResponse(BaseModel):
     id: uuid.UUID
     title: str
     description: str
-    code: Optional[List[CodeResponse]]
+    code: Optional[List[CodeResponse]] = None
     created_by: Optional[str] = None
 
 
