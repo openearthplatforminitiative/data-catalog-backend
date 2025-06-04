@@ -1,7 +1,10 @@
 import logging
+import uuid
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import select, func, and_, case
+from sqlalchemy.sql.functions import user, current_user
 
 from data_catalog_backend.models import (
     Resource,
@@ -118,11 +121,13 @@ class ResourceService:
             data=[ResourceQuerySpatialResponse(**dict(row)) for row in results],
         )
 
-    def get_resource(self, resource_id) -> Resource:
+    def get_resource(self, resource_id: uuid.UUID) -> Resource:
         stmt = select(Resource).where(Resource.id == resource_id)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def create_resource(self, resource_req: ResourceRequest, user: User) -> Resource:
+    def create_resource(
+        self, resource_req: ResourceRequest, current_user: User
+    ) -> Resource:
         try:
             license = self.license_service.get_license_by_name(resource_req.license)
             if not license and resource_req.type is ResourceType.Dataset:
@@ -136,7 +141,9 @@ class ResourceService:
                 if not provider:
                     raise ValueError("Provider not found")
                 providers.append(
-                    ResourceProvider(role="", provider=provider, created_by=user.email)
+                    ResourceProvider(
+                        role="", provider=provider, created_by=current_user.email
+                    )
                 )
 
             main_category = self.category_service.get_category_by_title(
@@ -147,7 +154,9 @@ class ResourceService:
 
             categories = [
                 ResourceCategory(
-                    is_main_category=True, category=main_category, created_by=user.email
+                    is_main_category=True,
+                    category=main_category,
+                    created_by=current_user.email,
                 )
             ]
             if resource_req.additional_categories:
@@ -157,7 +166,9 @@ class ResourceService:
                         raise ValueError("Category not found")
                     categories.append(
                         ResourceCategory(
-                            is_main_category=False, category=cat, created_by=user.email
+                            is_main_category=False,
+                            category=cat,
+                            created_by=current_user.email,
                         )
                     )
 
@@ -171,7 +182,7 @@ class ResourceService:
                             description=resource_example.description,
                             example_url=resource_example.example_url,
                             favicon_url=resource_example.favicon_url,
-                            created_by=user.email,
+                            created_by=current_user.email,
                         )
                     )
 
@@ -184,14 +195,14 @@ class ResourceService:
                         TemporalExtent(
                             start_date=temporal_extent.start_date,
                             end_date=temporal_extent.end_date,
-                            created_by=user.email,
+                            created_by=current_user.email,
                         )
                     )
 
             code_examples = []
             if resource_req.code_examples:
                 code_examples = self.code_example_service.create_code_examples(
-                    resource_req.code_examples, user=user
+                    resource_req.code_examples, user=current_user
                 )
 
             spatial_extent_objects = []
@@ -218,7 +229,7 @@ class ResourceService:
                         details=extent.details if extent.details else None,
                         spatial_resolution=extent.spatial_resolution,
                         geometries=geometries,
-                        created_by=user.email,
+                        created_by=current_user.email,
                     )
                     spatial_extent_objects.append(spa)
 
@@ -250,12 +261,102 @@ class ResourceService:
             resource.examples = examples
             resource.code_examples = code_examples
             resource.keywords = keywords
-            resource.created_by = user.email
+            resource.created_by = current_user.email
 
             self.session.add(resource)
             self.session.commit()
 
             return resource
+        except Exception as e:
+            # Log unexpected errors and raise a 500 error
+            logger.error(f"Unexpected error: {e}")
+            self.session.rollback()
+            raise e
+
+    def update_resource(self, resource_id, update_dict, current_user: User) -> Resource:
+        resource = self.get_resource(resource_id)
+        if not resource:
+            raise ValueError("Resource not found")
+
+        for key, value in update_dict.items():
+            if hasattr(resource, key):
+                setattr(resource, key, value)
+
+        setattr(resource, "updated_at", datetime.now())
+        setattr(resource, "updated_by", current_user.email)
+
+        self.session.commit()
+        return resource
+
+    def get_spatial_extent(self, spatial_extent_id) -> SpatialExtent:
+        stmt = select(SpatialExtent).where(SpatialExtent.id == spatial_extent_id)
+        return self.session.scalars(stmt).unique().one_or_none()
+
+    def update_spatial_extent(
+        self, resource_id, extent_data, spatial_extent_id, current_user: User
+    ) -> SpatialExtent:
+        spatial_extent = self.get_spatial_extent(spatial_extent_id)
+        extent_dict = extent_data.model_dump()
+        extent_dict["resource_id"] = resource_id
+        extent_dict["id"] = spatial_extent_id
+        extent_dict["created_by"] = spatial_extent.created_by
+
+        if not spatial_extent:
+            raise ValueError("Spatial extent not found")
+
+        for key, value in extent_dict.items():
+            if hasattr(spatial_extent, key):
+                setattr(spatial_extent, key, value)
+
+        setattr(spatial_extent, "updated_at", datetime.now())
+        setattr(spatial_extent, "updated_by", current_user.email)
+
+        self.session.commit()
+        return spatial_extent
+
+    def create_spatial_extent(
+        self, resource_id, spatial_extent_data, current_user: User
+    ) -> SpatialExtent:
+        try:
+            geometries = []
+            if spatial_extent_data.geometries:
+                for geometry_name in spatial_extent_data.geometries:
+                    geometry = self.geometry_service.get_geometry_by_name(geometry_name)
+                    if geometry:
+                        geometries.append(geometry)
+                    else:
+                        raise ValueError(f"Geometry {geometry_name} not found")
+
+            spa = SpatialExtent(**spatial_extent_data.model_dump(exclude="geometries"))
+            print(spa)
+            spa.created_by = current_user.email
+            spa.resource_id = resource_id
+            spa.geometries = geometries
+
+            self.session.add(spa)
+            self.session.commit()
+            return spa
+
+        except Exception as e:
+            # Log unexpected errors and raise a 500 error
+            logger.error(f"Unexpected error: {e}")
+            self.session.rollback()
+            raise e
+
+    def create_temporal_extent(
+        self, resource_id, temporal_extent_data, current_user: User
+    ) -> TemporalExtent:
+        try:
+            temporal_extent = TemporalExtent(
+                **temporal_extent_data.model_dump(exclude_none=True)
+            )
+            temporal_extent.resource_id = resource_id
+            temporal_extent.created_by = current_user.email
+
+            self.session.add(temporal_extent)
+            self.session.commit()
+            return temporal_extent
+
         except Exception as e:
             # Log unexpected errors and raise a 500 error
             logger.error(f"Unexpected error: {e}")

@@ -8,6 +8,7 @@ from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.category import (
     CategoryRequest,
     CategorySummaryResponse,
+    UpdateCategoryRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,3 +44,24 @@ class CategoryService:
             self.session.rollback()
             raise e
         return category
+
+    def update_category(
+        self, category: UpdateCategoryRequest, category_id: uuid.UUID, user: User
+    ) -> Category:
+        existing_category = self.get_category(category_id)
+        if not existing_category:
+            raise ValueError("Category not found")
+
+        category_data = category.dict(exclude_unset=True)
+        category_data["updated_by"] = user.email
+
+        for key, value in category_data.items():
+            if hasattr(existing_category, key):
+                setattr(existing_category, key, value)
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+
+        return existing_category
