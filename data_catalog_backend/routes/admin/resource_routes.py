@@ -50,6 +50,7 @@ async def add_resource(
 
 @router.delete(
     "/{resource_id}",
+    status_code=204,
     description="Delete a resource from the metadata store",
     tags=["admin"],
     response_model=ResourceResponse,
@@ -59,12 +60,7 @@ async def delete_resource(
     resource_id: uuid.UUID,
     current_user: Annotated[User, Depends(authenticate_user)],
     service: ResourceService = Depends(get_resource_service),
-) -> ResourceResponse:
-    try:
-        deleted_resource = service.delete_resource(resource_id, current_user)
-        return ResourceResponse.model_validate(deleted_resource)
-    except Exception as e:
-        logging.error(e)
-        raise HTTPException(
-            status_code=500, detail=f"Error deleting resource: {str(e)}"
-        )
+):
+    logging.info(f"Deleting resource with id {resource_id}")
+    service.delete_resource(resource_id, current_user)
+    return

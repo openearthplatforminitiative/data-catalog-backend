@@ -39,6 +39,7 @@ async def add_category(
 
 @router.delete(
     "/{category_id}",
+    status_code=204,
     description="Delete a category",
     response_model=CategoryResponse,
     response_model_exclude_none=True,
@@ -48,7 +49,8 @@ async def delete_category(
     category_id: uuid.UUID,
     current_user: Annotated[User, Depends(authenticate_user)],
     service: CategoryService = Depends(get_category_service),
-) -> CategoryResponse:
+):
+    logging.info(f"Deleting category with id {category_id}")
     deleted_category = service.delete_category(category_id, current_user)
     if not deleted_category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -56,5 +58,4 @@ async def delete_category(
         raise HTTPException(
             status_code=400, detail="Cannot delete category with existing resources"
         )
-    converted = CategoryResponse.model_validate(deleted_category)
-    return converted
+    return

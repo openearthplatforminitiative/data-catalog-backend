@@ -37,6 +37,7 @@ async def add_license(
 
 @router.delete(
     "/{licence_id}",
+    status_code=204,
     description="Delete a license",
     response_model=LicenseResponse,
     response_model_exclude_none=True,
@@ -46,8 +47,7 @@ async def delete_license(
     license_id: uuid.UUID,
     current_user: Annotated[User, Depends(authenticate_user)],
     service: LicenseService = Depends(get_license_service),
-) -> LicenseResponse:
+):
     logging.info(f"Deleting license with id {license_id}")
-    deleted_license = service.delete_license(license_id, current_user)
-    converted = LicenseResponse.model_validate(deleted_license)
-    return converted
+    service.delete_license(license_id, current_user)
+    return

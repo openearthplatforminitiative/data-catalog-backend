@@ -57,6 +57,7 @@ async def update_provider(
 
 @router.delete(
     "/{provider_id}",
+    status_code=204,
     description="Delete a provider",
     response_model=ProviderResponse,
     response_model_exclude_none=True,
@@ -66,7 +67,7 @@ async def delete_provider(
     provider_id: uuid.UUID,
     current_user: Annotated[User, Depends(authenticate_user)],
     provider_service: ProviderService = Depends(get_provider_service),
-) -> ProviderResponse:
-    deleted_provider = provider_service.delete_provider(provider_id)
-    converted = ProviderResponse.model_validate(deleted_provider)
-    return converted
+):
+    logging.info(f"Deleting provider with id {provider_id}")
+    provider_service.delete_provider(provider_id)
+    return
