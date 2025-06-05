@@ -68,7 +68,6 @@ class CategoryService:
         except Exception as e:
             self.session.rollback()
             raise e
-        print(category)
         return category
 
     def delete_resource_in_category(self, resource_id: uuid.UUID) -> Category:
