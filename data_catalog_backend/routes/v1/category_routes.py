@@ -29,7 +29,7 @@ async def get_categories(
 
 
 @router.get(
-    "/{id}",
+    "/{category_id}",
     description="Returns specific category",
     response_model=CategoryResponse,
     response_model_exclude_none=True,

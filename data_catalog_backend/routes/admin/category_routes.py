@@ -38,7 +38,7 @@ async def add_category(
 
 
 @router.delete(
-    "/{id}",
+    "/{category_id}",
     description="Delete a category",
     response_model=CategoryResponse,
     response_model_exclude_none=True,

@@ -36,7 +36,7 @@ async def add_license(
 
 
 @router.delete(
-    "/{id}",
+    "/{licence_id}",
     description="Delete a license",
     response_model=LicenseResponse,
     response_model_exclude_none=True,

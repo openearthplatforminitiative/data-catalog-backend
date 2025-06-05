@@ -56,7 +56,7 @@ async def update_provider(
 
 
 @router.delete(
-    "/{id}",
+    "/{provider_id}",
     description="Delete a provider",
     response_model=ProviderResponse,
     response_model_exclude_none=True,

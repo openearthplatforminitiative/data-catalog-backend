@@ -30,7 +30,7 @@ async def get_providers(
 
 
 @router.get(
-    "/{id}",
+    "/{provider_id}",
     description="Returns specific provider",
     response_model=ProviderResponse,
     response_model_exclude_none=True,
