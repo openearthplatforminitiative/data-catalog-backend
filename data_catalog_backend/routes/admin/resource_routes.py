@@ -59,11 +59,11 @@ async def add_resource(
 async def delete_resource(
     resource_id: uuid.UUID,
     current_user: Annotated[User, Depends(authenticate_user)],
-    service: ResourceService = Depends(get_resource_service),
+    resource_service: ResourceService = Depends(get_resource_service),
 ):
     try:
         logging.info(f"Deleting resource with id {resource_id}")
-        service.delete_resource(resource_id, current_user)
+        resource_service.delete_resource(resource_id, current_user)
     except Exception as e:
         logger.error(f"Error deleting resource: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))

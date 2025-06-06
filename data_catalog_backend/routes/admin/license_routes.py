@@ -41,16 +41,16 @@ async def add_license(
     description="Delete a license",
     response_model=LicenseResponse,
     response_model_exclude_none=True,
-    tags=["licenses"],
+    tags=["admin"],
 )
 async def delete_license(
     license_id: uuid.UUID,
     current_user: Annotated[User, Depends(authenticate_user)],
-    service: LicenseService = Depends(get_license_service),
+    license_service: LicenseService = Depends(get_license_service),
 ):
     try:
         logging.info(f"Deleting license with id {license_id}")
-        service.delete_license(license_id, current_user)
+        license_service.delete_license(license_id, current_user)
     except Exception as e:
         logger.error(f"Error deleting license: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
