@@ -22,9 +22,9 @@ router = APIRouter(prefix="/providers")
     tags=["providers"],
 )
 async def get_providers(
-    service: ProviderService = Depends(get_provider_service),
+    provider_service: ProviderService = Depends(get_provider_service),
 ) -> List[ProviderResponse]:
-    providers = service.get_providers()
+    providers = provider_service.get_providers()
     converted = [ProviderResponse.model_validate(providers)]
     return converted
 
@@ -37,8 +37,9 @@ async def get_providers(
     tags=["providers"],
 )
 async def get_provider(
-    provider_id: uuid.UUID, service: ProviderService = Depends(get_provider_service)
+    provider_id: uuid.UUID,
+    provider_service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponse:
-    provider = service.get_provider(provider_id)
+    provider = provider_service.get_provider(provider_id)
     converted = ProviderResponse.model_validate(provider)
     return converted

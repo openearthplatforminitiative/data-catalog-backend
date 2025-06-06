@@ -23,9 +23,9 @@ router = APIRouter(prefix="/categories")
     tags=["categories"],
 )
 async def get_categories(
-    service: CategoryService = Depends(get_category_service),
+    category_service: CategoryService = Depends(get_category_service),
 ) -> List[CategorySummaryResponse]:
-    return service.get_categories()
+    return category_service.get_categories()
 
 
 @router.get(
@@ -36,8 +36,9 @@ async def get_categories(
     tags=["categories"],
 )
 async def get_category(
-    category_id: uuid.UUID, service: CategoryService = Depends(get_category_service)
+    category_id: uuid.UUID,
+    category_service: CategoryService = Depends(get_category_service),
 ) -> CategoryResponse:
-    category = service.get_category(category_id)
+    category = category_service.get_category(category_id)
     converted = CategoryResponse.model_validate(category)
     return converted
