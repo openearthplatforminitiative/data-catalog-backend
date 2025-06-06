@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -45,3 +46,25 @@ async def add_resource(
         raise HTTPException(
             status_code=500, detail=f"Error creating resource: {str(e)}"
         )
+
+
+@router.delete(
+    "/{resource_id}",
+    status_code=204,
+    description="Delete a resource from the metadata store",
+    tags=["admin"],
+    response_model=ResourceResponse,
+    response_model_exclude_none=True,
+)
+async def delete_resource(
+    resource_id: uuid.UUID,
+    current_user: Annotated[User, Depends(authenticate_user)],
+    service: ResourceService = Depends(get_resource_service),
+):
+    try:
+        logging.info(f"Deleting resource with id {resource_id}")
+        service.delete_resource(resource_id, current_user)
+    except Exception as e:
+        logger.error(f"Error deleting resource: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    return

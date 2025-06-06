@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_provider_service
 from data_catalog_backend.models import Provider
+from data_catalog_backend.schemas.category import CategoryResponse
 from data_catalog_backend.schemas.provider import ProviderRequest, ProviderResponse
 from data_catalog_backend.services.provider_service import ProviderService
 
@@ -23,17 +24,21 @@ router = APIRouter(prefix="/providers")
 async def get_providers(
     service: ProviderService = Depends(get_provider_service),
 ) -> List[ProviderResponse]:
-    return service.get_providers()
+    providers = service.get_providers()
+    converted = [ProviderResponse.model_validate(providers)]
+    return converted
 
 
 @router.get(
-    "/{id}",
+    "/{provider_id}",
     description="Returns specific provider",
     response_model=ProviderResponse,
     response_model_exclude_none=True,
     tags=["providers"],
 )
 async def get_provider(
-    id: uuid.UUID, service: ProviderService = Depends(get_provider_service)
+    provider_id: uuid.UUID, service: ProviderService = Depends(get_provider_service)
 ) -> ProviderResponse:
-    return service.get_provider(id)
+    provider = service.get_provider(provider_id)
+    converted = ProviderResponse.model_validate(provider)
+    return converted

@@ -11,7 +11,7 @@ class ResourceCategory(Base):
     __tablename__ = "resource_category"
 
     resource_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("resources.id"), primary_key=True
+        ForeignKey("resources.id", ondelete="CASCADE"), primary_key=True
     )
     category_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("categories.id"), primary_key=True

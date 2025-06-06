@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -34,3 +35,25 @@ async def add_category(
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete(
+    "/{category_id}",
+    status_code=204,
+    description="Delete a category",
+    response_model=CategoryResponse,
+    response_model_exclude_none=True,
+    tags=["admin"],
+)
+async def delete_category(
+    category_id: uuid.UUID,
+    current_user: Annotated[User, Depends(authenticate_user)],
+    category_service: CategoryService = Depends(get_category_service),
+):
+    try:
+        logging.info(f"Deleting category with id {category_id}")
+        category_service.delete_category(category_id, current_user)
+    except Exception as e:
+        logger.error(f"Error deleting category: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    return

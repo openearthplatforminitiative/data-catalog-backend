@@ -23,4 +23,6 @@ async def get_licenses(
     service: LicenseService = Depends(get_license_service),
 ) -> List[LicenseResponse]:
     logging.info("Getting licenses")
-    return service.get_licenses()
+    licences = service.get_licenses()
+    converted = [LicenseResponse.model_validate(lic) for lic in licences]
+    return converted

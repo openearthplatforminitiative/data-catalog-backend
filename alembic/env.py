@@ -16,7 +16,7 @@ from data_catalog_backend import database
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 # Construct the path to .env.local
-ENV_PATH = os.path.join(ROOT_DIR, ".env.local")
+ENV_PATH = os.path.join(ROOT_DIR, ".env")
 
 # Load environment variables from .env.local
 load_dotenv(ENV_PATH)
