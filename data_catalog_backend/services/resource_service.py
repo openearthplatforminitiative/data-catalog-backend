@@ -318,7 +318,7 @@ class ResourceService:
         )
 
         if not resource:
-            raise HTTPException(status_code=404, detail="Resource not found")
+            raise ValueError(f"Resource with id {resource_id} not found")
 
         try:
             for provider in resource.providers:
@@ -341,6 +341,4 @@ class ResourceService:
         except Exception as e:
             self.session.rollback()
             logger.error(f"Error deleting resource: {e}")
-            raise HTTPException(
-                status_code=500, detail="An error occurred while deleting the resource"
-            )
+            raise e

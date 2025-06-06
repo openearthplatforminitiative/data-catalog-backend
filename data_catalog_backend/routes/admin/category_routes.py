@@ -48,14 +48,8 @@ async def add_category(
 async def delete_category(
     category_id: uuid.UUID,
     current_user: Annotated[User, Depends(authenticate_user)],
-    service: CategoryService = Depends(get_category_service),
+    category_service: CategoryService = Depends(get_category_service),
 ):
     logging.info(f"Deleting category with id {category_id}")
-    deleted_category = service.delete_category(category_id, current_user)
-    if not deleted_category:
-        raise HTTPException(status_code=404, detail="Category not found")
-    if deleted_category.resources and len(deleted_category.resources) > 0:
-        raise HTTPException(
-            status_code=400, detail="Cannot delete category with existing resources"
-        )
+    category_service.delete_category(category_id, current_user)
     return

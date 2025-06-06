@@ -53,11 +53,11 @@ class CategoryService:
             raise e
         return category
 
-    def delete_category(self, category_id: uuid.UUID, current_user: User) -> Category:
+    def delete_category(self, category_id: uuid.UUID, user: User) -> Category:
         category = self.get_category(category_id)
 
         if not category:
-            return None
+            raise ValueError(f"Category with id {category_id} does not exist")
         if category.resources and len(category.resources) > 0:
             raise ValueError(
                 "Cannot delete category with resources. Please remove resources first."
@@ -79,7 +79,7 @@ class CategoryService:
         category = self.session.scalars(stmt).unique().one_or_none()
 
         if not category:
-            return None
+            raise ValueError("Cannot find category with the given resource ID")
 
         category.resources = [
             r for r in category.resources if r.resource_id != resource_id
