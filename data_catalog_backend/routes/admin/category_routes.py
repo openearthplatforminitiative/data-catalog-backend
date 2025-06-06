@@ -50,6 +50,10 @@ async def delete_category(
     current_user: Annotated[User, Depends(authenticate_user)],
     category_service: CategoryService = Depends(get_category_service),
 ):
-    logging.info(f"Deleting category with id {category_id}")
-    category_service.delete_category(category_id, current_user)
+    try:
+        logging.info(f"Deleting category with id {category_id}")
+        category_service.delete_category(category_id, current_user)
+    except Exception as e:
+        logger.error(f"Error deleting category: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     return

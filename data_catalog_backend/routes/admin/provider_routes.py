@@ -68,6 +68,10 @@ async def delete_provider(
     current_user: Annotated[User, Depends(authenticate_user)],
     provider_service: ProviderService = Depends(get_provider_service),
 ):
-    logging.info(f"Deleting provider with id {provider_id}")
-    provider_service.delete_provider(provider_id)
+    try:
+        logging.info(f"Deleting provider with id {provider_id}")
+        provider_service.delete_provider(provider_id)
+    except Exception as e:
+        logger.error(f"Error deleting provider: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     return

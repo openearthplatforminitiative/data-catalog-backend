@@ -61,6 +61,10 @@ async def delete_resource(
     current_user: Annotated[User, Depends(authenticate_user)],
     service: ResourceService = Depends(get_resource_service),
 ):
-    logging.info(f"Deleting resource with id {resource_id}")
-    service.delete_resource(resource_id, current_user)
+    try:
+        logging.info(f"Deleting resource with id {resource_id}")
+        service.delete_resource(resource_id, current_user)
+    except Exception as e:
+        logger.error(f"Error deleting resource: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     return

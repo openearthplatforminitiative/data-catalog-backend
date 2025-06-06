@@ -48,6 +48,10 @@ async def delete_license(
     current_user: Annotated[User, Depends(authenticate_user)],
     service: LicenseService = Depends(get_license_service),
 ):
-    logging.info(f"Deleting license with id {license_id}")
-    service.delete_license(license_id, current_user)
+    try:
+        logging.info(f"Deleting license with id {license_id}")
+        service.delete_license(license_id, current_user)
+    except Exception as e:
+        logger.error(f"Error deleting license: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     return
