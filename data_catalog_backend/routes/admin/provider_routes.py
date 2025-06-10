@@ -69,9 +69,18 @@ async def delete_provider(
     provider_service: ProviderService = Depends(get_provider_service),
 ):
     try:
+        provider = provider_service.get_provider(provider_id)
+        if not provider:
+            raise ValueError(f"Provider with id {provider_id} not found")
+
         logging.info(f"Deleting provider with id {provider_id}")
         provider_service.delete_provider(provider_id)
+    except ValueError as ve:
+        logger.warning(
+            f"Validation error while deleting provider with ID: {provider_id} - {str(ve)}"
+        )
+        raise HTTPException(status_code=404, detail=str(ve))
     except Exception as e:
-        logger.error(f"Error deleting provider: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Error deleting provider with id {provider_id} - {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
     return

@@ -124,7 +124,7 @@ class ResourceService:
         stmt = select(Resource).where(Resource.id == resource_id)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def create_resource(self, resource_req: ResourceRequest, user: User) -> Resource:
+    def create_resource(self, resource_req: Resource, user: User) -> Resource:
         try:
             license = self.license_service.get_license_by_name(resource_req.license)
             if not license and resource_req.type is ResourceType.Dataset:
@@ -316,9 +316,6 @@ class ResourceService:
             .where(Resource.id == resource_id)
             .first()
         )
-
-        if not resource:
-            raise ValueError(f"Resource with id {resource_id} not found")
 
         try:
             for provider in resource.providers:

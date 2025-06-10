@@ -51,8 +51,21 @@ async def delete_category(
     category_service: CategoryService = Depends(get_category_service),
 ):
     try:
+        category = category_service.get_category(category_id)
+        if not category:
+            raise ValueError(f"Category with ID {category_id} does not exist.")
+
+        if category.resources and len(category.resources) > 0:
+            raise ValueError(
+                "Cannot delete category with resources. Please remove resources first."
+            )
         logging.info(f"Deleting category with id {category_id}")
         category_service.delete_category(category_id, current_user)
+    except ValueError as ve:
+        logger.error(
+            f"Validation error while deleting category with ID: {category_id} - {str(ve)}"
+        )
+        raise HTTPException(status_code=404, detail=str(ve))
     except Exception as e:
         logger.error(f"Error deleting category: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))

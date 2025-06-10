@@ -41,8 +41,6 @@ class LicenseService:
 
     def delete_license(self, license_id: uuid.UUID, user: User) -> License:
         license = self.get_license(license_id)
-        if not license:
-            raise ValueError("License not found")
 
         self.session.delete(license)
         try:

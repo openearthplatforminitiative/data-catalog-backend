@@ -63,8 +63,6 @@ class ProviderService:
 
     def delete_provider(self, provider_id: uuid.UUID) -> Union[Provider, None]:
         provider = self.get_provider(provider_id)
-        if not provider:
-            raise ValueError(f"Provider with id {provider_id} not found")
 
         try:
             self.session.delete(provider)

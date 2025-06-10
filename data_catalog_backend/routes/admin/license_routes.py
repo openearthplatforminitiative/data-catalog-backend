@@ -49,9 +49,18 @@ async def delete_license(
     license_service: LicenseService = Depends(get_license_service),
 ):
     try:
+        license = license_service.get_license(license_id)
+        if not license:
+            raise ValueError(f"License with ID {license_id} does not exist.")
+
         logging.info(f"Deleting license with id {license_id}")
         license_service.delete_license(license_id, current_user)
+    except ValueError as e:
+        logger.error(
+            f"Validation error while deleting license with ID: {license_id} - {str(e)}"
+        )
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Error deleting license: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Error deleting license with license id {license_id} - {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
     return

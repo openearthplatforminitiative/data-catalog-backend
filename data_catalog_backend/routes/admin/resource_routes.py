@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from data_catalog_backend.dependencies import (
     get_resource_service,
 )
+from data_catalog_backend.models import Resource
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.resource import (
@@ -32,8 +33,10 @@ async def add_resource(
 ) -> ResourceResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a resource")
-        validated_request = ResourceRequest.model_validate(resource_req)
-        created = resource_service.create_resource(validated_request, current_user)
+        resource_data = resource_req.model_dump()
+        resource = Resource(**resource_data)
+
+        created = resource_service.create_resource(resource, current_user)
 
         if created.spatial_extent is not None:
             for extent in created.spatial_extent:
@@ -62,9 +65,24 @@ async def delete_resource(
     resource_service: ResourceService = Depends(get_resource_service),
 ):
     try:
+        resource = resource_service.get_resource(resource_id)
+        if not resource:
+            raise ValueError(f"Resource with id {resource_id} not found")
+
         logging.info(f"Deleting resource with id {resource_id}")
         resource_service.delete_resource(resource_id, current_user)
+
+    except ValueError as ve:
+        logger.warning(
+            f"Validation error while deleting resource with ID: {resource_id} - {str(ve)}"
+        )
+        raise HTTPException(status_code=404, detail=str(ve))
     except Exception as e:
-        logger.error(f"Error deleting resource: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(
+            f"Unexpected error while deleting resource with ID: {resource_id} - {str(e)}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
     return
