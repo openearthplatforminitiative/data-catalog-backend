@@ -83,4 +83,3 @@ async def delete_provider(
     except Exception as e:
         logger.error(f"Error deleting provider with id {provider_id} - {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-    return

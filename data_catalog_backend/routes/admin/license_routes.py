@@ -63,4 +63,3 @@ async def delete_license(
     except Exception as e:
         logger.error(f"Error deleting license with license id {license_id} - {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-    return

@@ -53,7 +53,7 @@ class CategoryService:
             raise e
         return category
 
-    def delete_category(self, category_id: uuid.UUID, user: User) -> Category:
+    def delete_category(self, category_id: uuid.UUID, user: User):
         category = self.get_category(category_id)
 
         self.session.delete(category)
@@ -62,4 +62,3 @@ class CategoryService:
         except Exception as e:
             self.session.rollback()
             raise e
-        return category

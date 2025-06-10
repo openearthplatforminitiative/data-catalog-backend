@@ -69,4 +69,3 @@ async def delete_category(
     except Exception as e:
         logger.error(f"Error deleting category: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
-    return

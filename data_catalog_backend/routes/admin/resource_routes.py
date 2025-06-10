@@ -85,4 +85,3 @@ async def delete_resource(
             status_code=500,
             detail=str(e),
         )
-    return

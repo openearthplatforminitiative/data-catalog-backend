@@ -61,7 +61,7 @@ class ProviderService:
 
         return provider
 
-    def delete_provider(self, provider_id: uuid.UUID) -> Union[Provider, None]:
+    def delete_provider(self, provider_id: uuid.UUID):
         provider = self.get_provider(provider_id)
 
         try:
@@ -70,5 +70,3 @@ class ProviderService:
         except Exception as e:
             self.session.rollback()
             raise e
-
-        return provider

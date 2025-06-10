@@ -301,7 +301,7 @@ class ResourceService:
                 status_code=500, detail=f"Error deleting SpatialExtent: {e}"
             )
 
-    def delete_resource(self, resource_id, user: User) -> Resource:
+    def delete_resource(self, resource_id, user: User):
         resource = (
             self.session.query(Resource)
             .options(
@@ -332,8 +332,6 @@ class ResourceService:
             # Delete the resource itself
             self.session.delete(resource)
             self.session.commit()
-
-            return resource
 
         except Exception as e:
             self.session.rollback()

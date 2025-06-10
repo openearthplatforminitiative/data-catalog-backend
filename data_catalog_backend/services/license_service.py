@@ -39,7 +39,7 @@ class LicenseService:
             raise e
         return new_license
 
-    def delete_license(self, license_id: uuid.UUID, user: User) -> License:
+    def delete_license(self, license_id: uuid.UUID, user: User):
         license = self.get_license(license_id)
 
         self.session.delete(license)
@@ -48,4 +48,3 @@ class LicenseService:
         except Exception as e:
             self.session.rollback()
             raise e
-        return license
