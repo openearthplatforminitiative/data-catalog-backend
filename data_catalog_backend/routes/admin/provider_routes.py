@@ -46,10 +46,12 @@ async def add_provider(
     response_model=ProviderResponse,
 )
 async def update_provider(
-    id: uuid.UUID,
+    provider_id: uuid.UUID,
     provider_req: ProviderRequest,
     current_user: Annotated[User, Depends(authenticate_user)],
     service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponse:
     logger.info(f"User {current_user.preferred_username} is updating a provider")
-    return service.update_provider(id, provider_req, current_user)
+    provider_data = provider_req.model_dump()
+    provider = Provider(**provider_data)
+    return service.update_provider(provider_id, provider, current_user)

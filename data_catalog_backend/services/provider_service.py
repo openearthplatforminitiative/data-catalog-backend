@@ -43,8 +43,8 @@ class ProviderService:
             raise e
         return provider
 
-    def update_provider(self, id, provider_req, user: User):
-        provider = self.get_provider(id)
+    def update_provider(self, provider_id, provider_req, user: User):
+        provider = self.get_provider(provider_id)
         if not provider:
             raise HTTPException(status_code=404, detail="Provider not found")
 
