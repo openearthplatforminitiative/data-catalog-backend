@@ -25,11 +25,20 @@ class CategoryService:
         stmt = select(Category).where(Category.title == title)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def get_categories(self) -> list[CategorySummaryResponse]:
+    def get_categories(self) -> list[Category]:
         stmt = select(Category)
-        return self.session.scalars(stmt).all()
+        categories = self.session.execute(stmt).scalars().all()
+        return [
+            Category(
+                id=category.id,
+                title=category.title,
+                abstract=category.abstract,
+                icon=category.icon or "",
+            )
+            for category in categories
+        ]
 
-    def create_category(self, category: CategoryRequest, user: User) -> Category:
+    def create_category(self, category: Category, user: User) -> Category:
         category = Category(
             title=category.title,
             abstract=category.abstract,
@@ -43,3 +52,19 @@ class CategoryService:
             self.session.rollback()
             raise e
         return category
+
+    def delete_category(self, category_id: uuid.UUID, user: User):
+        category = self.get_category(category_id)
+        if not category:
+            raise ValueError(f"Category with ID {category_id} does not exist.")
+
+        if category.resources and len(category.resources) > 0:
+            raise ValueError(
+                "Cannot delete category with resources. Please remove resources first."
+            )
+        self.session.delete(category)
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e

@@ -36,7 +36,7 @@ async def get_resources(
     years: Optional[List[str]] = Query(None, description="Filter by years"),
     page: int = Query(0, description="Page number for pagination"),
     per_page: int = Query(10, description="Number of items per page"),
-    service: ResourceService = Depends(get_resource_service),
+    resource_service: ResourceService = Depends(get_resource_service),
 ) -> ResourceQueryResponse:
     resources_req = ResourceQueryRequest(
         types=types,
@@ -50,7 +50,7 @@ async def get_resources(
 
     logger.info("Getting resources with non-geospatial filters")
     logger.info(resources_req)
-    resources = service.get_resources(page, per_page, resources_req)
+    resources = resource_service.get_resources(page, per_page, resources_req)
     return resources
 
 
@@ -66,11 +66,11 @@ async def search_resources(
     resources_req: ResourceQueryRequest,
     page: int = 0,
     per_page: int = 10,
-    service: ResourceService = Depends(get_resource_service),
+    resource_service: ResourceService = Depends(get_resource_service),
 ) -> ResourceQueryResponse:
     logger.info("Searching resources with all filters")
     logger.info(resources_req)
-    resources = service.get_resources(page, per_page, resources_req)
+    resources = resource_service.get_resources(page, per_page, resources_req)
     return resources
 
 
@@ -82,9 +82,10 @@ async def search_resources(
     tags=["resources"],
 )
 async def get_resource(
-    resource_id: uuid.UUID, service: ResourceService = Depends(get_resource_service)
+    resource_id: uuid.UUID,
+    resource_service: ResourceService = Depends(get_resource_service),
 ) -> ResourceResponse:
-    resource = service.get_resource(resource_id)
+    resource = resource_service.get_resource(resource_id)
     try:
         for extent in resource.spatial_extent:
             extent.geometry = extent.geom  # Convert WKB to GeoJSON

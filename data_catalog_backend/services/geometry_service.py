@@ -16,7 +16,7 @@ class GeometryService:
     def __init__(self, session):
         self.session = session
 
-    def create_geometry(self, geometry_req: GeometryRequest, user: User) -> None:
+    def create_geometry(self, geometry_req: Geometry, user: User) -> None:
         feature_collection = geometry_req.geometry
 
         if feature_collection.type != "FeatureCollection":

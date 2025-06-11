@@ -43,10 +43,10 @@ class ProviderService:
             raise e
         return provider
 
-    def update_provider(self, id, provider_req, user: User):
-        provider = self.get_provider(id)
+    def update_provider(self, provider_id, provider_req, user: User):
+        provider = self.get_provider(provider_id)
         if not provider:
-            raise HTTPException(status_code=404, detail="Provider not found")
+            raise ValueError(f"Provider with id {provider_id} not found")
 
         for field, value in provider_req.model_dump().items():
             setattr(provider, field, value)
@@ -60,3 +60,15 @@ class ProviderService:
             raise e
 
         return provider
+
+    def delete_provider(self, provider_id: uuid.UUID):
+        provider = self.get_provider(provider_id)
+        if not provider:
+            raise ValueError(f"Provider with id {provider_id} not found")
+
+        try:
+            self.session.delete(provider)
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e

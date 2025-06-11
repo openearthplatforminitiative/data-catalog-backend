@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -6,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from data_catalog_backend.dependencies import (
     get_resource_service,
 )
+from data_catalog_backend.models import Resource
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.resource import (
@@ -31,8 +33,10 @@ async def add_resource(
 ) -> ResourceResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a resource")
-        validated_request = ResourceRequest.model_validate(resource_req)
-        created = resource_service.create_resource(validated_request, current_user)
+        resource_data = resource_req.model_dump()
+        resource = Resource(**resource_data)
+
+        created = resource_service.create_resource(resource, current_user)
 
         if created.spatial_extent is not None:
             for extent in created.spatial_extent:
@@ -44,4 +48,36 @@ async def add_resource(
         logger.error(e)
         raise HTTPException(
             status_code=500, detail=f"Error creating resource: {str(e)}"
+        )
+
+
+@router.delete(
+    "/{resource_id}",
+    status_code=204,
+    description="Delete a resource from the metadata store",
+    tags=["admin"],
+    response_model=ResourceResponse,
+    response_model_exclude_none=True,
+)
+async def delete_resource(
+    resource_id: uuid.UUID,
+    current_user: Annotated[User, Depends(authenticate_user)],
+    resource_service: ResourceService = Depends(get_resource_service),
+):
+    try:
+        logging.info(f"Deleting resource with id {resource_id}")
+        resource_service.delete_resource(resource_id, current_user)
+
+    except ValueError as ve:
+        logger.warning(
+            f"Validation error while deleting resource with ID: {resource_id} - {str(ve)}"
+        )
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        logger.error(
+            f"Unexpected error while deleting resource with ID: {resource_id} - {str(e)}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
         )
