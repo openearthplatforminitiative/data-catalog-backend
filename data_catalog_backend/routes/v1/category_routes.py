@@ -25,7 +25,11 @@ router = APIRouter(prefix="/categories")
 async def get_categories(
     category_service: CategoryService = Depends(get_category_service),
 ) -> List[CategorySummaryResponse]:
-    return category_service.get_categories()
+    categories = category_service.get_categories()
+    converted = [
+        CategorySummaryResponse.model_validate(category) for category in categories
+    ]
+    return converted
 
 
 @router.get(

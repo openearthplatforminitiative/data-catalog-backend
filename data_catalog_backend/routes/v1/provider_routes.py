@@ -25,7 +25,7 @@ async def get_providers(
     provider_service: ProviderService = Depends(get_provider_service),
 ) -> List[ProviderResponse]:
     providers = provider_service.get_providers()
-    converted = [ProviderResponse.model_validate(providers)]
+    converted = [ProviderResponse.model_validate(provider) for provider in providers]
     return converted
 
 

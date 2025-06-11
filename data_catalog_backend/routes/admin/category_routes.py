@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from data_catalog_backend.dependencies import (
     get_category_service,
 )
+from data_catalog_backend.models import Category
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.category import CategoryResponse, CategoryRequest
@@ -29,7 +30,9 @@ async def add_category(
 ) -> CategoryResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a category")
-        created = category_service.create_category(category_req, current_user)
+        category_data = category_req.model_dump()
+        category = Category(**category_data)
+        created = category_service.create_category(category, current_user)
         converted = CategoryResponse.model_validate(created)
         return converted
     except Exception as e:
