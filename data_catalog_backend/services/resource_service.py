@@ -302,38 +302,66 @@ class ResourceService:
             )
 
     def delete_resource(self, resource_id, user: User):
-        resource = (
-            self.session.query(Resource)
-            .options(
-                joinedload(Resource.categories).joinedload(ResourceCategory.category),
-                joinedload(Resource.providers).joinedload(ResourceProvider.provider),
-                joinedload(Resource.spatial_extent),
-                joinedload(Resource.temporal_extent),
-                joinedload(Resource.examples),
-                joinedload(Resource.code_examples),
-                joinedload(Resource.license),
-            )
-            .where(Resource.id == resource_id)
-            .first()
-        )
-
         try:
-            for provider in resource.providers:
-                self.session.delete(provider)
-            for extent in resource.spatial_extent:
-                self.delete_spatial_extent_without_geometries(extent.id)
-            for extent in resource.temporal_extent:
-                self.session.delete(extent)
-            for example in resource.examples:
-                self.session.delete(example)
-            for code_example in resource.code_examples:
-                self.session.delete(code_example)
+            resource = (
+                self.session.query(Resource)
+                .options(
+                    joinedload(Resource.categories).joinedload(
+                        ResourceCategory.category
+                    ),
+                    joinedload(Resource.providers).joinedload(
+                        ResourceProvider.provider
+                    ),
+                    joinedload(Resource.spatial_extent),
+                    joinedload(Resource.temporal_extent),
+                    joinedload(Resource.examples),
+                    joinedload(Resource.code_examples),
+                    joinedload(Resource.license),
+                )
+                .where(Resource.id == resource_id)
+                .first()
+            )
 
-            # Delete the resource itself
-            self.session.delete(resource)
-            self.session.commit()
+            if not resource:
+                raise ValueError(f"Resource with id {resource_id} not found")
+
+            try:
+                for provider in resource.providers:
+                    self.session.delete(provider)
+                for extent in resource.spatial_extent:
+                    self.delete_spatial_extent_without_geometries(extent.id)
+                for extent in resource.temporal_extent:
+                    self.session.delete(extent)
+                for example in resource.examples:
+                    self.session.delete(example)
+                for code_example in resource.code_examples:
+                    self.session.delete(code_example)
+
+            except Exception as e:
+                logger.error(f"Error deleting resource with ID:{resource_id} - {e}")
+                raise e
+
+            try:
+                # Delete the resource itself
+                self.session.delete(resource)
+                self.session.commit()
+            except Exception as e:
+                logger.error(
+                    f"Error commiting delete for resource with ID:{resource_id} - {e}"
+                )
+                self.session.rollback()
+                raise e
+
+        except ValueError as e:
+            self.session.rollback()
+            logger.error(
+                f"Validation error while deleting resource with ID: {resource_id} - {str(e)}"
+            )
+            raise e
 
         except Exception as e:
             self.session.rollback()
-            logger.error(f"Error deleting resource: {e}")
+            logger.error(
+                f"Unexpected error while deleting resource with ID: {resource_id} - {str(e)}"
+            )
             raise e

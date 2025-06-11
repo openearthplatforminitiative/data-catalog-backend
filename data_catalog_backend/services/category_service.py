@@ -55,7 +55,13 @@ class CategoryService:
 
     def delete_category(self, category_id: uuid.UUID, user: User):
         category = self.get_category(category_id)
+        if not category:
+            raise ValueError(f"Category with ID {category_id} does not exist.")
 
+        if category.resources and len(category.resources) > 0:
+            raise ValueError(
+                "Cannot delete category with resources. Please remove resources first."
+            )
         self.session.delete(category)
         try:
             self.session.commit()

@@ -65,10 +65,6 @@ async def delete_resource(
     resource_service: ResourceService = Depends(get_resource_service),
 ):
     try:
-        resource = resource_service.get_resource(resource_id)
-        if not resource:
-            raise ValueError(f"Resource with id {resource_id} not found")
-
         logging.info(f"Deleting resource with id {resource_id}")
         resource_service.delete_resource(resource_id, current_user)
 
