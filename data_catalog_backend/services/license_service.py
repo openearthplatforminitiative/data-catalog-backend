@@ -27,7 +27,7 @@ class LicenseService:
         stmt = select(License)
         return self.session.scalars(stmt).unique().all()
 
-    def create_license(self, license: LicenseRequest, user: User) -> License:
+    def create_license(self, license: License, user: User) -> License:
         new_license = License(
             name=license.name, url=str(license.url), created_by=user.email
         )

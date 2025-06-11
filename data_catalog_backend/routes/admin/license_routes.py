@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_license_service
+from data_catalog_backend.models import License
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.license import LicenseResponse, LicenseRequest
@@ -27,7 +28,9 @@ async def add_license(
 ) -> LicenseResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a license")
-        created = license_service.create_license(license_req, current_user)
+        licence_data = license_req.model_dump()
+        license = License(**licence_data)
+        created = license_service.create_license(license, current_user)
         converted = LicenseResponse.model_validate(created)
         return converted
     except Exception as e:

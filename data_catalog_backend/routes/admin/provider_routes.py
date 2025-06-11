@@ -28,9 +28,9 @@ async def add_provider(
 ) -> ProviderResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a provider")
-        created = service.create_provider(
-            Provider(**provider_req.model_dump()), current_user
-        )
+        provider_data = provider_req.model_dump()
+        provider = Provider(**provider_data)
+        created = service.create_provider(provider, current_user)
         converted = ProviderResponse.model_validate(created)
         return converted
     except Exception as e:
