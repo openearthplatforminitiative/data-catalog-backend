@@ -40,7 +40,7 @@ async def add_provider(
 
 
 @router.put(
-    "/{id}",
+    "/{provider_id}",
     status_code=200,
     summary="Update a provider",
     description="Updates a provider in the database",
@@ -53,7 +53,16 @@ async def update_provider(
     current_user: Annotated[User, Depends(authenticate_user)],
     provider_service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponse:
-    logger.info(f"User {current_user.preferred_username} is updating a provider")
-    provider_data = provider_req.model_dump()
-    provider = Provider(**provider_data)
-    return provider_service.update_provider(provider_id, provider, current_user)
+    try:
+        logger.info(f"User {current_user.preferred_username} is updating a provider")
+        provider_data = provider_req.model_dump()
+        provider = Provider(**provider_data)
+        updated = provider_service.update_provider(provider_id, provider, current_user)
+        converted = ProviderResponse.model_validate(updated)
+        return converted
+    except ValueError as e:
+        logger.error(f"Value error while updating category: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error while updating provider: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

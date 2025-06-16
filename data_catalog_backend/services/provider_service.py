@@ -43,12 +43,12 @@ class ProviderService:
             raise e
         return provider
 
-    def update_provider(self, provider_id, provider_req, user: User):
-        provider = self.get_provider(provider_id)
-        if not provider:
-            raise HTTPException(status_code=404, detail="Provider not found")
+    def update_provider(self, provider_id, provider: Provider, user: User) -> Provider:
+        existing_provider = self.get_provider(provider_id)
+        if not existing_provider:
+            raise ValueError("Provider not found")
 
-        for field, value in provider_req.model_dump().items():
+        for field, value in vars(provider).items():
             setattr(provider, field, value)
 
         provider.updated_by = user.email

@@ -3,6 +3,7 @@ import uuid
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.openapi.models import Example
 
 from data_catalog_backend.dependencies import (
     get_resource_service,
@@ -86,7 +87,7 @@ async def update_resource(
 ) -> ResourceResponse:
     resource = resource_service.get_resource(resource_id)
     if not resource:
-        raise HTTPException(status_code=404, detail="Resource not found")
+        raise ValueError("Resource not found")
 
     try:
         update_dict = update_data.model_dump(exclude_unset=True)
@@ -153,8 +154,10 @@ async def update_resource(
 
         return ResourceResponse.model_validate(updated_resource)
     except ValueError as e:
+        logger.error(f"Value error while updating category: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
+        logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -195,17 +198,22 @@ async def add_spatial_extent(
 )
 async def update_spatial_extent(
     resource_id: uuid.UUID,
-    spatial_extent: UpdateSpatialExtentRequest,
+    spatial_extent_req: UpdateSpatialExtentRequest,
     spatial_extent_id: uuid.UUID,
     current_user: Annotated[User, Depends(authenticate_user)],
     resource_service: ResourceService = Depends(get_resource_service),
 ) -> SpatialExtentResponse:
     try:
+        spatial_extent_data = spatial_extent_req.model_dump()
+        spatial_extent = SpatialExtent(**spatial_extent_data)
         updated_spatial_extent = resource_service.update_spatial_extent(
             resource_id, spatial_extent, spatial_extent_id, current_user
         )
         converted = SpatialExtentResponse.model_validate(updated_spatial_extent)
         return converted
+    except ValueError as e:
+        logger.error(f"Value error while updating spatial extent: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -283,6 +291,9 @@ async def update_code_example(
             user=current_user,
         )
         return CodeExampleResponse.model_validate(updated_code_example).model_dump()
+    except ValueError as e:
+        logger.error(f"Value error while updating code example: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -325,15 +336,20 @@ async def add_examples(
 )
 async def update_example(
     example_id: uuid.UUID,
-    example: UpdateExampleRequest,
+    example_req: UpdateExampleRequest,
     current_user: Annotated[User, Depends(authenticate_user)],
     service: ResourceService = Depends(get_resource_service),
 ) -> ExampleResponse:
     try:
+        example_data = example_req.model_dump()
+        example = Example(**example_data)
         updated_example = service.example_service.update_example(
             example_id, example, current_user
         )
         return ExampleResponse.model_validate(updated_example).model_dump()
+    except ValueError as e:
+        logger.error(f"Value error while updating example: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))

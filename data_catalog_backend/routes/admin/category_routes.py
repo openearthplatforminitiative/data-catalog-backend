@@ -64,6 +64,9 @@ async def update_category(
         updating = category_service.update_category(category, category_id, current_user)
         converted = CategoryResponse.model_validate(updating)
         return converted
+    except ValueError as e:
+        logger.error(f"Value error while updating category: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))

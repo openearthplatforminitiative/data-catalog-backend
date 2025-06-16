@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime
 from typing import List
 
+from fastapi.openapi.models import Example
+
 from data_catalog_backend.models import Examples
 
 from sqlalchemy import select
@@ -52,14 +54,14 @@ class ExampleService:
         return self.session.scalars(stmt).unique().one_or_none()
 
     def update_example(
-        self, example_id: uuid.UUID, example_data: UpdateExampleRequest, user: User
-    ) -> Examples:
-        example = self.get_example(example_id)
+        self, example_id: uuid.UUID, example: Example, user: User
+    ) -> Example:
+        existing_example = self.get_example(example_id)
 
-        if example is None:
+        if existing_example is None:
             raise ValueError(f"Example with id {example_id} not found")
 
-        for key, value in example_data.dict(exclude_unset=True).items():
+        for key, value in vars(example).items():
             if hasattr(example, key) and value is not None:
                 setattr(example, key, value)
 
