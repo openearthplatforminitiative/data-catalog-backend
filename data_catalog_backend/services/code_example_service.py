@@ -67,19 +67,23 @@ class CodeExampleService:
         return self.session.scalars(stmt).unique().first()
 
     def update_code_example(
-        self, resource_id, code_example_id, example_data, user: User
+        self,
+        resource_id: uuid.UUID,
+        code_example_id: uuid.UUID,
+        code_example: CodeExamples,
+        user: User,
     ) -> CodeExamples:
-        code_example = self.get_code_example(code_example_id)
-        if not code_example:
+        existing_code_example = self.get_code_example(code_example_id)
+        if not existing_code_example:
             raise ValueError("Code example not found")
 
         # Update attributes directly on the ORM instance
-        code_example.title = example_data.title
-        code_example.description = example_data.description
-        code_example.resource_id = resource_id
-        code_example.updated_by = user.email
+        existing_code_example.title = code_example.title
+        existing_code_example.description = code_example.description
+        existing_code_example.resource_id = resource_id
+        existing_code_example.updated_by = user.email
 
-        for new_code_data in example_data.code:
+        for new_code_data in code_example.code:
             # Create new code object if id is None
             if not hasattr(new_code_data, "id") or new_code_data.id is None:
                 new_code = Code(
@@ -88,10 +92,10 @@ class CodeExampleService:
                     created_by=user.email,
                 )
                 self.session.add(new_code)
-                code_example.code.append(new_code)
+                existing_code_example.code.append(new_code)
             else:
                 # Update existing code object
-                for code in code_example.code:
+                for code in existing_code_example.code:
                     if code.id == new_code_data.id:
                         code.language = new_code_data.language
                         code.source = new_code_data.source
@@ -103,4 +107,4 @@ class CodeExampleService:
                         )
 
         self.session.commit()
-        return code_example
+        return existing_code_example

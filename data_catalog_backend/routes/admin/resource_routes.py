@@ -279,18 +279,21 @@ async def add_code_examples(
 async def update_code_example(
     resource_id: uuid.UUID,
     code_example_id: uuid.UUID,
-    code_example: UpdateCodeExampleRequest,
+    code_example_req: UpdateCodeExampleRequest,
     current_user: Annotated[User, Depends(authenticate_user)],
     service: ResourceService = Depends(get_resource_service),
 ) -> CodeExampleResponse:
     try:
+        code_example_data = code_example_req.model_dump()
+        code_example = code_example_data.model_dump()
         updated_code_example = service.code_example_service.update_code_example(
             resource_id=resource_id,
             code_example_id=code_example_id,
             example_data=code_example,
             user=current_user,
         )
-        return CodeExampleResponse.model_validate(updated_code_example).model_dump()
+        converted = CodeExampleResponse.model_validate(updated_code_example)
+        return converted
     except ValueError as e:
         logger.error(f"Value error while updating code example: {e}")
         raise HTTPException(status_code=404, detail=str(e))
