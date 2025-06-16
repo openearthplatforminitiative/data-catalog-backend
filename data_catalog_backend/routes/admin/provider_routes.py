@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 @router.post(
     "/",
+    status_code=201,
     summary="Add a provider to the database",
     tags=["admin"],
     response_model=ProviderResponse,
@@ -40,6 +41,7 @@ async def add_provider(
 
 @router.put(
     "/{id}",
+    status_code=200,
     summary="Update a provider",
     description="Updates a provider in the database",
     tags=["admin"],
@@ -49,9 +51,9 @@ async def update_provider(
     provider_id: uuid.UUID,
     provider_req: ProviderRequest,
     current_user: Annotated[User, Depends(authenticate_user)],
-    service: ProviderService = Depends(get_provider_service),
+    provider_service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponse:
     logger.info(f"User {current_user.preferred_username} is updating a provider")
     provider_data = provider_req.model_dump()
     provider = Provider(**provider_data)
-    return service.update_provider(provider_id, provider, current_user)
+    return provider_service.update_provider(provider_id, provider, current_user)

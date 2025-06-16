@@ -30,6 +30,19 @@ class CategoryService:
         stmt = select(Category)
         return self.session.scalars(stmt).all()
 
+    def get_main_category(self, resource_id: uuid.UUID) -> Category:
+        from data_catalog_backend.models.resource_category import ResourceCategory
+
+        stmt = (
+            select(ResourceCategory.category)
+            .where(
+                ResourceCategory.resource_id == resource_id,
+                ResourceCategory.is_main_category.is_(True),
+            )
+            .join(Category)
+        )
+        return self.session.scalars(stmt).unique().one_or_none()
+
     def create_category(self, category: CategoryRequest, user: User) -> Category:
         category = Category(
             title=category.title,
@@ -46,16 +59,15 @@ class CategoryService:
         return category
 
     def update_category(
-        self, category: UpdateCategoryRequest, category_id: uuid.UUID, user: User
+        self, category: Category, category_id: uuid.UUID, user: User
     ) -> Category:
         existing_category = self.get_category(category_id)
         if not existing_category:
             raise ValueError("Category not found")
 
-        category_data = category.dict(exclude_unset=True)
-        category_data["updated_by"] = user.email
+        category.updated_by = user.email
 
-        for key, value in category_data.items():
+        for key, value in vars(category).items():
             if hasattr(existing_category, key):
                 setattr(existing_category, key, value)
         try:

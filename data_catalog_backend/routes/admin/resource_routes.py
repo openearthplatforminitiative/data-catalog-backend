@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from data_catalog_backend.dependencies import (
     get_resource_service,
 )
+from data_catalog_backend.models import Category, SpatialExtent, Resource
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.category import UpdateCategoryRequest
@@ -39,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 @router.post(
     "/",
+    status_code=201,
     summary="Add a resource to the database",
     tags=["admin"],
     response_model=ResourceResponse,
@@ -50,8 +52,10 @@ async def add_resource(
 ) -> ResourceResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a resource")
-        validated_request = ResourceRequest.model_validate(resource_req)
-        created = resource_service.create_resource(validated_request, current_user)
+        resource_data = resource_req.model_dump()
+        resource = Resource(**resource_data)
+
+        created = resource_service.create_resource(resource, current_user)
 
         if created.spatial_extent is not None:
             for extent in created.spatial_extent:
@@ -68,6 +72,7 @@ async def add_resource(
 
 @router.put(
     "/{resource_id}",
+    status_code=200,
     description="Update a resource",
     response_model_exclude_none=True,
     tags=["admin"],
@@ -94,9 +99,13 @@ async def update_resource(
                 extent_data = validated_extent.model_dump()
 
                 extent_data["resource_id"] = resource_id
+                updated_spatial_extent = SpatialExtent(**extent_data)
 
                 spatial_extent_instance = resource_service.update_spatial_extent(
-                    resource_id, extent_data
+                    resource_id,
+                    updated_spatial_extent,
+                    updated_spatial_extent.id,
+                    current_user,
                 )
 
                 validated_spatial_extent.append(spatial_extent_instance)
@@ -129,8 +138,9 @@ async def update_resource(
                 validated_category = UpdateCategoryRequest(**category)
                 category_data = validated_category.model_dump()
                 category_data["resource_id"] = resource_id
+                updated_category = Category(**category_data)
                 category_instance = resource_service.category_service.update_category(
-                    category_data
+                    updated_category
                 )
 
                 validated_categories.append(category_instance)
@@ -150,6 +160,7 @@ async def update_resource(
 
 @router.post(
     "/{resource_id}/spatial_extent",
+    status_code=201,
     description="Add a spatial extent to a resource",
     response_model=SpatialExtentResponse,
     response_model_exclude_none=True,
@@ -157,11 +168,13 @@ async def update_resource(
 )
 async def add_spatial_extent(
     resource_id: uuid.UUID,
-    spatial_extent: SpatialExtentRequest,
+    spatial_extent_req: SpatialExtentRequest,
     current_user: Annotated[User, Depends(authenticate_user)],
     resource_service: ResourceService = Depends(get_resource_service),
 ) -> SpatialExtentResponse:
     try:
+        spatial_extent_data = spatial_extent_req.model_dump()
+        spatial_extent = SpatialExtent(**spatial_extent_data)
         created_spatial_extent = resource_service.create_spatial_extent(
             resource_id, spatial_extent, current_user
         )
@@ -174,6 +187,7 @@ async def add_spatial_extent(
 
 @router.put(
     "/{resource_id}/spatial_extent/{spatial_extent_id}",
+    status_code=200,
     description="Update a spatial extent of a resource",
     response_model=SpatialExtentResponse,
     response_model_exclude_none=True,

@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 @router.post(
     "/",
+    status_code=201,
     summary="Add a license to the database",
     tags=["admin"],
     response_model=LicenseResponse,

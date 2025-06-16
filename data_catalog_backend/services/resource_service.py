@@ -125,9 +125,7 @@ class ResourceService:
         stmt = select(Resource).where(Resource.id == resource_id)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def create_resource(
-        self, resource_req: ResourceRequest, current_user: User
-    ) -> Resource:
+    def create_resource(self, resource_req: Resource, current_user: User) -> Resource:
         try:
             license = self.license_service.get_license_by_name(resource_req.license)
             if not license and resource_req.type is ResourceType.Dataset:
@@ -146,9 +144,7 @@ class ResourceService:
                     )
                 )
 
-            main_category = self.category_service.get_category_by_title(
-                resource_req.main_category
-            )
+            main_category = self.category_service.get_main_category(resource_req.id)
             if not main_category:
                 raise ValueError("Main category not found")
 
@@ -293,18 +289,22 @@ class ResourceService:
         return self.session.scalars(stmt).unique().one_or_none()
 
     def update_spatial_extent(
-        self, resource_id, extent_data, spatial_extent_id, current_user: User
+        self,
+        resource_id: uuid.UUID,
+        updated_spatial_extent: SpatialExtent,
+        spatial_extent_id: uuid.UUID,
+        current_user: User,
     ) -> SpatialExtent:
         spatial_extent = self.get_spatial_extent(spatial_extent_id)
-        extent_dict = extent_data.model_dump()
-        extent_dict["resource_id"] = resource_id
-        extent_dict["id"] = spatial_extent_id
-        extent_dict["created_by"] = spatial_extent.created_by
+
+        updated_spatial_extent.resource_id = resource_id
+        updated_spatial_extent.id = spatial_extent_id
+        updated_spatial_extent.created_by = spatial_extent.created_by
 
         if not spatial_extent:
             raise ValueError("Spatial extent not found")
 
-        for key, value in extent_dict.items():
+        for key, value in vars(updated_spatial_extent).items():
             if hasattr(spatial_extent, key):
                 setattr(spatial_extent, key, value)
 
@@ -315,20 +315,25 @@ class ResourceService:
         return spatial_extent
 
     def create_spatial_extent(
-        self, resource_id, spatial_extent_data, current_user: User
+        self, resource_id: uuid.UUID, spatial_extent: SpatialExtent, current_user: User
     ) -> SpatialExtent:
         try:
             geometries = []
-            if spatial_extent_data.geometries:
-                for geometry_name in spatial_extent_data.geometries:
+            if spatial_extent.geometries:
+                for geometry_name in spatial_extent.geometries:
                     geometry = self.geometry_service.get_geometry_by_name(geometry_name)
                     if geometry:
                         geometries.append(geometry)
                     else:
                         raise ValueError(f"Geometry {geometry_name} not found")
 
-            spa = SpatialExtent(**spatial_extent_data.model_dump(exclude="geometries"))
-            print(spa)
+            spa = SpatialExtent(
+                type=spatial_extent.type,
+                region=spatial_extent.region,
+                details=spatial_extent.details,
+                spatial_resolution=spatial_extent.spatial_resolution,
+            )
+
             spa.created_by = current_user.email
             spa.resource_id = resource_id
             spa.geometries = geometries
