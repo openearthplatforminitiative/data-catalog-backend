@@ -289,7 +289,7 @@ async def update_code_example(
         updated_code_example = service.code_example_service.update_code_example(
             resource_id=resource_id,
             code_example_id=code_example_id,
-            example_data=code_example,
+            code_example=code_example,
             user=current_user,
         )
         converted = CodeExampleResponse.model_validate(updated_code_example)
