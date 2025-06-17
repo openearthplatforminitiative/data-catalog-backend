@@ -188,19 +188,15 @@ async def update_resource(
 
                 validated_code_examples.append(code_example_instance)
 
-            print("update_dict[code_examples]", update_dict["code_examples"])
             update_dict["code_examples"] = validated_code_examples
-        print(update_dict.keys())
-        print(update_dict.values())
+
         # main_category or additional_categories
         if "categories" in update_dict:
             categories = update_dict.pop("categories")
             validated_categories = []
-            print("update_dict[categories]", update_dict["categories"])
             for category in categories:
                 validated_category = UpdateCategoryRequest(**category)
                 category_data = validated_category.model_dump()
-                print("category_dATA: ", category_data)
                 category_data["resource_id"] = resource_id
                 category_instance = service.category_service.update_category(
                     category_data
