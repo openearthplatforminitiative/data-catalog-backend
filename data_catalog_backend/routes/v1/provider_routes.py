@@ -8,8 +8,8 @@ from data_catalog_backend.models import Provider
 from data_catalog_backend.schemas.provider import ProviderRequest, ProviderResponse
 from data_catalog_backend.services.provider_service import ProviderService
 
-
 router = APIRouter(prefix="/providers")
+logger = logging.getLogger(__name__)
 
 
 @router.get(
@@ -23,17 +23,34 @@ router = APIRouter(prefix="/providers")
 async def get_providers(
     service: ProviderService = Depends(get_provider_service),
 ) -> List[ProviderResponse]:
-    return service.get_providers()
+    try:
+        logging.info("Fetching all providers")
+        providers = service.get_providers()
+        converted = [
+            ProviderResponse.model_validate(provider) for provider in providers
+        ]
+        return converted
+    except Exception as e:
+        logger.error(f"Error fetching providers: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get(
-    "/{id}",
+    "/{provider_id}",
     description="Returns specific provider",
     response_model=ProviderResponse,
     response_model_exclude_none=True,
     tags=["providers"],
 )
 async def get_provider(
-    id: uuid.UUID, service: ProviderService = Depends(get_provider_service)
+    provider_id: uuid.UUID, service: ProviderService = Depends(get_provider_service)
 ) -> ProviderResponse:
-    return service.get_provider(id)
+    try:
+        provider = service.get_provider(provider_id)
+        if not provider:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        converted = ProviderResponse.model_validate(provider)
+        return converted
+    except Exception as e:
+        logger.error(f"Error getting provider {provider_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
