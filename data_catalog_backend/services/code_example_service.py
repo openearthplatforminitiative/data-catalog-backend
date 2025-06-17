@@ -12,13 +12,19 @@ from data_catalog_backend.schemas.User import User
 
 
 class CodeExampleService:
-    def __init__(self, session):
+    def __init__(self, session, resource_service):
         self.session = session
+        self.resource_service = resource_service
 
     def create_code_examples(
         self, code_examples: List[CodeExamples], resource_id: uuid.UUID, user: User
     ) -> List[CodeExamples]:
         created_code_examples = []
+
+        resource = self.resource_service.get_resource(resource_id)
+        if not resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+
         for code_example in code_examples:
             new_code_example = CodeExamples(
                 title=code_example.title,
@@ -73,9 +79,14 @@ class CodeExampleService:
         code_example: CodeExamples,
         user: User,
     ) -> CodeExamples:
+
+        resource = self.resource_service.get_resource(resource_id)
+        if not resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+
         existing_code_example = self.get_code_example(code_example_id)
         if not existing_code_example:
-            raise ValueError("Code example not found")
+            raise ValueError(f"Code example with ID: {code_example_id} not found")
 
         # Update attributes directly on the ORM instance
         existing_code_example.title = code_example.title

@@ -8,7 +8,7 @@ from fastapi.openapi.models import Example
 from data_catalog_backend.dependencies import (
     get_resource_service,
 )
-from data_catalog_backend.models import Category, SpatialExtent, Resource
+from data_catalog_backend.models import Category, SpatialExtent, Resource, CodeExamples
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.category import UpdateCategoryRequest
@@ -260,18 +260,22 @@ async def add_temporal_extent(
 )
 async def add_code_examples(
     resource_id: uuid.UUID,
-    code_examples: List[CodeExampleRequest],
+    code_examples_req: List[CodeExampleRequest],
     current_user: Annotated[User, Depends(authenticate_user)],
     service: ResourceService = Depends(get_resource_service),
 ) -> List[CodeExampleResponse]:
     try:
+        logger.info(f"Adding code examples for resource {resource_id}")
+        code_examples_data = code_examples_req.model_dump()
+        code_examples = [CodeExamples(**example) for example in code_examples_data]
         created_code_examples = service.code_example_service.create_code_examples(
             code_examples, resource_id, current_user
         )
-        return [
-            CodeExampleResponse.model_validate(example).model_dump()
-            for example in created_code_examples
-        ]
+        converted = CodeExampleResponse.model_validate(created_code_examples)
+        return [converted]
+    except ValueError as e:
+        logger.error(f"Value error while adding code examples: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
