@@ -5,9 +5,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 
 from data_catalog_backend.dependencies import get_category_service
-from data_catalog_backend.schemas.category import (
-    CategoryResponse,
-)
+from data_catalog_backend.schemas.category import CategoryResponse
 from data_catalog_backend.services.category_service import CategoryService
 
 router = APIRouter(prefix="/categories")
