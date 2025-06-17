@@ -21,6 +21,9 @@ class CategoryResponse(BaseModel):
     created_by: Optional[str] = Field(
         default=None, description="email of the user who created the data"
     )
+    updated_by: Optional[str] = Field(
+        default=None, description="email of the user who updated the data"
+    )
 
 
 class CategoryRequest(BaseModel):
@@ -30,6 +33,9 @@ class CategoryRequest(BaseModel):
     created_by: Optional[str] = Field(
         default=None, description="email of the user who created the data"
     )
+    updated_by: Optional[str] = Field(
+        default=None, description="email of the user who updated the data"
+    )
 
 
 class UpdateCategoryRequest(BaseModel):
@@ -41,14 +47,9 @@ class UpdateCategoryRequest(BaseModel):
     created_by: Optional[str] = Field(
         default=None, description="email of the user who created the data"
     )
-
-
-class UpdateCategoryRequest(BaseModel):
-    title: Optional[str] = Field(default=None, description="title of the category")
-    abstract: Optional[str] = Field(
-        default=None, description="short description of the category"
+    updated_by: Optional[str] = Field(
+        default=None, description="email of the user who updated the data"
     )
-    icon: Optional[str] = Field(default=None, description="MUI icon of the category")
 
 
 class CategorySummaryResponse(BaseModel):

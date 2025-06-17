@@ -192,6 +192,8 @@ class ResourceResponse(BaseModel):
     children: Optional[List[ResourceSummaryResponse]] = Field(
         default=None, nullable=True, description="Child resources"
     )
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
 
 
 class UpdateResourceRequest(BaseModel):
@@ -220,3 +222,5 @@ class UpdateResourceRequest(BaseModel):
     license: Optional[str] = None
     providers: Optional[conlist(str, min_length=1)] = None
     examples: Optional[List[ExampleRequest]] = None
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None

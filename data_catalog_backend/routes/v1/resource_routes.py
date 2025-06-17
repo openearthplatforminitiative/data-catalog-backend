@@ -5,52 +5,18 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from data_catalog_backend.dependencies import get_resource_service
-from data_catalog_backend.routes.admin.authentication import dummy_user
-from data_catalog_backend.schemas.User import User
-from data_catalog_backend.models import ResourceType, SpatialExtent, SpatialExtentType
-from data_catalog_backend.schemas.category import UpdateCategoryRequest
-from data_catalog_backend.routes.admin.authentication import dummy_user
-from data_catalog_backend.schemas.User import User
-from data_catalog_backend.schemas.code import (
-    CodeExampleResponse,
-    CodeExampleRequest,
-    UpdateCodeExampleRequest,
-)
-from data_catalog_backend.schemas.example import (
-    ExampleRequest,
-    ExampleResponse,
-    UpdateExampleRequest,
-)
-from data_catalog_backend.schemas.resource import (
-    ResourceResponse,
-    UpdateResourceRequest,
-)
 from data_catalog_backend.models import (
     ResourceType,
-    SpatialExtent,
     SpatialExtentRequestType,
 )
-from data_catalog_backend.schemas.example import (
-    ExampleRequest,
-    ExampleResponse,
-    UpdateExampleRequest,
-)
-from data_catalog_backend.schemas.resource import (
-    ResourceResponse,
-    UpdateResourceRequest,
-)
+from data_catalog_backend.schemas.resource import ResourceResponse
 
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQueryResponse,
 )
 
-from data_catalog_backend.schemas.spatial_extent import (
-    SpatialExtentResponse,
-    SpatialExtentRequest,
-    UpdateSpatialExtentRequest,
-)
-from data_catalog_backend.schemas.temporal_extent import TemporalExtentResponse
+from data_catalog_backend.schemas.spatial_extent import SpatialExtentResponse
 from data_catalog_backend.services.resource_service import ResourceService
 
 router = APIRouter(prefix="/resources")

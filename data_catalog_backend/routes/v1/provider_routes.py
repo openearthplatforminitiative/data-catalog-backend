@@ -4,8 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 
 from data_catalog_backend.dependencies import get_provider_service
-from data_catalog_backend.models import Provider
-from data_catalog_backend.schemas.provider import ProviderRequest, ProviderResponse
+from data_catalog_backend.schemas.provider import ProviderResponse
 from data_catalog_backend.services.provider_service import ProviderService
 
 router = APIRouter(prefix="/providers")
@@ -48,9 +47,12 @@ async def get_provider(
     try:
         provider = service.get_provider(provider_id)
         if not provider:
-            raise HTTPException(status_code=404, detail="Provider not found")
+            raise ValueError(f"Provider with ID: {provider_id} not found")
         converted = ProviderResponse.model_validate(provider)
         return converted
+    except ValueError as e:
+        logger.warning(f"Value error while fetching provider: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Error getting provider {provider_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

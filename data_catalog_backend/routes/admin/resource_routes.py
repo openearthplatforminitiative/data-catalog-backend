@@ -124,7 +124,7 @@ async def update_resource(
                 example_data["resource_id"] = resource_id
                 code_example_instance = (
                     resource_service.code_example_service.update_code_example(
-                        example_data
+                        resource_id, example_data, example_data.id, current_user
                     )
                 )
 
@@ -226,6 +226,7 @@ async def update_spatial_extent(
 
 @router.post(
     "/{resource_id}/temporal_extent",
+    status_code=201,
     description="Add a temporal extent to a resource",
     response_model=List[TemporalExtentResponse],
     response_model_exclude_none=True,
@@ -253,6 +254,7 @@ async def add_temporal_extent(
 
 @router.post(
     "/{resource_id}/code_examples",
+    status_code=201,
     description="Add code examples to a resource",
     response_model=List[CodeExampleResponse],
     response_model_exclude_none=True,
@@ -283,6 +285,7 @@ async def add_code_examples(
 
 @router.put(
     "/{resource_id}/code_examples/{code_example_id}",
+    status_code=200,
     description="Update a code example of a resource",
     response_model=CodeExampleResponse,
     response_model_exclude_none=True,
@@ -316,6 +319,7 @@ async def update_code_example(
 
 @router.post(
     "/{resource_id}/examples",
+    status_code=201,
     description="Add examples to a resource",
     response_model=List[ExampleResponse],
     response_model_exclude_none=True,
@@ -344,6 +348,7 @@ async def add_examples(
 
 @router.put(
     "/{resource_id}/examples/{example_id}",
+    status_code=200,
     description="Update an example of a resource",
     response_model=ExampleResponse,
     response_model_exclude_none=True,
