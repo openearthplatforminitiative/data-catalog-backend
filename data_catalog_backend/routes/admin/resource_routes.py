@@ -157,7 +157,7 @@ async def update_resource(
         logger.error(f"Value error while updating category: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Error updating resource with ID: {resource_id} - {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -183,8 +183,13 @@ async def add_spatial_extent(
         )
         converted = SpatialExtentResponse.model_validate(created_spatial_extent)
         return converted
+    except ValueError as e:
+        logger.error(f"Value error while adding spatial extent: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(e)
+        logger.error(
+            f"Error adding spatial extent to resource with ID: {resource_id} - {e}"
+        )
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -215,7 +220,7 @@ async def update_spatial_extent(
         logger.error(f"Value error while updating spatial extent: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Unexpected error while updating spatial extent: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -238,6 +243,9 @@ async def add_temporal_extent(
         )
         converted = [TemporalExtentResponse.model_validate(created_temporal_extent)]
         return converted
+    except ValueError as e:
+        logger.error(f"Value error while adding temporal extent: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))

@@ -301,8 +301,12 @@ class ResourceService:
         updated_spatial_extent.id = spatial_extent_id
         updated_spatial_extent.created_by = spatial_extent.created_by
 
+        resource = self.get_resource(resource_id)
+        if not resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+
         if not spatial_extent:
-            raise ValueError("Spatial extent not found")
+            raise ValueError(f"Spatial extent with ID: {spatial_extent_id} not found")
 
         for key, value in vars(updated_spatial_extent).items():
             if hasattr(spatial_extent, key):
@@ -319,6 +323,10 @@ class ResourceService:
     ) -> SpatialExtent:
         try:
             geometries = []
+            resource = self.get_resource(resource_id)
+            if not resource:
+                raise ValueError(f"Resource with ID: {resource_id} not found")
+
             if spatial_extent.geometries:
                 for geometry_name in spatial_extent.geometries:
                     geometry = self.geometry_service.get_geometry_by_name(geometry_name)
@@ -357,6 +365,12 @@ class ResourceService:
             )
             temporal_extent.resource_id = resource_id
             temporal_extent.created_by = current_user.email
+
+            resource = self.get_resource(resource_id)
+            if not resource:
+                raise ValueError(f"Resource with ID: {resource_id} not found")
+            if not temporal_extent:
+                raise ValueError("Temporal extent data is required")
 
             self.session.add(temporal_extent)
             self.session.commit()
