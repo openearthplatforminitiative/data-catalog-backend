@@ -81,7 +81,7 @@ async def add_resource(
 )
 async def update_resource(
     resource_id: uuid.UUID,
-    update_data: UpdateResourceRequest,
+    update_resource_req: UpdateResourceRequest,
     current_user: Annotated[User, Depends(authenticate_user)],
     resource_service: ResourceService = Depends(get_resource_service),
 ) -> ResourceResponse:
@@ -90,9 +90,9 @@ async def update_resource(
         raise ValueError("Resource not found")
 
     try:
-        update_dict = update_data.model_dump(exclude_unset=True)
-        if "spatial_extent" in update_dict:
-            spatial_extent_data = update_dict.pop("spatial_extent")
+        updated_resource = update_resource_req.model_dump(exclude_unset=True)
+        if "spatial_extent" in updated_resource:
+            spatial_extent_data = updated_resource.pop("spatial_extent")
             validated_spatial_extent = []
 
             for extent in spatial_extent_data:
@@ -111,10 +111,10 @@ async def update_resource(
 
                 validated_spatial_extent.append(spatial_extent_instance)
 
-            update_dict["spatial_extent"] = validated_spatial_extent
+            updated_resource["spatial_extent"] = validated_spatial_extent
 
-        if "code_examples" in update_dict:
-            code_examples = update_dict.pop("code_examples")
+        if "code_examples" in updated_resource:
+            code_examples = updated_resource.pop("code_examples")
             validated_code_examples = []
 
             for example in code_examples:
@@ -129,11 +129,11 @@ async def update_resource(
                 )
 
                 validated_code_examples.append(code_example_instance)
-            update_dict["code_examples"] = validated_code_examples
+            updated_resource["code_examples"] = validated_code_examples
 
         # main_category or additional_categories
-        if "categories" in update_dict:
-            categories = update_dict.pop("categories")
+        if "categories" in updated_resource:
+            categories = updated_resource.pop("categories")
             validated_categories = []
             for category in categories:
                 validated_category = UpdateCategoryRequest(**category)
@@ -146,10 +146,10 @@ async def update_resource(
 
                 validated_categories.append(category_instance)
 
-            update_dict["categories"] = validated_categories
+            updated_resource["categories"] = validated_categories
 
         updated_resource = resource_service.update_resource(
-            resource_id, update_dict, current_user
+            resource_id, updated_resource, current_user
         )
 
         return ResourceResponse.model_validate(updated_resource)
