@@ -29,10 +29,10 @@ async def add_provider(
 ) -> ProviderResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a provider")
-        created = service.create_provider(
-            Provider(**provider_req.model_dump()), current_user
-        )
-        converted = ProviderResponse.model_validate(created)
+        provider_data = provider_req.model_dump()
+        provider = Provider(**provider_data)
+        created_provider = service.create_provider(provider, current_user)
+        converted = ProviderResponse.model_validate(created_provider)
         return converted
     except Exception as e:
         logger.error(e)
@@ -57,8 +57,10 @@ async def update_provider(
         logger.info(f"User {current_user.preferred_username} is updating a provider")
         provider_data = provider_req.model_dump()
         provider = Provider(**provider_data)
-        updated = provider_service.update_provider(provider_id, provider, current_user)
-        converted = ProviderResponse.model_validate(updated)
+        updated_provider = provider_service.update_provider(
+            provider_id, provider, current_user
+        )
+        converted = ProviderResponse.model_validate(updated_provider)
         return converted
     except ValueError as e:
         logger.error(f"Value error while updating category: {e}")

@@ -6,9 +6,7 @@ from sqlalchemy import select
 from data_catalog_backend.models import Category
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.category import (
-    CategoryRequest,
     CategorySummaryResponse,
-    UpdateCategoryRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,7 +41,7 @@ class CategoryService:
         )
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def create_category(self, category: CategoryRequest, user: User) -> Category:
+    def create_category(self, category: Category, user: User) -> Category:
         category = Category(
             title=category.title,
             abstract=category.abstract,

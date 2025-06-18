@@ -18,9 +18,7 @@ from data_catalog_backend.models import (
     TemporalExtent,
 )
 from data_catalog_backend.schemas.User import User
-from data_catalog_backend.schemas.resource import (
-    ResourceRequest,
-)
+
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQuerySpatialResponse,

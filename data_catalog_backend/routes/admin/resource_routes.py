@@ -3,12 +3,17 @@ import uuid
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.openapi.models import Example
 
 from data_catalog_backend.dependencies import (
     get_resource_service,
 )
-from data_catalog_backend.models import Category, SpatialExtent, Resource, CodeExamples
+from data_catalog_backend.models import (
+    Category,
+    SpatialExtent,
+    Resource,
+    CodeExamples,
+    Examples,
+)
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.category import UpdateCategoryRequest
@@ -141,7 +146,7 @@ async def update_resource(
                 category_data["resource_id"] = resource_id
                 updated_category = Category(**category_data)
                 category_instance = resource_service.category_service.update_category(
-                    updated_category
+                    updated_category, category.id, current_user
                 )
 
                 validated_categories.append(category_instance)
@@ -327,20 +332,22 @@ async def update_code_example(
 )
 async def add_examples(
     resource_id: uuid.UUID,
-    examples: List[ExampleRequest],
+    examples_req: List[ExampleRequest],
     current_user: Annotated[User, Depends(authenticate_user)],
     service: ResourceService = Depends(get_resource_service),
 ) -> List[ExampleResponse]:
     try:
-
+        examples_data = examples_req.model_dump()
+        examples = [Examples(**example) for example in examples_data]
         created_examples = service.example_service.create_examples(
             examples, resource_id, current_user
         )
         logger.info(f"Response data: {created_examples}")
-        return [
-            ExampleResponse.model_validate(example).model_dump()
-            for example in created_examples
-        ]
+        return [ExampleResponse.model_validate(example) for example in created_examples]
+    except ValueError as e:
+        logger.error(f"Value error while adding examples: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
+
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -362,11 +369,11 @@ async def update_example(
 ) -> ExampleResponse:
     try:
         example_data = example_req.model_dump()
-        example = Example(**example_data)
+        example = Examples(**example_data)
         updated_example = service.example_service.update_example(
             example_id, example, current_user
         )
-        return ExampleResponse.model_validate(updated_example).model_dump()
+        return ExampleResponse.model_validate(updated_example)
     except ValueError as e:
         logger.error(f"Value error while updating example: {e}")
         raise HTTPException(status_code=404, detail=str(e))

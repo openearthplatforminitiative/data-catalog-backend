@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from data_catalog_backend.dependencies import (
     get_geometry_service,
 )
+from data_catalog_backend.models import Geometry
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.geometry import GeometryRequest
@@ -28,7 +29,9 @@ async def add_geometry(
 ) -> None:
     try:
         logger.info(f"User {current_user.email} is adding a geometry")
-        geometry_service.create_geometry(geometry_req, current_user)
+        geometry_data = geometry_req.model_dump()
+        geometry = Geometry(**geometry_data)
+        geometry_service.create_geometry(geometry, current_user)
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))

@@ -2,28 +2,26 @@ import uuid
 from datetime import datetime
 from typing import List
 
-from fastapi.openapi.models import Example
-
 from data_catalog_backend.models import Examples
 
 from sqlalchemy import select
 
 from data_catalog_backend.schemas.User import User
-from data_catalog_backend.schemas.example import (
-    ExampleResponse,
-    ExampleRequest,
-    UpdateExampleRequest,
-)
 
 
 class ExampleService:
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, session, resource_service):
+        self.session = (session,)
+        self.resource_service = resource_service
 
     def create_examples(
-        self, examples: List[ExampleRequest], resource_id: uuid.UUID, user: User
+        self, examples: List[Examples], resource_id: uuid.UUID, user: User
     ) -> List[Examples]:
         created_examples = []
+        resource = self.resource_service.get_resource(resource_id)
+        if not resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+
         for example in examples:
             new_example = Examples(
                 title=example.title,
@@ -54,8 +52,8 @@ class ExampleService:
         return self.session.scalars(stmt).unique().one_or_none()
 
     def update_example(
-        self, example_id: uuid.UUID, example: Example, user: User
-    ) -> Example:
+        self, example_id: uuid.UUID, example: Examples, user: User
+    ) -> Examples:
         existing_example = self.get_example(example_id)
 
         if existing_example is None:

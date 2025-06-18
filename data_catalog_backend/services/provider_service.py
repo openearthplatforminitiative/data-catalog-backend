@@ -1,8 +1,7 @@
 import logging
-from typing import List, Union
+from typing import List
 import uuid
 
-from fastapi import HTTPException
 from sqlalchemy import select
 
 from data_catalog_backend.models import Provider
