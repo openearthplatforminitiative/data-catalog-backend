@@ -99,57 +99,83 @@ async def update_resource(
         if "spatial_extent" in updated_resource:
             spatial_extent_data = updated_resource.pop("spatial_extent")
             validated_spatial_extent = []
+            try:
+                for extent in spatial_extent_data:
+                    validated_extent = UpdateSpatialExtentRequest(**extent)
+                    extent_data = validated_extent.model_dump()
 
-            for extent in spatial_extent_data:
-                validated_extent = UpdateSpatialExtentRequest(**extent)
-                extent_data = validated_extent.model_dump()
+                    extent_data["resource_id"] = resource_id
+                    updated_spatial_extent = SpatialExtent(**extent_data)
 
-                extent_data["resource_id"] = resource_id
-                updated_spatial_extent = SpatialExtent(**extent_data)
+                    spatial_extent_instance = resource_service.update_spatial_extent(
+                        resource_id,
+                        updated_spatial_extent,
+                        updated_spatial_extent.id,
+                        current_user,
+                    )
 
-                spatial_extent_instance = resource_service.update_spatial_extent(
-                    resource_id,
-                    updated_spatial_extent,
-                    updated_spatial_extent.id,
-                    current_user,
-                )
+                    validated_spatial_extent.append(spatial_extent_instance)
 
-                validated_spatial_extent.append(spatial_extent_instance)
+            except ValueError as ve:
+                logger.error(f"Validation error for spatial extent: {ve}")
+                raise HTTPException(status_code=404, detail=str(ve))
+            except Exception as e:
+                logger.error(f"Unexpected error while processing spatial extent: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
 
             updated_resource["spatial_extent"] = validated_spatial_extent
 
-        if "code_examples" in updated_resource:
-            code_examples = updated_resource.pop("code_examples")
-            validated_code_examples = []
+            if "code_examples" in updated_resource:
+                code_examples = updated_resource.pop("code_examples")
+                validated_code_examples = []
 
-            for example in code_examples:
-                validated_example = UpdateCodeExampleRequest(**example)
-                example_data = validated_example.model_dump()
+                try:
+                    for example in code_examples:
+                        validated_example = UpdateCodeExampleRequest(**example)
+                        example_data = validated_example.model_dump()
 
-                example_data["resource_id"] = resource_id
-                code_example_instance = (
-                    resource_service.code_example_service.update_code_example(
-                        resource_id, example_data, example_data.id, current_user
+                        example_data["resource_id"] = resource_id
+                        code_example_instance = (
+                            resource_service.code_example_service.update_code_example(
+                                resource_id, example_data, example_data.id, current_user
+                            )
+                        )
+
+                        validated_code_examples.append(code_example_instance)
+                except ValueError as ve:
+                    logger.error(f"Validation error for code example: {ve}")
+                    raise HTTPException(status_code=400, detail=str(ve))
+                except Exception as e:
+                    logger.error(
+                        f"Unexpected error while processing code examples: {e}"
                     )
-                )
+                    raise HTTPException(status_code=500, detail=str(e))
 
-                validated_code_examples.append(code_example_instance)
-            updated_resource["code_examples"] = validated_code_examples
+                updated_resource["code_examples"] = validated_code_examples
 
         # main_category or additional_categories
         if "categories" in updated_resource:
             categories = updated_resource.pop("categories")
             validated_categories = []
-            for category in categories:
-                validated_category = UpdateCategoryRequest(**category)
-                category_data = validated_category.model_dump()
-                category_data["resource_id"] = resource_id
-                updated_category = Category(**category_data)
-                category_instance = resource_service.category_service.update_category(
-                    updated_category, category.id, current_user
-                )
+            try:
+                for category in categories:
+                    validated_category = UpdateCategoryRequest(**category)
+                    category_data = validated_category.model_dump()
+                    category_data["resource_id"] = resource_id
+                    category_instance = Category(**category_data)
+                    updated_category = (
+                        resource_service.category_service.update_category(
+                            category_instance, category.id, current_user
+                        )
+                    )
 
-                validated_categories.append(category_instance)
+                    validated_categories.append(updated_category)
+            except ValueError as ve:
+                logger.error(f"Validation error for category: {ve}")
+                raise HTTPException(status_code=400, detail=str(ve))
+            except Exception as e:
+                logger.error(f"Unexpected error while processing categories: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
 
             updated_resource["categories"] = validated_categories
 
@@ -159,7 +185,7 @@ async def update_resource(
 
         return ResourceResponse.model_validate(updated_resource)
     except ValueError as e:
-        logger.error(f"Value error while updating category: {e}")
+        logger.error(f"Value error while updating resource: {e}")
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Error updating resource with ID: {resource_id} - {e}")
@@ -263,7 +289,7 @@ async def add_temporal_extent(
     description="Add code examples to a resource",
     response_model=List[CodeExampleResponse],
     response_model_exclude_none=True,
-    tags=["resources"],
+    tags=["admin"],
 )
 async def add_code_examples(
     resource_id: uuid.UUID,
@@ -294,7 +320,7 @@ async def add_code_examples(
     description="Update a code example of a resource",
     response_model=CodeExampleResponse,
     response_model_exclude_none=True,
-    tags=["resources"],
+    tags=["admin"],
 )
 async def update_code_example(
     resource_id: uuid.UUID,
@@ -328,7 +354,7 @@ async def update_code_example(
     description="Add examples to a resource",
     response_model=List[ExampleResponse],
     response_model_exclude_none=True,
-    tags=["resources"],
+    tags=["admin"],
 )
 async def add_examples(
     resource_id: uuid.UUID,
@@ -359,7 +385,7 @@ async def add_examples(
     description="Update an example of a resource",
     response_model=ExampleResponse,
     response_model_exclude_none=True,
-    tags=["resources"],
+    tags=["admin"],
 )
 async def update_example(
     example_id: uuid.UUID,

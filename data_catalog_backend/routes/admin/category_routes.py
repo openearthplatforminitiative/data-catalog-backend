@@ -63,12 +63,14 @@ async def update_category(
         logger.info(f"User {current_user.preferred_username} is updating a category")
         category_data = category_req.model_dump()
         category = Category(**category_data)
-        updating = category_service.update_category(category, category_id, current_user)
-        converted = CategoryResponse.model_validate(updating)
+        updated_category = category_service.update_category(
+            category, category_id, current_user
+        )
+        converted = CategoryResponse.model_validate(updated_category)
         return converted
     except ValueError as e:
         logger.error(f"Value error while updating category: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))

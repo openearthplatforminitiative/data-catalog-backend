@@ -30,8 +30,8 @@ async def add_license(
         logger.info(f"User {current_user.preferred_username} is adding a license")
         license_data = license_req.model_dump()
         license = License(**license_data)
-        created = license_service.create_license(license, current_user)
-        converted = LicenseResponse.model_validate(created)
+        created_license = license_service.create_license(license, current_user)
+        converted = LicenseResponse.model_validate(created_license)
         return converted
     except Exception as e:
         logger.error(e)

@@ -61,7 +61,7 @@ class CategoryService:
     ) -> Category:
         existing_category = self.get_category(category_id)
         if not existing_category:
-            raise ValueError("Category not found")
+            raise ValueError(f"Category with ID: {category_id} not found")
 
         category.updated_by = user.email
 
