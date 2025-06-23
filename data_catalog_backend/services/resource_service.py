@@ -5,6 +5,13 @@ from typing import Optional
 
 from sqlalchemy import select, func, and_, case
 
+from data_catalog_backend.exceptions import (
+    LicenseNotFoundError,
+    ProviderNotFoundError,
+    CategoryNotFoundError,
+    TemporalExtentError,
+    SpatialExtentError,
+)
 from data_catalog_backend.models import (
     Resource,
     SpatialExtent,
@@ -78,7 +85,7 @@ class ResourceService:
                     ResourceCategory.is_main_category.is_(True),
                 ),
             )
-            .join(Category, Category.id == ResourceCategory.category_id)
+            .join(Category, ResourceCategory.category_id == Category.id)
         )
 
         query = ResourceQuery()
@@ -126,7 +133,7 @@ class ResourceService:
         try:
             license = self.license_service.get_license_by_name(resource_req.license)
             if not license and resource_req.type is ResourceType.Dataset:
-                raise ValueError("License not found and required for Datasets")
+                raise LicenseNotFoundError(resource_req.license)
 
             providers = []
             for provider_short_name in resource_req.providers:
@@ -134,7 +141,7 @@ class ResourceService:
                     provider_short_name
                 )
                 if not provider:
-                    raise ValueError("Provider not found")
+                    raise ProviderNotFoundError(provider_short_name)
                 providers.append(
                     ResourceProvider(
                         role="", provider=provider, created_by=current_user.email
@@ -142,8 +149,9 @@ class ResourceService:
                 )
 
             main_category = self.category_service.get_main_category(resource_req.id)
+
             if not main_category:
-                raise ValueError("Main category not found")
+                raise CategoryNotFoundError("Main category")
 
             categories = [
                 ResourceCategory(
@@ -152,11 +160,19 @@ class ResourceService:
                     created_by=current_user.email,
                 )
             ]
-            if resource_req.additional_categories:
-                for category_title in resource_req.additional_categories:
-                    cat = self.category_service.get_category_by_title(category_title)
+            if resource_req.categories:
+                for iterated_cat in resource_req.categories:
+                    if not iterated_cat.category.title:
+                        raise ValueError(
+                            f"Category title is required for resource {resource_req.id}"
+                        )
+                    cat = self.category_service.get_category_by_title(
+                        iterated_cat.category.title
+                    )
                     if not cat:
-                        raise ValueError("Category not found")
+                        raise ValueError(
+                            f"Category with title: {iterated_cat.category.title} not found"
+                        )
                     categories.append(
                         ResourceCategory(
                             is_main_category=False,
@@ -183,7 +199,9 @@ class ResourceService:
             if resource_req.temporal_extent:
                 for temporal_extent in resource_req.temporal_extent:
                     if not temporal_extent.start_date:
-                        raise ValueError("Start date is required in Temporal Extents")
+                        raise TemporalExtentError(
+                            "Start date is required in Temporal Extents"
+                        )
                     temporal_extents.append(
                         TemporalExtent(
                             start_date=temporal_extent.start_date,
@@ -206,16 +224,17 @@ class ResourceService:
                         extent.type == SpatialExtentType.Region
                         and len(extent.geometries) <= 0
                     ):
-                        raise ValueError("Region type requires geometries")
+                        raise SpatialExtentError("Region type requires geometries")
                     if extent.geometries:
-                        for geometry_name in extent.geometries:
-                            geometry = self.geometry_service.get_geometry_by_name(
+                        for geometry in extent.geometries:
+                            geometry_name = geometry.name
+                            g = self.geometry_service.get_geometry_by_name(
                                 geometry_name
                             )
-                            if geometry:
-                                geometries.append(geometry)
+                            if g:
+                                geometries.append(g)
                             else:
-                                raise ValueError("Geometry not found")
+                                raise SpatialExtentError("Geometry not found")
                     spa = SpatialExtent(
                         type=extent.type,
                         region=extent.region if extent.region else None,
@@ -233,21 +252,8 @@ class ResourceService:
                 for keyword in resource_req.keywords:
                     keywords.append(keyword.strip())
 
-            resource = Resource(
-                **resource_req.model_dump(
-                    exclude={
-                        "examples",
-                        "license",
-                        "spatial_extent",
-                        "temporal_extent",
-                        "code_examples",
-                        "providers",
-                        "main_category",
-                        "additional_categories",
-                        "keywords",
-                    }
-                ),
-            )
+            resource = resource_req
+
             resource.categories = categories
             resource.providers = providers
             resource.license = license
@@ -364,12 +370,6 @@ class ResourceService:
             )
             temporal_extent.resource_id = resource_id
             temporal_extent.created_by = current_user.email
-
-            resource = self.get_resource(resource_id)
-            if not resource:
-                raise ValueError(f"Resource with ID: {resource_id} not found")
-            if not temporal_extent:
-                raise ValueError("Temporal extent data is required")
 
             self.session.add(temporal_extent)
             self.session.commit()

@@ -5,7 +5,12 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from data_catalog_backend.dependencies import get_resource_service
-from data_catalog_backend.models import SpatialExtent, SpatialExtentType
+from data_catalog_backend.models import (
+    SpatialExtent,
+    SpatialExtentType,
+    ResourceType,
+    SpatialExtentRequestType,
+)
 
 from data_catalog_backend.schemas.resource import (
     ResourceResponse,
@@ -16,12 +21,7 @@ from data_catalog_backend.schemas.resource_query import (
     ResourceQueryResponse,
 )
 
-from data_catalog_backend.schemas.spatial_extent import (
-    SpatialExtentRequest,
-    UpdateSpatialExtentRequest,
-    SpatialExtentResponse,
-)
-from data_catalog_backend.schemas.temporal_extent import TemporalExtentResponse
+from data_catalog_backend.schemas.spatial_extent import SpatialExtentResponse
 from data_catalog_backend.services.resource_service import ResourceService
 
 router = APIRouter(prefix="/resources")
@@ -106,7 +106,6 @@ async def get_resource(
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 @router.get(

@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey, Boolean, Index, DateTime, String, func
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
+
 from data_catalog_backend.database import Base
 
 

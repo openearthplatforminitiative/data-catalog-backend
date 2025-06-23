@@ -42,12 +42,18 @@ def get_geometry_service(db: Session = Depends(get_db)) -> GeometryService:
     return GeometryService(db)
 
 
-def get_examples_service(db: Session = Depends(get_db)) -> ExampleService:
-    return ExampleService(db)
+def get_examples_service(
+    db: Session = Depends(get_db),
+    resource_service: ResourceService = Depends(lambda: get_resource_service),
+) -> ExampleService:
+    return ExampleService(db, resource_service)
 
 
-def get_code_example_service(db: Session = Depends(get_db)) -> CodeExampleService:
-    return CodeExampleService(db)
+def get_code_example_service(
+    db: Session = Depends(get_db),
+    resource_service: ResourceService = Depends(lambda: get_resource_service()),
+) -> CodeExampleService:
+    return CodeExampleService(db, resource_service)
 
 
 def get_resource_service(
@@ -55,9 +61,11 @@ def get_resource_service(
     license_service: LicenseService = Depends(get_license_service),
     provider_service: ProviderService = Depends(get_provider_service),
     category_service: CategoryService = Depends(get_category_service),
-    example_service: ExampleService = Depends(get_examples_service),
+    example_service: ExampleService = Depends(lambda: get_examples_service),
     geometry_service: GeometryService = Depends(get_geometry_service),
-    code_example_service: CodeExampleService = Depends(get_code_example_service),
+    code_example_service: CodeExampleService = Depends(
+        lambda: get_code_example_service
+    ),
 ) -> ResourceService:
     return ResourceService(
         db,

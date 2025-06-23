@@ -11,7 +11,7 @@ from data_catalog_backend.schemas.User import User
 
 class ExampleService:
     def __init__(self, session, resource_service):
-        self.session = (session,)
+        self.session = session
         self.resource_service = resource_service
 
     def create_examples(

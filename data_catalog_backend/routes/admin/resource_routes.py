@@ -58,7 +58,19 @@ async def add_resource(
 ) -> ResourceResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a resource")
-        resource_data = resource_req.model_dump()
+        resource_data = resource_req.model_dump(
+            exclude={
+                "examples",
+                "license",
+                "spatial_extent",
+                "temporal_extent",
+                "code_examples",
+                "providers",
+                "main_category",
+                "additional_categories",
+                "keywords",
+            }
+        )
         resource = Resource(**resource_data)
 
         created = resource_service.create_resource(resource, current_user)
