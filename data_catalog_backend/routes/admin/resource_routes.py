@@ -58,22 +58,8 @@ async def add_resource(
 ) -> ResourceResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a resource")
-        resource_data = resource_req.model_dump(
-            exclude={
-                "examples",
-                "license",
-                "spatial_extent",
-                "temporal_extent",
-                "code_examples",
-                "providers",
-                "main_category",
-                "additional_categories",
-                "keywords",
-            }
-        )
-        resource = Resource(**resource_data)
 
-        created = resource_service.create_resource(resource, current_user)
+        created = resource_service.create_resource(resource_req, current_user)
 
         if created.spatial_extent is not None:
             for extent in created.spatial_extent:
@@ -393,11 +379,10 @@ async def add_examples(
 
 @router.put(
     "/{resource_id}/examples/{example_id}",
-    status_code=200,
     description="Update an example of a resource",
     response_model=ExampleResponse,
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
 )
 async def update_example(
     example_id: uuid.UUID,
@@ -407,11 +392,11 @@ async def update_example(
 ) -> ExampleResponse:
     try:
         example_data = example_req.model_dump()
-        example = Examples(**example_data)
+        example = Example(**example_data)
         updated_example = service.example_service.update_example(
             example_id, example, current_user
         )
-        return ExampleResponse.model_validate(updated_example)
+        return ExampleResponse.model_validate(updated_example).model_dump()
     except ValueError as e:
         logger.error(f"Value error while updating example: {e}")
         raise HTTPException(status_code=404, detail=str(e))
