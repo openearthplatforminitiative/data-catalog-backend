@@ -153,10 +153,12 @@ async def update_resource(
 
         # main_category or additional_categories
         if "categories" in updated_resource:
+            logger.info(f"Authenticated user: {current_user}")
             categories = updated_resource.pop("categories")
             validated_categories = []
             try:
                 for category in categories:
+
                     validated_category = UpdateCategoryRequest(**category)
                     category_data = validated_category.model_dump()
                     category_data["resource_id"] = resource_id
@@ -166,6 +168,7 @@ async def update_resource(
                             category_instance, category.id, current_user
                         )
                     )
+                    logger.debug(f"Updated category: {updated_category}")
 
                     validated_categories.append(updated_category)
             except ValueError as ve:

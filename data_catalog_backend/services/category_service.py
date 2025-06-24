@@ -59,16 +59,27 @@ class CategoryService:
     def update_category(
         self, category: Category, category_id: uuid.UUID, user: User
     ) -> Category:
+
+        logger.info(f"Modified objects: {self.session.dirty}")
+
         existing_category = self.get_category(category_id)
+        logger.debug(f"Fetched category: {existing_category}")
         if not existing_category:
             raise ValueError(f"Category with ID: {category_id} not found")
 
-        category.updated_by = user.email
+        category.created_by = existing_category.created_by
 
-        for key, value in vars(category).items():
-            if hasattr(existing_category, key):
+        for key, value in category.__dict__.items():
+            if hasattr(existing_category, key) and value is not None:
+                logger.debug(
+                    f"Updating {key} from {getattr(existing_category, key)} to {value}"
+                )
                 setattr(existing_category, key, value)
+
+        existing_category.updated_by = user.email
+
         try:
+            logger.info(f"Session dirty objects before commit: {self.session.dirty}")
             self.session.commit()
         except Exception as e:
             self.session.rollback()
