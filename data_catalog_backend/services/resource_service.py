@@ -294,28 +294,29 @@ class ResourceService:
         spatial_extent_id: uuid.UUID,
         current_user: User,
     ) -> SpatialExtent:
-        spatial_extent = self.get_spatial_extent(spatial_extent_id)
+        existing_spatial_extent = self.get_spatial_extent(spatial_extent_id)
 
         updated_spatial_extent.resource_id = resource_id
-        updated_spatial_extent.id = spatial_extent_id
-        updated_spatial_extent.created_by = spatial_extent.created_by
 
         resource = self.get_resource(resource_id)
         if not resource:
             raise ValueError(f"Resource with ID: {resource_id} not found")
 
-        if not spatial_extent:
+        if not existing_spatial_extent:
             raise ValueError(f"Spatial extent with ID: {spatial_extent_id} not found")
 
-        for key, value in vars(updated_spatial_extent).items():
-            if hasattr(spatial_extent, key):
-                setattr(spatial_extent, key, value)
-
-        setattr(spatial_extent, "updated_at", datetime.now())
-        setattr(spatial_extent, "updated_by", current_user.email)
+        existing_spatial_extent.type = updated_spatial_extent.type
+        existing_spatial_extent.region = updated_spatial_extent.region
+        existing_spatial_extent.details = updated_spatial_extent.details
+        existing_spatial_extent.geometry = updated_spatial_extent.geometry
+        existing_spatial_extent.spatial_resolution = (
+            updated_spatial_extent.spatial_resolution
+        )
+        existing_spatial_extent.updated_by = current_user.email
+        existing_spatial_extent.updated_at = datetime.now()
 
         self.session.commit()
-        return spatial_extent
+        return existing_spatial_extent
 
     def create_spatial_extent(
         self, resource_id: uuid.UUID, spatial_extent: SpatialExtent, current_user: User

@@ -120,7 +120,7 @@ class ResourceResponse(BaseModel):
     id: uuid.UUID
     title: str = Field(description="Title of the resource")
     abstract: str = Field(description="Short description of the resource")
-    icon: str = Field(description="Icon of the resource")
+    icon: Optional[str] = Field(default=None, description="Icon of the resource")
     html_content: Optional[str] = Field(
         description="Extended description of the resource"
     )
@@ -171,7 +171,7 @@ class ResourceResponse(BaseModel):
         default=None, nullable=True, description="The version of this resource"
     )
     type: ResourceType = Field(description="Type of the resource")
-    categories: List[ResourceCategoryResponse] = Field(
+    categories: Optional[List[ResourceCategoryResponse]] = Field(
         default=None, nullable=True, description="List of categories"
     )
     code_examples: Optional[List[CodeExampleResponse]] = Field(
