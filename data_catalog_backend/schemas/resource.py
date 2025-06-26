@@ -113,7 +113,7 @@ class ResourceResponse(BaseModel):
     id: uuid.UUID
     title: str = Field(description="Title of the resource")
     abstract: str = Field(description="Short description of the resource")
-    icon: str = Field(description="Icon of the resource")
+    icon: Optional[str] = Field(default=None, description="Icon of the resource")
     html_content: Optional[str] = Field(
         description="Extended description of the resource"
     )

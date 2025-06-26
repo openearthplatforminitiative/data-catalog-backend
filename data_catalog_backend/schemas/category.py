@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 from pydantic import Field
 from data_catalog_backend.schemas.basemodel import BaseModel
@@ -14,7 +14,7 @@ class CategoryResponse(BaseModel):
     id: uuid.UUID
     title: str = Field(description="title of the category")
     abstract: str = Field(description="short description of the category")
-    icon: str = Field(description="MUI icon of the category")
+    icon: Optional[str] = Field(description="MUI icon of the category")
     resources: List[ResourceCategoryResponse] = Field(
         description="list of resources in the category"
     )
@@ -30,4 +30,4 @@ class CategorySummaryResponse(BaseModel):
     id: uuid.UUID
     title: str = Field(description="title of the category")
     abstract: str = Field(description="short description of the category")
-    icon: str = Field(description="MUI icon of the category")
+    icon: Optional[str] = Field(default=None, description="MUI icon of the category")

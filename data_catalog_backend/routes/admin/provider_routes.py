@@ -59,7 +59,6 @@ async def update_provider(
     "/{provider_id}",
     status_code=204,
     description="Delete a provider",
-    response_model=ProviderResponse,
     response_model_exclude_none=True,
     tags=["admin"],
 )

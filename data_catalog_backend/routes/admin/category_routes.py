@@ -44,7 +44,6 @@ async def add_category(
     "/{category_id}",
     status_code=204,
     description="Delete a category",
-    response_model=CategoryResponse,
     response_model_exclude_none=True,
     tags=["admin"],
 )

@@ -56,7 +56,6 @@ async def add_resource(
     status_code=204,
     description="Delete a resource from the metadata store",
     tags=["admin"],
-    response_model=ResourceResponse,
     response_model_exclude_none=True,
 )
 async def delete_resource(

@@ -42,7 +42,6 @@ async def add_license(
     "/{licence_id}",
     status_code=204,
     description="Delete a license",
-    response_model=LicenseResponse,
     response_model_exclude_none=True,
     tags=["admin"],
 )
