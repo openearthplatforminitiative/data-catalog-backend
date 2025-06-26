@@ -53,6 +53,7 @@ async def get_category(
         logging.error(f"Error getting category {category_id}: {e}")
         raise e
 
+
 @router.post(
     "/categories",
     description="Create a new category",
