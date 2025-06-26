@@ -14,17 +14,17 @@ class ExampleService:
         self.session = session
 
     def create_examples(
-        self, examples: List[Examples], resource_id: uuid.UUID, user: User
+        self, examples_data: List[dict], resource_id: uuid.UUID, user: User
     ) -> List[Examples]:
         created_examples = []
 
-        for example in examples:
+        for example in examples_data:
             new_example = Examples(
-                title=example.title,
-                type=example.type,
-                description=example.description,
-                example_url=example.example_url,
-                favicon_url=example.favicon_url,
+                title=example["title"],
+                type=example["type"],
+                description=example["description"],
+                example_url=example["example_url"],
+                favicon_url=example["favicon_url"],
                 created_by=user.email,
                 resource_id=resource_id,
             )
@@ -72,4 +72,4 @@ class ExampleService:
         existing_example.updated_at = datetime.now()
 
         self.session.commit()
-        return example
+        return existing_example

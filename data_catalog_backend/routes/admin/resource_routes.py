@@ -368,10 +368,9 @@ async def add_examples(
     service: ResourceService = Depends(get_resource_service),
 ) -> List[ExampleResponse]:
     try:
-        examples_data = examples_req.model_dump()
-        examples = [Examples(**example) for example in examples_data]
+        examples_data = [example.model_dump() for example in examples_req]
         created_examples = service.example_service.create_examples(
-            examples, resource_id, current_user
+            examples_data, resource_id, current_user
         )
         logger.info(f"Response data: {created_examples}")
         return [ExampleResponse.model_validate(example) for example in created_examples]
