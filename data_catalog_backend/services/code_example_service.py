@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime
 from typing import List
@@ -11,35 +12,36 @@ from sqlalchemy import select
 from data_catalog_backend.schemas.User import User
 
 
+logger = logging.getLogger(__name__)
+
+
 class CodeExampleService:
-    def __init__(self, session, resource_service):
+    def __init__(self, session):
         self.session = session
-        self.resource_service = resource_service
 
     def create_code_examples(
-        self, code_examples: List[CodeExamples], resource_id: uuid.UUID, user: User
+        self, code_examples_data: List[dict], resource_id: uuid.UUID, user: User
     ) -> List[CodeExamples]:
         created_code_examples = []
 
-        resource = self.resource_service.get_resource(resource_id)
-        if not resource:
-            raise ValueError(f"Resource with ID: {resource_id} not found")
-
-        for code_example in code_examples:
+        for code_example in code_examples_data:
             new_code_example = CodeExamples(
-                title=code_example.title,
-                description=code_example.description,
+                title=code_example["title"],
+                description=code_example["description"],
                 resource_id=resource_id,
                 created_by=user.email,
                 created_at=datetime.now(),
             )
+
             self.session.add(new_code_example)
             self.session.commit()
 
-            for code in code_example.code:
+            for code in code_example["code"]:
+                if isinstance(code, dict):
+                    print("Found dict:", code)
                 new_code = Code(
-                    language=code.language,
-                    source=code.source,
+                    language=code["language"],
+                    source=code["source"],
                     examples_id=new_code_example.id,
                     created_by=user.email,
                     created_at=datetime.now(),
@@ -76,46 +78,37 @@ class CodeExampleService:
         self,
         resource_id: uuid.UUID,
         code_example_id: uuid.UUID,
-        code_example: CodeExamples,
+        code_example: dict,
         user: User,
     ) -> CodeExamples:
-
-        resource = self.resource_service.get_resource(resource_id)
-        if not resource:
-            raise ValueError(f"Resource with ID: {resource_id} not found")
 
         existing_code_example = self.get_code_example(code_example_id)
         if not existing_code_example:
             raise ValueError(f"Code example with ID: {code_example_id} not found")
 
         # Update attributes directly on the ORM instance
-        existing_code_example.title = code_example.title
-        existing_code_example.description = code_example.description
+        existing_code_example.title = code_example["title"]
+        existing_code_example.description = code_example["description"]
         existing_code_example.resource_id = resource_id
         existing_code_example.updated_by = user.email
 
-        for new_code_data in code_example.code:
+        for new_code_data in code_example["code"]:
             # Create new code object if id is None
-            if not hasattr(new_code_data, "id") or new_code_data.id is None:
+            if new_code_data["id"] is None:
                 new_code = Code(
-                    language=new_code_data.language,
-                    source=new_code_data.source,
+                    language=new_code_data["language"],
+                    source=new_code_data["source"],
                     created_by=user.email,
                 )
-                self.session.add(new_code)
                 existing_code_example.code.append(new_code)
             else:
                 # Update existing code object
                 for code in existing_code_example.code:
-                    if code.id == new_code_data.id:
-                        code.language = new_code_data.language
-                        code.source = new_code_data.source
+                    if code.id == new_code_data["id"]:
+                        code.language = new_code_data["language"]
+                        code.source = new_code_data["source"]
                         code.updated_by = user.email
                         break
-                    else:
-                        raise ValueError(
-                            f"Code with id {new_code_data.id} not found in the existing code examples"
-                        )
 
         self.session.commit()
         return existing_code_example

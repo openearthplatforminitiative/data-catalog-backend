@@ -10,17 +10,13 @@ from data_catalog_backend.schemas.User import User
 
 
 class ExampleService:
-    def __init__(self, session, resource_service):
+    def __init__(self, session):
         self.session = session
-        self.resource_service = resource_service
 
     def create_examples(
         self, examples: List[Examples], resource_id: uuid.UUID, user: User
     ) -> List[Examples]:
         created_examples = []
-        resource = self.resource_service.get_resource(resource_id)
-        if not resource:
-            raise ValueError(f"Resource with ID: {resource_id} not found")
 
         for example in examples:
             new_example = Examples(
@@ -59,12 +55,21 @@ class ExampleService:
         if existing_example is None:
             raise ValueError(f"Example with id {example_id} not found")
 
-        for key, value in vars(example).items():
-            if hasattr(example, key) and value is not None:
-                setattr(example, key, value)
-
-        setattr(example, "updated_by", user.email)
-        setattr(example, "updated_at", datetime.now())
+        existing_example.title = (
+            example.title if example.title else existing_example.title
+        )
+        existing_example.type = example.type if example.type else existing_example.type
+        existing_example.description = (
+            example.description if example.description else existing_example.description
+        )
+        existing_example.example_url = (
+            example.example_url if example.example_url else existing_example.example_url
+        )
+        existing_example.favicon_url = (
+            example.favicon_url if example.favicon_url else existing_example.favicon_url
+        )
+        existing_example.updated_by = user.email
+        existing_example.updated_at = datetime.now()
 
         self.session.commit()
         return example

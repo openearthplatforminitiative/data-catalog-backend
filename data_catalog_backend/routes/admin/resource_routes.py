@@ -300,13 +300,17 @@ async def add_code_examples(
 ) -> List[CodeExampleResponse]:
     try:
         logger.info(f"Adding code examples for resource {resource_id}")
-        code_examples_data = code_examples_req.model_dump()
-        code_examples = [CodeExamples(**example) for example in code_examples_data]
+        code_examples_data = [
+            code_example.model_dump() for code_example in code_examples_req
+        ]
         created_code_examples = service.code_example_service.create_code_examples(
-            code_examples, resource_id, current_user
+            code_examples_data, resource_id, current_user
         )
-        converted = CodeExampleResponse.model_validate(created_code_examples)
-        return [converted]
+        converted = [
+            CodeExampleResponse.model_validate(code_example)
+            for code_example in created_code_examples
+        ]
+        return converted
     except ValueError as e:
         logger.error(f"Value error while adding code examples: {e}")
         raise HTTPException(status_code=404, detail=str(e))
@@ -332,11 +336,11 @@ async def update_code_example(
 ) -> CodeExampleResponse:
     try:
         code_example_data = code_example_req.model_dump()
-        code_example = code_example_data.model_dump()
+
         updated_code_example = service.code_example_service.update_code_example(
             resource_id=resource_id,
             code_example_id=code_example_id,
-            code_example=code_example,
+            code_example=code_example_data,
             user=current_user,
         )
         converted = CodeExampleResponse.model_validate(updated_code_example)
@@ -395,7 +399,7 @@ async def update_example(
 ) -> ExampleResponse:
     try:
         example_data = example_req.model_dump()
-        example = Example(**example_data)
+        example = Examples(**example_data)
         updated_example = service.example_service.update_example(
             example_id, example, current_user
         )

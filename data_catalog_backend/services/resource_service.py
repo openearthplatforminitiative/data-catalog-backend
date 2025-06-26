@@ -269,19 +269,57 @@ class ResourceService:
             raise e
 
     def update_resource(self, resource_id, update_dict, current_user: User) -> Resource:
-        resource = self.get_resource(resource_id)
-        if not resource:
+        existing_resource = self.get_resource(resource_id)
+        if not existing_resource:
             raise ValueError("Resource not found")
 
-        for key, value in update_dict.items():
-            if hasattr(resource, key):
-                setattr(resource, key, value)
+        existing_resource.title = (
+            update_dict["title"] if "title" in update_dict else existing_resource.title
+        )
+        existing_resource.abstract = (
+            update_dict["abstract"]
+            if "abstract" in update_dict
+            else existing_resource.abstract
+        )
+        existing_resource.html_content = (
+            update_dict["html_content"]
+            if "html_content" in update_dict
+            else existing_resource.html_content
+        )
+        existing_resource.resource_url = (
+            update_dict["resource_url"]
+            if "resource_url" in update_dict
+            else existing_resource.resource_url
+        )
+        existing_resource.documentation_url = (
+            update_dict["documentation_url"]
+            if "documentation_url" in update_dict
+            else existing_resource.documentation_url
+        )
+        existing_resource.download_url = (
+            update_dict["download_url"]
+            if "download_url" in update_dict
+            else existing_resource.download_url
+        )
+        existing_resource.git_url = (
+            update_dict["git_url"]
+            if "git_url" in update_dict
+            else existing_resource.git_url
+        )
+        existing_resource.icon = (
+            update_dict["icon"] if "icon" in update_dict else existing_resource.icon
+        )
+        existing_resource.resource_type = (
+            update_dict["resource_type"]
+            if "resource_type" in update_dict
+            else existing_resource.resource_type
+        )
 
-        setattr(resource, "updated_at", datetime.now())
-        setattr(resource, "updated_by", current_user.email)
+        existing_resource.updated_by = current_user.email
+        existing_resource.updated_at = datetime.now()
 
         self.session.commit()
-        return resource
+        return existing_resource
 
     def get_spatial_extent(self, spatial_extent_id) -> SpatialExtent:
         stmt = select(SpatialExtent).where(SpatialExtent.id == spatial_extent_id)
@@ -305,12 +343,30 @@ class ResourceService:
         if not existing_spatial_extent:
             raise ValueError(f"Spatial extent with ID: {spatial_extent_id} not found")
 
-        existing_spatial_extent.type = updated_spatial_extent.type
-        existing_spatial_extent.region = updated_spatial_extent.region
-        existing_spatial_extent.details = updated_spatial_extent.details
-        existing_spatial_extent.geometry = updated_spatial_extent.geometry
+        existing_spatial_extent.type = (
+            updated_spatial_extent.type
+            if updated_spatial_extent.type
+            else existing_spatial_extent.type
+        )
+        existing_spatial_extent.region = (
+            updated_spatial_extent.region
+            if updated_spatial_extent.region
+            else existing_spatial_extent.region
+        )
+        existing_spatial_extent.details = (
+            updated_spatial_extent.details
+            if updated_spatial_extent.details
+            else existing_spatial_extent.details
+        )
+        existing_spatial_extent.geometry = (
+            updated_spatial_extent.geometry
+            if updated_spatial_extent.geometry
+            else existing_spatial_extent.geometry
+        )
         existing_spatial_extent.spatial_resolution = (
             updated_spatial_extent.spatial_resolution
+            if updated_spatial_extent.spatial_resolution
+            else existing_spatial_extent.spatial_resolution
         )
         existing_spatial_extent.updated_by = current_user.email
         existing_spatial_extent.updated_at = datetime.now()
