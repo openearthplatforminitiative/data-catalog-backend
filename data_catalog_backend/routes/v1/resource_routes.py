@@ -5,12 +5,23 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from data_catalog_backend.dependencies import get_resource_service
-from data_catalog_backend.models import ResourceType, SpatialExtentRequestType
-from data_catalog_backend.schemas.resource import ResourceResponse
+from data_catalog_backend.models import (
+    SpatialExtent,
+    SpatialExtentType,
+    ResourceType,
+    SpatialExtentRequestType,
+)
+
+from data_catalog_backend.schemas.resource import (
+    ResourceResponse,
+    UpdateResourceRequest,
+)
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQueryResponse,
 )
+
+from data_catalog_backend.schemas.spatial_extent import SpatialExtentResponse
 from data_catalog_backend.services.resource_service import ResourceService
 
 router = APIRouter(prefix="/resources")
@@ -92,6 +103,28 @@ async def get_resource(
 
         converted = ResourceResponse.model_validate(resource)
         logger.info(converted)
+        return converted
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/spatial_extent/{spatial_extent_id}",
+    description="Get spatial extent from metadata store",
+    response_model=SpatialExtentResponse,
+    response_model_exclude_none=True,
+    tags=["resources"],
+)
+async def get_spatial_extent(
+    spatial_extent_id: uuid.UUID,
+    service: ResourceService = Depends(get_resource_service),
+) -> SpatialExtentResponse:
+    try:
+        spatial_extent = service.get_spatial_extent(spatial_extent_id)
+        converted = SpatialExtentResponse.model_validate(spatial_extent)
+        if not spatial_extent:
+            raise HTTPException(status_code=404, detail="Spatial extent not found")
         return converted
     except Exception as e:
         logger.error(e)

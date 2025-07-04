@@ -1,10 +1,17 @@
 import logging
+import uuid
+from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import select, func, and_, case
 from sqlalchemy.orm import joinedload
 
+from data_catalog_backend.exceptions import (
+    LicenseNotFoundError,
+    ProviderNotFoundError,
+    CategoryNotFoundError,
+)
 from data_catalog_backend.models import (
     Resource,
     SpatialExtent,
@@ -17,9 +24,8 @@ from data_catalog_backend.models import (
     TemporalExtent,
 )
 from data_catalog_backend.schemas.User import User
-from data_catalog_backend.schemas.resource import (
-    ResourceRequest,
-)
+from data_catalog_backend.schemas.resource import ResourceRequest
+
 from data_catalog_backend.schemas.resource_query import (
     ResourceQueryRequest,
     ResourceQuerySpatialResponse,
@@ -120,15 +126,15 @@ class ResourceService:
             data=[ResourceQuerySpatialResponse(**dict(row)) for row in results],
         )
 
-    def get_resource(self, resource_id) -> Resource:
+    def get_resource(self, resource_id: uuid.UUID) -> Resource:
         stmt = select(Resource).where(Resource.id == resource_id)
         return self.session.scalars(stmt).unique().one_or_none()
 
-    def create_resource(self, resource_req: Resource, user: User) -> Resource:
+    def create_resource(self, resource_req: ResourceRequest, user: User) -> Resource:
         try:
             license = self.license_service.get_license_by_name(resource_req.license)
             if not license and resource_req.type is ResourceType.Dataset:
-                raise ValueError("License not found and required for Datasets")
+                raise LicenseNotFoundError(resource_req.type)
 
             providers = []
             for provider_short_name in resource_req.providers:
@@ -136,7 +142,7 @@ class ResourceService:
                     provider_short_name
                 )
                 if not provider:
-                    raise ValueError("Provider not found")
+                    raise ProviderNotFoundError(provider_short_name)
                 providers.append(
                     ResourceProvider(role="", provider=provider, created_by=user.email)
                 )
@@ -145,7 +151,7 @@ class ResourceService:
                 resource_req.main_category
             )
             if not main_category:
-                raise ValueError("Main category not found")
+                raise CategoryNotFoundError("Main category")
 
             categories = [
                 ResourceCategory(
@@ -156,7 +162,7 @@ class ResourceService:
                 for category_title in resource_req.additional_categories:
                     cat = self.category_service.get_category_by_title(category_title)
                     if not cat:
-                        raise ValueError("Category not found")
+                        raise CategoryNotFoundError(category_title)
                     categories.append(
                         ResourceCategory(
                             is_main_category=False, category=cat, created_by=user.email
@@ -258,6 +264,170 @@ class ResourceService:
             self.session.commit()
 
             return resource
+        except Exception as e:
+            # Log unexpected errors and raise a 500 error
+            logger.error(f"Unexpected error: {e}")
+            self.session.rollback()
+            raise e
+
+    def update_resource(self, resource_id, update_dict, current_user: User) -> Resource:
+        existing_resource = self.get_resource(resource_id)
+        if not existing_resource:
+            raise ValueError("Resource not found")
+
+        existing_resource.title = (
+            update_dict["title"] if "title" in update_dict else existing_resource.title
+        )
+        existing_resource.abstract = (
+            update_dict["abstract"]
+            if "abstract" in update_dict
+            else existing_resource.abstract
+        )
+        existing_resource.html_content = (
+            update_dict["html_content"]
+            if "html_content" in update_dict
+            else existing_resource.html_content
+        )
+        existing_resource.resource_url = (
+            update_dict["resource_url"]
+            if "resource_url" in update_dict
+            else existing_resource.resource_url
+        )
+        existing_resource.documentation_url = (
+            update_dict["documentation_url"]
+            if "documentation_url" in update_dict
+            else existing_resource.documentation_url
+        )
+        existing_resource.download_url = (
+            update_dict["download_url"]
+            if "download_url" in update_dict
+            else existing_resource.download_url
+        )
+        existing_resource.git_url = (
+            update_dict["git_url"]
+            if "git_url" in update_dict
+            else existing_resource.git_url
+        )
+        existing_resource.icon = (
+            update_dict["icon"] if "icon" in update_dict else existing_resource.icon
+        )
+        existing_resource.resource_type = (
+            update_dict["resource_type"]
+            if "resource_type" in update_dict
+            else existing_resource.resource_type
+        )
+
+        existing_resource.updated_by = current_user.email
+        existing_resource.updated_at = datetime.now()
+
+        self.session.commit()
+        return existing_resource
+
+    def get_spatial_extent(self, spatial_extent_id) -> SpatialExtent:
+        stmt = select(SpatialExtent).where(SpatialExtent.id == spatial_extent_id)
+        return self.session.scalars(stmt).unique().one_or_none()
+
+    def update_spatial_extent(
+        self,
+        resource_id: uuid.UUID,
+        updated_spatial_extent: SpatialExtent,
+        spatial_extent_id: uuid.UUID,
+        current_user: User,
+    ) -> SpatialExtent:
+        existing_spatial_extent = self.get_spatial_extent(spatial_extent_id)
+
+        updated_spatial_extent.resource_id = resource_id
+
+        resource = self.get_resource(resource_id)
+        if not resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+
+        if not existing_spatial_extent:
+            raise ValueError(f"Spatial extent with ID: {spatial_extent_id} not found")
+
+        existing_spatial_extent.type = (
+            updated_spatial_extent.type
+            if updated_spatial_extent.type
+            else existing_spatial_extent.type
+        )
+        existing_spatial_extent.region = (
+            updated_spatial_extent.region
+            if updated_spatial_extent.region
+            else existing_spatial_extent.region
+        )
+        existing_spatial_extent.details = (
+            updated_spatial_extent.details
+            if updated_spatial_extent.details
+            else existing_spatial_extent.details
+        )
+        existing_spatial_extent.geometry = (
+            updated_spatial_extent.geometry
+            if updated_spatial_extent.geometry
+            else existing_spatial_extent.geometry
+        )
+        existing_spatial_extent.spatial_resolution = (
+            updated_spatial_extent.spatial_resolution
+            if updated_spatial_extent.spatial_resolution
+            else existing_spatial_extent.spatial_resolution
+        )
+        existing_spatial_extent.updated_by = current_user.email
+        existing_spatial_extent.updated_at = datetime.now()
+
+        self.session.commit()
+        return existing_spatial_extent
+
+    def create_spatial_extent(
+        self, resource_id: uuid.UUID, spatial_extent: SpatialExtent, current_user: User
+    ) -> SpatialExtent:
+        try:
+            geometries = []
+            resource = self.get_resource(resource_id)
+            if not resource:
+                raise ValueError(f"Resource with ID: {resource_id} not found")
+
+            if spatial_extent.geometries:
+                for geometry_name in spatial_extent.geometries:
+                    geometry = self.geometry_service.get_geometry_by_name(geometry_name)
+                    if geometry:
+                        geometries.append(geometry)
+                    else:
+                        raise ValueError(f"Geometry {geometry_name} not found")
+
+            spa = SpatialExtent(
+                type=spatial_extent.type,
+                region=spatial_extent.region,
+                details=spatial_extent.details,
+                spatial_resolution=spatial_extent.spatial_resolution,
+            )
+
+            spa.created_by = current_user.email
+            spa.resource_id = resource_id
+            spa.geometries = geometries
+
+            self.session.add(spa)
+            self.session.commit()
+            return spa
+
+        except Exception as e:
+            # Log unexpected errors and raise a 500 error
+            logger.error(f"Unexpected error: {e}")
+            self.session.rollback()
+            raise e
+
+    def create_temporal_extent(
+        self, resource_id, temporal_extent_data, current_user: User
+    ) -> TemporalExtent:
+        try:
+            temporal_extent = TemporalExtent(
+                **temporal_extent_data.model_dump(exclude_none=True)
+            )
+            temporal_extent.resource_id = resource_id
+            temporal_extent.created_by = current_user.email
+
+            self.session.add(temporal_extent)
+            self.session.commit()
+            return temporal_extent
+
         except Exception as e:
             # Log unexpected errors and raise a 500 error
             logger.error(f"Unexpected error: {e}")

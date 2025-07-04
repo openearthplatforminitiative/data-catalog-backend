@@ -6,7 +6,6 @@ from sqlalchemy import select
 from data_catalog_backend.models import Category
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.category import (
-    CategoryRequest,
     CategorySummaryResponse,
 )
 
@@ -38,6 +37,19 @@ class CategoryService:
             for category in categories
         ]
 
+    def get_main_category(self, resource_id: uuid.UUID) -> Category:
+        from data_catalog_backend.models.resource_category import ResourceCategory
+
+        stmt = (
+            select(ResourceCategory.category)
+            .where(
+                ResourceCategory.resource_id == resource_id,
+                ResourceCategory.is_main_category.is_(True),
+            )
+            .join(Category)
+        )
+        return self.session.scalars(stmt).unique().one_or_none()
+
     def create_category(self, category: Category, user: User) -> Category:
         category = Category(
             title=category.title,
@@ -52,6 +64,35 @@ class CategoryService:
             self.session.rollback()
             raise e
         return category
+
+    def update_category(
+        self, category: Category, category_id: uuid.UUID, user: User
+    ) -> Category:
+
+        existing_category = self.get_category(category_id)
+        if not existing_category:
+            raise ValueError(f"Category with ID: {category_id} not found")
+
+        existing_category.title = (
+            category.title if category.title is not None else existing_category.title
+        )
+        existing_category.abstract = (
+            category.abstract
+            if category.abstract is not None
+            else existing_category.abstract
+        )
+        existing_category.icon = (
+            category.icon if category.icon is not None else existing_category.icon
+        )
+        existing_category.updated_by = user.email
+
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+
+        return existing_category
 
     def delete_category(self, category_id: uuid.UUID, user: User):
         category = self.get_category(category_id)

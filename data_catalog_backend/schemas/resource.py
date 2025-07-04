@@ -7,7 +7,11 @@ from pydantic import Field, conlist
 from data_catalog_backend.models import ResourceType
 from data_catalog_backend.schemas.basemodel import BaseModel
 from data_catalog_backend.schemas.category import CategorySummaryResponse
-from data_catalog_backend.schemas.code import CodeExampleRequest, CodeExampleResponse
+from data_catalog_backend.schemas.code import (
+    CodeExampleRequest,
+    CodeExampleResponse,
+    UpdateCodeExampleRequest,
+)
 from data_catalog_backend.schemas.example import ExampleResponse, ExampleRequest
 from data_catalog_backend.schemas.license import LicenseResponse
 from data_catalog_backend.schemas.provider import ProviderSummaryResponse
@@ -15,6 +19,7 @@ from data_catalog_backend.schemas.resource_summary import ResourceSummaryRespons
 from data_catalog_backend.schemas.spatial_extent import (
     SpatialExtentRequest,
     SpatialExtentResponse,
+    UpdateSpatialExtentRequest,
 )
 from data_catalog_backend.schemas.temporal_extent import (
     TemporalExtentRequest,
@@ -25,6 +30,8 @@ from data_catalog_backend.schemas.temporal_extent import (
 class ResourceCategoryResponse(BaseModel):
     category: CategorySummaryResponse = Field(description="Category")
     is_main_category: bool = Field(description="Role of the provider")
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
 
 
 class ResourceProviderResponse(BaseModel):
@@ -164,7 +171,7 @@ class ResourceResponse(BaseModel):
         default=None, nullable=True, description="The version of this resource"
     )
     type: ResourceType = Field(description="Type of the resource")
-    categories: List[ResourceCategoryResponse] = Field(
+    categories: Optional[List[ResourceCategoryResponse]] = Field(
         default=None, nullable=True, description="List of categories"
     )
     code_examples: Optional[List[CodeExampleResponse]] = Field(
@@ -181,3 +188,35 @@ class ResourceResponse(BaseModel):
     children: Optional[List[ResourceSummaryResponse]] = Field(
         default=None, nullable=True, description="Child resources"
     )
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
+
+
+class UpdateResourceRequest(BaseModel):
+    title: Optional[str] = None
+    abstract: Optional[str] = None
+    html_content: Optional[str] = None
+    resource_url: Optional[str] = None
+    documentation_url: Optional[str] = None
+    download_url: Optional[str] = None
+    git_url: Optional[str] = None
+    data_hub_url: Optional[str] = None
+    research_paper_url: Optional[str] = None
+    openapi_url: Optional[str] = None
+    client_library: Optional[bool] = False
+    api_authentication_url: Optional[str] = None
+    maintenance_and_update_frequency: Optional[str] = None
+    release_date: Optional[datetime.date] = None
+    spatial_extent: Optional[List[UpdateSpatialExtentRequest]] = None
+    contact: Optional[str] = None
+    keywords: List[str] = None
+    version: Optional[str] = None
+    type: Optional[ResourceType] = None
+    main_category: Optional[str] = None
+    additional_categories: Optional[List[str]] = None
+    code_examples: Optional[List[UpdateCodeExampleRequest]] = None
+    license: Optional[str] = None
+    providers: Optional[conlist(str, min_length=1)] = None
+    examples: Optional[List[ExampleRequest]] = None
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None

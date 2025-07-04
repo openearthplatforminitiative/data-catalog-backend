@@ -4,7 +4,6 @@ from sqlalchemy import select
 
 from data_catalog_backend.models import Geometry
 from data_catalog_backend.schemas.User import User
-from data_catalog_backend.schemas.geometry import GeometryRequest
 
 from shapely.geometry import shape, GeometryCollection
 from geoalchemy2.shape import from_shape

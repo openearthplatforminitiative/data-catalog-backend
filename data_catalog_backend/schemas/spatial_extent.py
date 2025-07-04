@@ -18,6 +18,9 @@ class SpatialExtentRequest(BaseModel):
     spatial_resolution: Optional[str] = Field(
         None, description="description of the resolution of the data. ex: 5mx5m"
     )
+    created_by: Optional[str] = Field(
+        None, description="email of the user who created the data"
+    )
 
 
 class SpatialExtentResponse(BaseModel):
@@ -30,4 +33,23 @@ class SpatialExtentResponse(BaseModel):
     geometry: Optional[FeatureCollection] = None
     spatial_resolution: Optional[str] = Field(
         None, description="description of the resolution of the data. ex: 5mx5m"
+    )
+    created_by: Optional[str] = Field(
+        None, description="email of the user who created the data"
+    )
+
+
+class UpdateSpatialExtentRequest(BaseModel):
+    id: Optional[uuid.UUID] = None
+    type: Optional[SpatialExtentType] = None
+    region: Optional[str] = None
+    details: Optional[str] = Field(
+        None, description="addition information about the region"
+    )
+    geometry: Optional[FeatureCollection] = None
+    spatial_resolution: Optional[str] = Field(
+        None, description="description of the resolution of the data. ex: 5mx5m"
+    )
+    created_by: Optional[str] = Field(
+        None, description="email of the user who created the data"
     )

@@ -1,8 +1,7 @@
 import logging
-from typing import List, Union
+from typing import List
 import uuid
 
-from fastapi import HTTPException
 from sqlalchemy import select
 
 from data_catalog_backend.models import Provider
@@ -43,12 +42,12 @@ class ProviderService:
             raise e
         return provider
 
-    def update_provider(self, provider_id, provider_req, user: User):
-        provider = self.get_provider(provider_id)
-        if not provider:
-            raise ValueError(f"Provider with id {provider_id} not found")
+    def update_provider(self, provider_id, provider: Provider, user: User) -> Provider:
+        existing_provider = self.get_provider(provider_id)
+        if not existing_provider:
+            raise ValueError("Provider not found")
 
-        for field, value in provider_req.model_dump().items():
+        for field, value in vars(provider).items():
             setattr(provider, field, value)
 
         provider.updated_by = user.email
