@@ -43,7 +43,7 @@ async def get_providers(
 )
 async def get_provider(
     provider_id: uuid.UUID,
-        provider_service: ProviderService = Depends(get_provider_service)
+    provider_service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponse:
     try:
         provider = provider_service.get_provider(provider_id)

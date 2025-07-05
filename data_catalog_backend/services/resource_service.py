@@ -311,11 +311,6 @@ class ResourceService:
         existing_resource.icon = (
             update_dict["icon"] if "icon" in update_dict else existing_resource.icon
         )
-        existing_resource.resource_type = (
-            update_dict["resource_type"]
-            if "resource_type" in update_dict
-            else existing_resource.resource_type
-        )
 
         existing_resource.updated_by = current_user.email
         existing_resource.updated_at = datetime.now()

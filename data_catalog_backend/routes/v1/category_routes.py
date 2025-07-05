@@ -8,7 +8,7 @@ from data_catalog_backend.dependencies import get_category_service
 from data_catalog_backend.schemas.category import (
     CategoryResponse,
     UpdateCategoryRequest,
-    CategorySummaryResponse
+    CategorySummaryResponse,
 )
 from data_catalog_backend.services.category_service import CategoryService
 

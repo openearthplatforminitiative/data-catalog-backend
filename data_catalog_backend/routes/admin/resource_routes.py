@@ -58,10 +58,8 @@ async def add_resource(
 ) -> ResourceResponse:
     try:
         logger.info(f"User {current_user.preferred_username} is adding a resource")
-        resource_data = resource_req.model_dump()
-        resource = Resource(**resource_data)
 
-        created = resource_service.create_resource(resource, current_user)
+        created = resource_service.create_resource(resource_req, current_user)
 
         if created.spatial_extent is not None:
             for extent in created.spatial_extent:

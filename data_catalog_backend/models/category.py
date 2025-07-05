@@ -27,7 +27,7 @@ class Category(Base):
         DateTime, nullable=False, default=func.now(), doc="created at"
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now(), doc="updated at"
+        DateTime, nullable=True, default=func.now(), doc="updated at"
     )
 
     # Relations

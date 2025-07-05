@@ -51,7 +51,6 @@ class CategorySummaryResponse(BaseModel):
     title: str = Field(description="title of the category")
     abstract: str = Field(description="short description of the category")
     icon: Optional[str] = Field(default=None, description="MUI icon of the category")
-    icon: Optional[str] = Field(default=None, description="MUI icon of the category")
     created_by: Optional[str] = Field(
         default=None, description="email of the user who created the data"
     )
