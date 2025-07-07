@@ -13,6 +13,7 @@ from data_catalog_backend.models import (
     Resource,
     CodeExamples,
     Examples,
+    Code,
 )
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
@@ -300,11 +301,24 @@ async def add_code_examples(
 ) -> List[CodeExampleResponse]:
     try:
         logger.info(f"Adding code examples for resource {resource_id}")
+
         code_examples_data = [
             code_example.model_dump() for code_example in code_examples_req
         ]
+        code_examples = [
+            CodeExamples(
+                title=example.title,
+                description=example.description,
+                code=[
+                    Code(language=code.language, source=code.source)
+                    for code in example.code
+                ],
+            )
+            for example in code_examples_req
+        ]
+
         created_code_examples = service.code_example_service.create_code_examples(
-            code_examples_data, resource_id, current_user
+            code_examples, resource_id, current_user
         )
         converted = [
             CodeExampleResponse.model_validate(code_example)
@@ -336,11 +350,11 @@ async def update_code_example(
 ) -> CodeExampleResponse:
     try:
         code_example_data = code_example_req.model_dump()
-
+        code_example = CodeExamples(**code_example_data)
         updated_code_example = service.code_example_service.update_code_example(
             resource_id=resource_id,
             code_example_id=code_example_id,
-            code_example=code_example_data,
+            code_example=code_example,
             user=current_user,
         )
         converted = CodeExampleResponse.model_validate(updated_code_example)

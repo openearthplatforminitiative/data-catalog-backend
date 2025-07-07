@@ -20,14 +20,14 @@ class CodeExampleService:
         self.session = session
 
     def create_code_examples(
-        self, code_examples_data: List[dict], resource_id: uuid.UUID, user: User
+        self, code_examples_data: List[CodeExamples], resource_id: uuid.UUID, user: User
     ) -> List[CodeExamples]:
         created_code_examples = []
 
         for code_example in code_examples_data:
             new_code_example = CodeExamples(
-                title=code_example["title"],
-                description=code_example["description"],
+                title=code_example.title,
+                description=code_example.description,
                 resource_id=resource_id,
                 created_by=user.email,
                 created_at=datetime.now(),
@@ -36,12 +36,10 @@ class CodeExampleService:
             self.session.add(new_code_example)
             self.session.commit()
 
-            for code in code_example["code"]:
-                if isinstance(code, dict):
-                    print("Found dict:", code)
+            for code in code_example.code:
                 new_code = Code(
-                    language=code["language"],
-                    source=code["source"],
+                    language=code.language,
+                    source=code.source,
                     examples_id=new_code_example.id,
                     created_by=user.email,
                     created_at=datetime.now(),
