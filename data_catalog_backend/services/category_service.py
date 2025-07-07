@@ -73,17 +73,10 @@ class CategoryService:
         if not existing_category:
             raise ValueError(f"Category with ID: {category_id} not found")
 
-        existing_category.title = (
-            category.title if category.title is not None else existing_category.title
-        )
-        existing_category.abstract = (
-            category.abstract
-            if category.abstract is not None
-            else existing_category.abstract
-        )
-        existing_category.icon = (
-            category.icon if category.icon is not None else existing_category.icon
-        )
+        existing_category.title = category.title or existing_category.title
+        existing_category.abstract = category.abstract or existing_category.abstract
+
+        existing_category.icon = category.icon or existing_category.icon
         existing_category.updated_by = user.email
 
         try:
