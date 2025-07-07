@@ -78,7 +78,7 @@ class CodeExampleService:
         self,
         resource_id: uuid.UUID,
         code_example_id: uuid.UUID,
-        code_example: dict,
+        code_example: CodeExamples,
         user: User,
     ) -> CodeExamples:
 
@@ -87,26 +87,26 @@ class CodeExampleService:
             raise ValueError(f"Code example with ID: {code_example_id} not found")
 
         # Update attributes directly on the ORM instance
-        existing_code_example.title = code_example["title"]
-        existing_code_example.description = code_example["description"]
+        existing_code_example.title = code_example.title
+        existing_code_example.description = code_example.description
         existing_code_example.resource_id = resource_id
         existing_code_example.updated_by = user.email
 
-        for new_code_data in code_example["code"]:
+        for new_code_data in code_example.code:
             # Create new code object if id is None
-            if new_code_data["id"] is None:
+            if new_code_data.id is None:
                 new_code = Code(
-                    language=new_code_data["language"],
-                    source=new_code_data["source"],
+                    language=new_code_data.language,
+                    source=new_code_data.source,
                     created_by=user.email,
                 )
                 existing_code_example.code.append(new_code)
             else:
                 # Update existing code object
                 for code in existing_code_example.code:
-                    if code.id == new_code_data["id"]:
-                        code.language = new_code_data["language"]
-                        code.source = new_code_data["source"]
+                    if code.id == new_code_data.id:
+                        code.language = new_code_data.language
+                        code.source = new_code_data.source
                         code.updated_by = user.email
                         break
 

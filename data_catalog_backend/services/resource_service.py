@@ -270,48 +270,33 @@ class ResourceService:
             self.session.rollback()
             raise e
 
-    def update_resource(self, resource_id, update_dict, current_user: User) -> Resource:
+    def update_resource(
+        self, resource_id: uuid.UUID, updated_resource: Resource, current_user: User
+    ) -> Resource:
         existing_resource = self.get_resource(resource_id)
         if not existing_resource:
             raise ValueError("Resource not found")
 
-        existing_resource.title = (
-            update_dict["title"] if "title" in update_dict else existing_resource.title
-        )
+        existing_resource.title = updated_resource.title or existing_resource.title
         existing_resource.abstract = (
-            update_dict["abstract"]
-            if "abstract" in update_dict
-            else existing_resource.abstract
+            updated_resource.abstract or existing_resource.abstract
         )
         existing_resource.html_content = (
-            update_dict["html_content"]
-            if "html_content" in update_dict
-            else existing_resource.html_content
+            updated_resource.html_content or existing_resource.html_content
         )
         existing_resource.resource_url = (
-            update_dict["resource_url"]
-            if "resource_url" in update_dict
-            else existing_resource.resource_url
+            updated_resource.resource_url or existing_resource.resource_url
         )
         existing_resource.documentation_url = (
-            update_dict["documentation_url"]
-            if "documentation_url" in update_dict
-            else existing_resource.documentation_url
+            updated_resource.documentation_url or existing_resource.documentation_url
         )
         existing_resource.download_url = (
-            update_dict["download_url"]
-            if "download_url" in update_dict
-            else existing_resource.download_url
+            updated_resource.download_url or existing_resource.download_url
         )
         existing_resource.git_url = (
-            update_dict["git_url"]
-            if "git_url" in update_dict
-            else existing_resource.git_url
+            updated_resource.git_url or existing_resource.git_url
         )
-        existing_resource.icon = (
-            update_dict["icon"] if "icon" in update_dict else existing_resource.icon
-        )
-
+        existing_resource.icon = updated_resource.icon or existing_resource.icon
         existing_resource.updated_by = current_user.email
         existing_resource.updated_at = datetime.now()
 
