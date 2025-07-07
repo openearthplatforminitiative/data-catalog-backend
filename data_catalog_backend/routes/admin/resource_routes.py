@@ -365,7 +365,7 @@ async def update_code_example(
                     else Code(
                         id=existing_code.id,
                         language=existing_code.language,
-                        source=code["source"],  # Update the source with the new value
+                        source=code["source"],
                     )
                 )
                 for code in (code_example_data.get("code") or [])
