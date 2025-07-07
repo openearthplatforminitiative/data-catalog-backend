@@ -349,8 +349,31 @@ async def update_code_example(
     service: ResourceService = Depends(get_resource_service),
 ) -> CodeExampleResponse:
     try:
+        existing_code_example = service.code_example_service.get_code_example(
+            code_example_id
+        )
+
         code_example_data = code_example_req.model_dump()
-        code_example = CodeExamples(**code_example_data)
+        code_example = CodeExamples(
+            title=code_example_data["title"] or existing_code_example.title,
+            description=code_example_data["description"]
+            or existing_code_example.description,
+            code=[
+                (
+                    Code(language=code["language"], source=code["source"])
+                    if code.get("id") is None
+                    else Code(
+                        id=existing_code.id,
+                        language=existing_code.language,
+                        source=code["source"],  # Update the source with the new value
+                    )
+                )
+                for code in (code_example_data.get("code") or [])
+                for existing_code in existing_code_example.code
+                if existing_code.id == code.get("id")
+            ],
+        )
+
         updated_code_example = service.code_example_service.update_code_example(
             resource_id=resource_id,
             code_example_id=code_example_id,
