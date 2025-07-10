@@ -6,7 +6,9 @@ from pydantic import Field, conlist
 
 from data_catalog_backend.models import ResourceType
 from data_catalog_backend.schemas.basemodel import BaseModel
-from data_catalog_backend.schemas.category import CategorySummaryResponse
+from data_catalog_backend.schemas.category import (
+    CategorySummaryResponse,
+)
 from data_catalog_backend.schemas.code import (
     CodeExampleRequest,
     CodeExampleResponse,
@@ -212,11 +214,19 @@ class UpdateResourceRequest(BaseModel):
     keywords: List[str] = None
     version: Optional[str] = None
     type: Optional[ResourceType] = None
-    main_category: Optional[str] = None
-    additional_categories: Optional[List[str]] = None
     code_examples: Optional[List[UpdateCodeExampleRequest]] = None
     license: Optional[str] = None
     providers: Optional[conlist(str, min_length=1)] = None
     examples: Optional[List[ExampleRequest]] = None
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
+
+
+class UpdateResourceCategoriesRequest(BaseModel):
+    main_category: Optional[uuid.UUID] = None
+    additional_categories: Optional[List[uuid.UUID]] = None
+
+
+class UpdateResourceCategoriesResponse(BaseModel):
+    main_category: Optional[uuid.UUID] = None
+    additional_categories: Optional[List[uuid.UUID]] = None

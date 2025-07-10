@@ -5,7 +5,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import select, func, and_, case
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, Session
 
 from data_catalog_backend.exceptions import (
     LicenseNotFoundError,
@@ -22,6 +22,7 @@ from data_catalog_backend.models import (
     Examples,
     SpatialExtentType,
     TemporalExtent,
+    resource_category,
 )
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.resource import ResourceRequest
@@ -45,7 +46,7 @@ logger = logging.getLogger(__name__)
 class ResourceService:
     def __init__(
         self,
-        session,
+        session: Session,
         license_service: LicenseService,
         provider_service: ProviderService,
         category_service: CategoryService,
@@ -303,6 +304,102 @@ class ResourceService:
         self.session.commit()
         return existing_resource
 
+    def set_main_category(
+        self, category_id: uuid.UUID, resource_id: uuid.UUID, user: User
+    ) -> uuid.UUID:
+        existing_resource = self.get_resource(resource_id)
+        if not existing_resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+
+        existing_category = self.category_service.get_category(category_id)
+        if not existing_category:
+            raise ValueError(f"Category with ID: {category_id} not found")
+
+        for cat in existing_resource.categories:
+            if cat.is_main_category:
+                cat.is_main_category = False
+
+        # Remove existing main category if it exists
+        self.session.flush()
+
+        existing_resource_category = next(
+            (
+                cat
+                for cat in existing_resource.categories
+                if cat.category_id == category_id
+            ),
+            None,
+        )
+
+        # Set new main category
+        if existing_resource_category:
+            existing_resource_category.is_main_category = True
+        else:
+            resource_category = ResourceCategory(
+                resource=existing_resource,
+                category=existing_category,
+                is_main_category=True,
+                created_by=user.email,
+            )
+            existing_resource.categories.append(resource_category)
+
+        self.session.commit()
+        return category_id
+
+    def override_additional_categories(
+        self, resource_id: uuid.UUID, categories: list[uuid.UUID] or None, user: User
+    ) -> list[uuid.UUID]:
+        existing_resource = self.get_resource(resource_id)
+
+        if not existing_resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+
+        main_category = (
+            self.session.query(Category)
+            .join(ResourceCategory, ResourceCategory.category_id == Category.id)
+            .filter(
+                ResourceCategory.resource_id == resource_id,
+                ResourceCategory.is_main_category.is_(True),
+            )
+            .one_or_none()
+        )
+        if not main_category:
+            raise ValueError("Main category not found")
+
+        # add main to new list
+        new_additional_resource_categories = [
+            ResourceCategory(
+                resource=existing_resource,
+                category=main_category,
+                is_main_category=True,
+                created_by=user.email,
+            )
+        ]
+        # add the rest of them to the new list
+        for category_id in categories if categories else []:
+            category = self.category_service.get_category(category_id)
+            if not category:
+                raise ValueError(f"Category with ID: {category_id} not found")
+            new_additional_resource_categories.append(
+                ResourceCategory(
+                    resource=existing_resource,
+                    category=category,
+                    is_main_category=False,
+                    created_by=user.email,
+                )
+            )
+
+        existing_resource.categories = new_additional_resource_categories
+        self.session.add(existing_resource)
+        self.session.commit()
+
+        # Get all uuids of additional categories and return them
+        return [
+            rc.category_id
+            for rc in existing_resource.categories
+            if not rc.is_main_category
+        ]
+
     def get_spatial_extent(self, spatial_extent_id) -> SpatialExtent:
         stmt = select(SpatialExtent).where(SpatialExtent.id == spatial_extent_id)
         return self.session.scalars(stmt).unique().one_or_none()
@@ -326,9 +423,7 @@ class ResourceService:
             raise ValueError(f"Spatial extent with ID: {spatial_extent_id} not found")
 
         existing_spatial_extent.type = (
-            updated_spatial_extent.type
-            if updated_spatial_extent.type
-            else existing_spatial_extent.type
+            updated_spatial_extent.type or existing_spatial_extent.type
         )
         existing_spatial_extent.region = (
             updated_spatial_extent.region

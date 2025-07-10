@@ -106,7 +106,7 @@ class CodeExampleService:
                         code.language = new_code_data.language
                         code.source = new_code_data.source
                         code.updated_by = user.email
-                        break
+                        break  # TODO: Check this
 
         self.session.commit()
         return existing_code_example

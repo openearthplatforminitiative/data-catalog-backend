@@ -14,6 +14,7 @@ from data_catalog_backend.models import (
     CodeExamples,
     Examples,
     Code,
+    ResourceCategory,
 )
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
@@ -32,6 +33,8 @@ from data_catalog_backend.schemas.resource import (
     ResourceRequest,
     ResourceResponse,
     UpdateResourceRequest,
+    UpdateResourceCategoriesRequest,
+    UpdateResourceCategoriesResponse,
 )
 from data_catalog_backend.schemas.spatial_extent import (
     UpdateSpatialExtentRequest,
@@ -94,9 +97,10 @@ async def update_resource(
         raise ValueError("Resource not found")
 
     try:
-        updated_resource = update_resource_req.model_dump(exclude_unset=True)
+        updated_resource_data = update_resource_req.model_dump(exclude_unset=True)
+        updated_resource = Resource(**updated_resource_data)
         if "spatial_extent" in updated_resource:
-            spatial_extent_data = updated_resource.pop("spatial_extent")
+            spatial_extent_data = updated_resource.spatial_extent.model_dump()
             validated_spatial_extent = []
             try:
                 for extent in spatial_extent_data:
@@ -122,10 +126,10 @@ async def update_resource(
                 logger.error(f"Unexpected error while processing spatial extent: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
-            updated_resource["spatial_extent"] = validated_spatial_extent
+            updated_resource.spatial_extent = validated_spatial_extent
 
             if "code_examples" in updated_resource:
-                code_examples = updated_resource.pop("code_examples")
+                code_examples = updated_resource.code_examples.model_dump()
                 validated_code_examples = []
 
                 try:
@@ -150,13 +154,14 @@ async def update_resource(
                     )
                     raise HTTPException(status_code=500, detail=str(e))
 
-                updated_resource["code_examples"] = validated_code_examples
+                updated_resource.code_examples = validated_code_examples
 
-        # main_category or additional_categories
+        # TODO: main_category or additional_categories
+        # TODO: remove id from object before updating? Only use id to find correct cateogory
         if "categories" in updated_resource:
             logger.info(f"Authenticated user: {current_user}")
-            categories = updated_resource.pop("categories")
-            validated_categories = []
+            categories = updated_resource.categories.model_dump()
+            validated_categories: List[Category] = []
             try:
                 for category in categories:
 
@@ -170,7 +175,6 @@ async def update_resource(
                         )
                     )
                     logger.debug(f"Updated category: {updated_category}")
-
                     validated_categories.append(updated_category)
             except ValueError as ve:
                 logger.error(f"Validation error for category: {ve}")
@@ -179,7 +183,8 @@ async def update_resource(
                 logger.error(f"Unexpected error while processing categories: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
-            updated_resource["categories"] = validated_categories
+            # TODO: Potentially change this to association proxy??
+            updated_resource.categories = [ResourceCategory(v) for v in categories]
 
         updated_resource = resource_service.update_resource(
             resource_id, updated_resource, current_user
@@ -191,6 +196,67 @@ async def update_resource(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Error updating resource with ID: {resource_id} - {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put(
+    "/{resource_id}/categories",
+    status_code=200,
+    description="Update categories of a resource",
+    response_model=UpdateResourceCategoriesResponse,
+    response_model_exclude_none=True,
+    tags=["admin"],
+)
+async def update_resource_categories(
+    resource_id: uuid.UUID,
+    categories_req: UpdateResourceCategoriesRequest,
+    current_user: Annotated[User, Depends(authenticate_user)],
+    resource_service: ResourceService = Depends(get_resource_service),
+) -> UpdateResourceCategoriesResponse:
+    try:
+        categories_data = categories_req.model_dump()
+
+        updated_main_category_uuid = None
+        if categories_data["main_category"]:
+            main_category: uuid.UUID = categories_data["main_category"]
+            if not main_category:
+                raise HTTPException(
+                    status_code=400, detail="Main category cannot be empty"
+                )
+            updated_main_category_uuid = resource_service.set_main_category(
+                category_id=main_category, resource_id=resource_id, user=current_user
+            )
+
+        additional_categories: List[uuid.UUID] = categories_data[
+            "additional_categories"
+        ]
+
+        # Override all existing additional categories with the new list
+        resource_service.override_additional_categories(
+            resource_id=resource_id,
+            categories=additional_categories,
+            user=current_user,
+        )
+        """
+        if "main_category" in categories_data:
+            sett til ny
+            
+        if "additional_categories" in categories_data:
+            ...
+            override alle med den mottatte listen
+        """
+
+        return UpdateResourceCategoriesResponse(
+            main_category=updated_main_category_uuid,
+            additional_categories=categories_data["additional_categories"],
+        )
+    except ValueError as e:
+        logger.error(
+            f"Value error while updating categories in resource {resource_id}: {e}"
+        )
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error updating categories for resource {resource_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
