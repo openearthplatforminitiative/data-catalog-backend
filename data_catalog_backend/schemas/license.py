@@ -17,3 +17,7 @@ class LicenseResponse(BaseModel):
     url: Optional[str]
     created_by: Optional[str] = None
     updated_by: Optional[str] = None
+
+
+class UpdateLicenseRequest(BaseModel):
+    id: uuid.UUID

@@ -217,7 +217,6 @@ class UpdateResourceRequest(BaseModel):
     version: Optional[str] = None
     type: Optional[ResourceType] = None
     license: Optional[str] = None
-    providers: Optional[conlist(str, min_length=1)] = None
 
 
 class UpdateProviderRequest(BaseModel):

@@ -29,6 +29,11 @@ from data_catalog_backend.schemas.example import (
     UpdateExampleRequest,
     ExampleRequest,
 )
+from data_catalog_backend.schemas.license import (
+    LicenseResponse,
+    LicenseRequest,
+    UpdateLicenseRequest,
+)
 from data_catalog_backend.schemas.provider import ProviderResponse
 from data_catalog_backend.schemas.resource import (
     ResourceRequest,
@@ -114,6 +119,33 @@ async def update_resource(
     except Exception as e:
         logger.error(f"Error updating resource with ID: {resource_id} - {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put(
+    "/{resource_id}/license",
+    status_code=200,
+    description="Update license of a resource",
+    response_model_exclude_none=True,
+    tags=["admin"],
+    response_model=LicenseResponse,
+)
+async def update_license(
+    resource_id: uuid.UUID,
+    license_req: UpdateLicenseRequest,
+    current_user: Annotated[User, Depends(authenticate_user)],
+    resource_service: ResourceService = Depends(get_resource_service),
+) -> LicenseResponse:
+    license_data = license_req.model_dump()
+    updated_license = resource_service.update_license(
+        resource_id=resource_id,
+        license_id=license_data["id"],
+        current_user=current_user,
+    )
+    if updated_license:
+        return LicenseResponse.model_validate(updated_license)
+    raise HTTPException(
+        status_code=404, detail="License not found or could not be updated"
+    )
 
 
 @router.put(

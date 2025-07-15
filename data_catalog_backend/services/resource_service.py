@@ -24,6 +24,7 @@ from data_catalog_backend.models import (
     SpatialExtentType,
     TemporalExtent,
     Provider,
+    License,
 )
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.resource import ResourceRequest
@@ -304,6 +305,22 @@ class ResourceService:
 
         self.session.commit()
         return existing_resource
+
+    def update_license(
+        self, resource_id: uuid.UUID, license_id: uuid.UUID, current_user: User
+    ) -> License:
+
+        existing_resource = self.get_resource(resource_id)
+        if not existing_resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+        new_license = self.license_service.get_license(license_id)
+        if not new_license:
+            raise ValueError(f"License with ID: {license_id} not found")
+        existing_resource.license = new_license
+        existing_resource.updated_by = current_user.email
+        existing_resource.updated_at = datetime.now()
+        self.session.commit()
+        return new_license
 
     def update_providers(
         self, resource_id: uuid.UUID, provider_ids: list[uuid.UUID], current_user: User
