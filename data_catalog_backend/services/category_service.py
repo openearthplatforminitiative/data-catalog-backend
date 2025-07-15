@@ -109,7 +109,7 @@ class CategoryService:
 
         return existing_category
 
-    def delete_category(self, category_id: uuid.UUID, user: User):
+    def delete_category(self, category_id: uuid.UUID):
         category = self.get_category(category_id)
         if not category:
             raise ValueError(f"Category with ID {category_id} does not exist.")

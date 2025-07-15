@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import HTTPException
 from sqlalchemy import select, func, and_, case
 from sqlalchemy.orm import joinedload, Session
+from sqlalchemy.sql.functions import user
 
 from data_catalog_backend.exceptions import (
     LicenseNotFoundError,
@@ -22,7 +23,7 @@ from data_catalog_backend.models import (
     Examples,
     SpatialExtentType,
     TemporalExtent,
-    resource_category,
+    Provider,
 )
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.resource import ResourceRequest
@@ -304,6 +305,43 @@ class ResourceService:
         self.session.commit()
         return existing_resource
 
+    def update_providers(
+        self, resource_id: uuid.UUID, provider_ids: list[uuid.UUID], current_user: User
+    ) -> list[Provider]:
+
+        existing_resource = self.get_resource(resource_id)
+
+        if not existing_resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+
+        # Explicitly delete old providers
+        self.session.query(ResourceProvider).filter_by(resource_id=resource_id).delete()
+
+        new_providers = []
+
+        if provider_ids:
+            for provider_id in provider_ids:
+                provider = self.provider_service.get_provider(provider_id)
+                if not provider:
+                    raise ValueError(f"Provider with ID: {provider_id} not found")
+                new_providers.append(
+                    ResourceProvider(
+                        resource=existing_resource,
+                        provider=provider,
+                        role="",
+                        created_by=current_user.email,
+                    )
+                )
+
+        existing_resource.providers = new_providers
+        self.session.add(existing_resource)
+        self.session.commit()
+
+        updated_providers = self.provider_service.get_providers_by_resource_id(
+            resource_id
+        )
+        return updated_providers
+
     def set_main_category(
         self, category_id: uuid.UUID, resource_id: uuid.UUID, user: User
     ) -> Category:
@@ -395,14 +433,6 @@ class ResourceService:
         self.session.add(existing_resource)
         self.session.commit()
 
-        # Get updated categories and return them as Category, not ResourceCategory
-        # stmt = (
-        #     select(Category)
-        #     .join(ResourceCategory, ResourceCategory.category_id == Category.id)
-        #     .where(ResourceCategory.resource_id == resource_id)
-        # )
-        # updated_categories = list(self.session.scalars(stmt))
-
         updated_categories = (
             self.category_service.get_additional_categories_by_resource_id(resource_id)
         )
@@ -422,7 +452,7 @@ class ResourceService:
         if not existing_resource:
             raise ValueError(f"Resource with ID: {resource_id} not found")
 
-        new_spatial_extent = []
+        new_spatial_extents = []
 
         if spatial_extent_ids:
             for spatial_extent_id in spatial_extent_ids:
@@ -431,13 +461,13 @@ class ResourceService:
                     raise ValueError(
                         f"Spatial extent with ID: {spatial_extent_id} not found"
                     )
-                new_spatial_extent.append(spatial_extent)
+                new_spatial_extents.append(spatial_extent)
 
-        existing_resource.spatial_extent = new_spatial_extent
+        existing_resource.spatial_extent = new_spatial_extents
         self.session.add(existing_resource)
         self.session.commit()
 
-        return new_spatial_extent
+        return new_spatial_extents
 
     def get_temporal_extent(self, temporal_extent_id) -> TemporalExtent:
         stmt = select(TemporalExtent).where(TemporalExtent.id == temporal_extent_id)
@@ -468,26 +498,6 @@ class ResourceService:
 
         return new_temporal_extent
 
-    def create_temporal_extent(
-        self, resource_id, temporal_extent_data, current_user: User
-    ) -> TemporalExtent:
-        try:
-            temporal_extent = TemporalExtent(
-                **temporal_extent_data.model_dump(exclude_none=True)
-            )
-            temporal_extent.resource_id = resource_id
-            temporal_extent.created_by = current_user.email
-
-            self.session.add(temporal_extent)
-            self.session.commit()
-            return temporal_extent
-
-        except Exception as e:
-            # Log unexpected errors and raise a 500 error
-            logger.error(f"Unexpected error: {e}")
-            self.session.rollback()
-            raise e
-
     def delete_spatial_extent_without_geometries(self, spatial_extent_id: str):
         try:
             # Fetch the SpatialExtent object
@@ -509,13 +519,9 @@ class ResourceService:
                 geometry_relation.spatial_extent_id = None
                 self.session.add(geometry_relation)
 
-            # Commit the changes to break the foreign key constraint
             self.session.commit()
-
-            # Delete the SpatialExtent
             self.session.delete(spatial_extent)
 
-            # Commit the transaction
             self.session.commit()
             logger.info(f"SpatialExtent {spatial_extent_id} deleted successfully.")
         except Exception as e:
@@ -525,7 +531,7 @@ class ResourceService:
                 status_code=500, detail=f"Error deleting SpatialExtent: {e}"
             )
 
-    def delete_resource(self, resource_id, user: User):
+    def delete_resource(self, resource_id):
         try:
             resource = (
                 self.session.query(Resource)
@@ -566,7 +572,6 @@ class ResourceService:
                 raise e
 
             try:
-                # Delete the resource itself
                 self.session.delete(resource)
                 self.session.commit()
             except Exception as e:

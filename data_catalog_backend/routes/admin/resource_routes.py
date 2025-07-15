@@ -3,23 +3,20 @@ import uuid
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.sql.functions import current_user
 
 from data_catalog_backend.dependencies import (
     get_resource_service,
 )
 from data_catalog_backend.models import (
-    Category,
-    SpatialExtent,
     Resource,
     CodeExamples,
     Examples,
     Code,
-    ResourceCategory,
 )
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
 from data_catalog_backend.schemas.category import (
-    UpdateCategoryRequest,
     CategoryResponse,
 )
 from data_catalog_backend.schemas.code import (
@@ -32,6 +29,7 @@ from data_catalog_backend.schemas.example import (
     UpdateExampleRequest,
     ExampleRequest,
 )
+from data_catalog_backend.schemas.provider import ProviderResponse
 from data_catalog_backend.schemas.resource import (
     ResourceRequest,
     ResourceResponse,
@@ -42,11 +40,10 @@ from data_catalog_backend.schemas.resource import (
     UpdateSpatialExtentResponse,
     UpdateTemporalExtentRequest,
     UpdateTemporalExtentResponse,
+    UpdateProviderResponse,
+    UpdateProviderRequest,
 )
-from data_catalog_backend.schemas.spatial_extent import (
-    SpatialExtentResponse,
-    SpatialExtentRequest,
-)
+from data_catalog_backend.schemas.spatial_extent import SpatialExtentResponse
 from data_catalog_backend.schemas.temporal_extent import TemporalExtentResponse
 from data_catalog_backend.services.resource_service import ResourceService
 
@@ -106,32 +103,6 @@ async def update_resource(
         updated_resource_data = update_resource_req.model_dump(exclude_unset=True)
         updated_resource = Resource(**updated_resource_data)
 
-        if "code_examples" in updated_resource:
-            code_examples = updated_resource.code_examples.model_dump()
-            validated_code_examples = []
-
-            try:
-                for example in code_examples:
-                    validated_example = UpdateCodeExampleRequest(**example)
-                    example_data = validated_example.model_dump()
-
-                    example_data["resource_id"] = resource_id
-                    code_example_instance = (
-                        resource_service.code_example_service.update_code_example(
-                            resource_id, example_data, example_data.id, current_user
-                        )
-                    )
-
-                    validated_code_examples.append(code_example_instance)
-            except ValueError as ve:
-                logger.error(f"Validation error for code example: {ve}")
-                raise HTTPException(status_code=400, detail=str(ve))
-            except Exception as e:
-                logger.error(f"Unexpected error while processing code examples: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
-
-            updated_resource.code_examples = validated_code_examples
-
         updated_resource = resource_service.update_resource(
             resource_id, updated_resource, current_user
         )
@@ -143,6 +114,35 @@ async def update_resource(
     except Exception as e:
         logger.error(f"Error updating resource with ID: {resource_id} - {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put(
+    "/{resource_id}/providers",
+    status_code=200,
+    description="Update providers for a resource",
+    response_model_exclude_none=True,
+    tags=["admin"],
+    response_model=UpdateProviderResponse,
+)
+async def update_resource_providers(
+    resource_id: uuid.UUID,
+    providers_req: UpdateProviderRequest,
+    current_user: Annotated[User, Depends(authenticate_user)],
+    resource_service: ResourceService = Depends(get_resource_service),
+) -> UpdateProviderResponse:
+
+    providers_data = providers_req.model_dump()
+    new_providers = resource_service.update_providers(
+        resource_id=resource_id,
+        provider_ids=providers_data["provider_ids"],
+        current_user=current_user,
+    )
+    if new_providers:
+        provider_responses = [
+            ProviderResponse.model_validate(prov) for prov in new_providers
+        ]
+        return UpdateProviderResponse(providers=provider_responses)
+    return UpdateProviderResponse(providers=[])
 
 
 @router.put(
@@ -211,7 +211,6 @@ async def update_resource_categories(
 async def update_spatial_extent(
     resource_id: uuid.UUID,
     spatial_extent_req: UpdateSpatialExtentRequest,
-    current_user: Annotated[User, Depends(authenticate_user)],
     resource_service: ResourceService = Depends(get_resource_service),
 ) -> UpdateSpatialExtentResponse:
     spatial_extent_data = spatial_extent_req.model_dump()
@@ -272,9 +271,6 @@ async def add_code_examples(
     try:
         logger.info(f"Adding code examples for resource {resource_id}")
 
-        code_examples_data = [
-            code_example.model_dump() for code_example in code_examples_req
-        ]
         code_examples = [
             CodeExamples(
                 title=example.title,
@@ -338,7 +334,9 @@ async def update_code_example(
                         source=code["source"],
                     )
                 )
+                # Iterate over the list of new code snippets provided in the request
                 for code in (code_example_data.get("code") or [])
+                # Match each new code snippet with an existing code snippet by ID
                 for existing_code in existing_code_example.code
                 if existing_code.id == code.get("id")
             ],

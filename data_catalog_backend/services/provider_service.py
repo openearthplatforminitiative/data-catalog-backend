@@ -4,7 +4,7 @@ import uuid
 
 from sqlalchemy import select
 
-from data_catalog_backend.models import Provider
+from data_catalog_backend.models import Provider, ResourceProvider
 from data_catalog_backend.schemas.User import User
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,27 @@ class ProviderService:
     def get_providers(self) -> List[Provider]:
         stmt = select(Provider)
         return self.session.scalars(stmt).unique().all()
+
+    def get_providers_by_resource_id(self, resource_id) -> list[Provider]:
+        stmt = (
+            select(Provider)
+            .select_from(ResourceProvider)
+            .join(Provider, ResourceProvider.provider_id == Provider.id)
+            .where(
+                ResourceProvider.resource_id == resource_id,
+            )
+        )
+        providers = self.session.execute(stmt).scalars().all()
+        return [
+            Provider(
+                id=provider.id,
+                name=provider.name,
+                short_name=provider.short_name,
+                provider_url=provider.provider_url,
+                description=provider.description,
+            )
+            for provider in providers
+        ]
 
     def get_provider_by_short_name(self, short_name: str) -> Provider:
         stmt = select(Provider).where(Provider.short_name == short_name)

@@ -79,7 +79,6 @@ async def update_provider(
 )
 async def delete_provider(
     provider_id: uuid.UUID,
-    current_user: Annotated[User, Depends(authenticate_user)],
     provider_service: ProviderService = Depends(get_provider_service),
 ):
     try:

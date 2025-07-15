@@ -1,4 +1,4 @@
-"""empty message
+"""added ondelete cascade to foreign keys ensuring related child records are automatically deleted when a parent record is removed.
 
 Revision ID: f5f39a679440
 Revises: 5992f61f9fb2

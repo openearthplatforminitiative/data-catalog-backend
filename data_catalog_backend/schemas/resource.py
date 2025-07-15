@@ -17,12 +17,14 @@ from data_catalog_backend.schemas.code import (
 )
 from data_catalog_backend.schemas.example import ExampleResponse, ExampleRequest
 from data_catalog_backend.schemas.license import LicenseResponse
-from data_catalog_backend.schemas.provider import ProviderSummaryResponse
+from data_catalog_backend.schemas.provider import (
+    ProviderSummaryResponse,
+    ProviderResponse,
+)
 from data_catalog_backend.schemas.resource_summary import ResourceSummaryResponse
 from data_catalog_backend.schemas.spatial_extent import (
     SpatialExtentRequest,
     SpatialExtentResponse,
-    UpdateSpatialExtentRequest,
 )
 from data_catalog_backend.schemas.temporal_extent import (
     TemporalExtentRequest,
@@ -210,17 +212,22 @@ class UpdateResourceRequest(BaseModel):
     api_authentication_url: Optional[str] = None
     maintenance_and_update_frequency: Optional[str] = None
     release_date: Optional[datetime.date] = None
-    spatial_extent: Optional[List[UpdateSpatialExtentRequest]] = None
     contact: Optional[str] = None
     keywords: List[str] = None
     version: Optional[str] = None
     type: Optional[ResourceType] = None
-    code_examples: Optional[List[UpdateCodeExampleRequest]] = None
     license: Optional[str] = None
     providers: Optional[conlist(str, min_length=1)] = None
-    examples: Optional[List[ExampleRequest]] = None
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None
+
+
+class UpdateProviderRequest(BaseModel):
+    provider_ids: List[uuid.UUID] = Field(None, description="List of providers")
+
+
+class UpdateProviderResponse(BaseModel):
+    providers: List[ProviderResponse] = Field(
+        None, description="List of updated providers"
+    )
 
 
 class UpdateResourceCategoriesRequest(BaseModel):
