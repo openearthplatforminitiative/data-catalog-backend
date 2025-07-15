@@ -18,7 +18,10 @@ from data_catalog_backend.models import (
 )
 from data_catalog_backend.routes.admin.authentication import authenticate_user
 from data_catalog_backend.schemas.User import User
-from data_catalog_backend.schemas.category import UpdateCategoryRequest
+from data_catalog_backend.schemas.category import (
+    UpdateCategoryRequest,
+    CategoryResponse,
+)
 from data_catalog_backend.schemas.code import (
     UpdateCodeExampleRequest,
     CodeExampleResponse,
@@ -35,9 +38,10 @@ from data_catalog_backend.schemas.resource import (
     UpdateResourceRequest,
     UpdateResourceCategoriesRequest,
     UpdateResourceCategoriesResponse,
+    UpdateSpatialExtentRequest,
+    UpdateSpatialExtentResponse,
 )
 from data_catalog_backend.schemas.spatial_extent import (
-    UpdateSpatialExtentRequest,
     SpatialExtentResponse,
     SpatialExtentRequest,
 )
@@ -156,36 +160,6 @@ async def update_resource(
 
                 updated_resource.code_examples = validated_code_examples
 
-        # TODO: main_category or additional_categories
-        # TODO: remove id from object before updating? Only use id to find correct cateogory
-        if "categories" in updated_resource:
-            logger.info(f"Authenticated user: {current_user}")
-            categories = updated_resource.categories.model_dump()
-            validated_categories: List[Category] = []
-            try:
-                for category in categories:
-
-                    validated_category = UpdateCategoryRequest(**category)
-                    category_data = validated_category.model_dump()
-                    category_data["resource_id"] = resource_id
-                    category_instance = Category(**category_data)
-                    updated_category = (
-                        resource_service.category_service.update_category(
-                            category_instance, category.id, current_user
-                        )
-                    )
-                    logger.debug(f"Updated category: {updated_category}")
-                    validated_categories.append(updated_category)
-            except ValueError as ve:
-                logger.error(f"Validation error for category: {ve}")
-                raise HTTPException(status_code=400, detail=str(ve))
-            except Exception as e:
-                logger.error(f"Unexpected error while processing categories: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
-
-            # TODO: Potentially change this to association proxy??
-            updated_resource.categories = [ResourceCategory(v) for v in categories]
-
         updated_resource = resource_service.update_resource(
             resource_id, updated_resource, current_user
         )
@@ -213,42 +187,23 @@ async def update_resource_categories(
     current_user: Annotated[User, Depends(authenticate_user)],
     resource_service: ResourceService = Depends(get_resource_service),
 ) -> UpdateResourceCategoriesResponse:
-    try:
-        categories_data = categories_req.model_dump()
+    categories_data = categories_req.model_dump()
 
-        updated_main_category_uuid = None
+    updated_main_category = None
+    try:
         if categories_data["main_category"]:
             main_category: uuid.UUID = categories_data["main_category"]
-            if not main_category:
-                raise HTTPException(
-                    status_code=400, detail="Main category cannot be empty"
-                )
-            updated_main_category_uuid = resource_service.set_main_category(
+            updated_main_category = resource_service.set_main_category(
                 category_id=main_category, resource_id=resource_id, user=current_user
             )
 
-        additional_categories: List[uuid.UUID] = categories_data[
-            "additional_categories"
-        ]
+        additional_categories: List = categories_data["additional_categories"]
 
         # Override all existing additional categories with the new list
-        resource_service.override_additional_categories(
+        updated_additional_categories = resource_service.override_additional_categories(
             resource_id=resource_id,
             categories=additional_categories,
             user=current_user,
-        )
-        """
-        if "main_category" in categories_data:
-            sett til ny
-            
-        if "additional_categories" in categories_data:
-            ...
-            override alle med den mottatte listen
-        """
-
-        return UpdateResourceCategoriesResponse(
-            main_category=updated_main_category_uuid,
-            additional_categories=categories_data["additional_categories"],
         )
     except ValueError as e:
         logger.error(
@@ -258,6 +213,47 @@ async def update_resource_categories(
     except Exception as e:
         logger.error(f"Error updating categories for resource {resource_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+    main_cat = None
+    if updated_main_category:
+        main_cat = CategoryResponse.model_validate(updated_main_category)
+
+    additional_cats = []
+    if updated_additional_categories:
+        additional_cats = [
+            CategoryResponse.model_validate(c) for c in updated_additional_categories
+        ]
+    return UpdateResourceCategoriesResponse(
+        main_category=main_cat, additional_categories=additional_cats
+    )
+
+
+@router.put(
+    "/{resource_id}/spatial_extent",
+    status_code=200,
+    description="Update spatial extent of a resource",
+    response_model=UpdateSpatialExtentResponse,
+    response_model_exclude_none=True,
+    tags=["admin"],
+)
+async def update_spatial_extent(
+    resource_id: uuid.UUID,
+    spatial_extent_req: UpdateSpatialExtentRequest,
+    current_user: Annotated[User, Depends(authenticate_user)],
+    resource_service: ResourceService = Depends(get_resource_service),
+) -> UpdateSpatialExtentResponse:
+    spatial_extent_data = spatial_extent_req.model_dump()
+    new_spatial_extents = resource_service.update_spatial_extent(
+        resource_id=resource_id,
+        spatial_extent_ids=spatial_extent_data["spatial_extent_ids"],
+    )
+    if new_spatial_extents:
+        spatial_extent_responses = [
+            SpatialExtentResponse.model_validate(extent)
+            for extent in new_spatial_extents
+        ]
+        return UpdateSpatialExtentResponse(spatial_extent=spatial_extent_responses)
+    return UpdateSpatialExtentResponse(spatial_extent=[])
 
 
 @router.post(
@@ -292,6 +288,7 @@ async def add_spatial_extent(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+"""
 @router.put(
     "/{resource_id}/spatial_extent/{spatial_extent_id}",
     status_code=200,
@@ -321,6 +318,7 @@ async def update_spatial_extent(
     except Exception as e:
         logger.error(f"Unexpected error while updating spatial extent: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+"""
 
 
 @router.post(

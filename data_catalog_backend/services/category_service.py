@@ -4,10 +4,9 @@ import uuid
 from sqlalchemy import select
 
 from data_catalog_backend.models import Category
+from data_catalog_backend.models.resource_category import ResourceCategory
 from data_catalog_backend.schemas.User import User
-from data_catalog_backend.schemas.category import (
-    CategorySummaryResponse,
-)
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +22,29 @@ class CategoryService:
     def get_category_by_title(self, title: str) -> Category:
         stmt = select(Category).where(Category.title == title)
         return self.session.scalars(stmt).unique().one_or_none()
+
+    def get_additional_categories_by_resource_id(
+        self, resource_id: uuid.UUID
+    ) -> list[Category]:
+        stmt = (
+            select(Category)
+            .select_from(ResourceCategory)
+            .join(Category, ResourceCategory.category_id == Category.id)
+            .where(
+                ResourceCategory.resource_id == resource_id,
+                ResourceCategory.is_main_category.is_(False),
+            )
+        )
+        categories = self.session.execute(stmt).scalars().all()
+        return [
+            Category(
+                id=category.id,
+                title=category.title,
+                abstract=category.abstract,
+                icon=category.icon or "",
+            )
+            for category in categories
+        ]
 
     def get_categories(self) -> list[Category]:
         stmt = select(Category)

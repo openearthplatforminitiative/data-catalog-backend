@@ -8,6 +8,7 @@ from data_catalog_backend.models import ResourceType
 from data_catalog_backend.schemas.basemodel import BaseModel
 from data_catalog_backend.schemas.category import (
     CategorySummaryResponse,
+    CategoryResponse,
 )
 from data_catalog_backend.schemas.code import (
     CodeExampleRequest,
@@ -228,5 +229,13 @@ class UpdateResourceCategoriesRequest(BaseModel):
 
 
 class UpdateResourceCategoriesResponse(BaseModel):
-    main_category: Optional[uuid.UUID] = None
-    additional_categories: Optional[List[uuid.UUID]] = None
+    main_category: Optional[CategoryResponse] = None
+    additional_categories: Optional[List[CategoryResponse]] = None
+
+
+class UpdateSpatialExtentRequest(BaseModel):
+    spatial_extent_ids: List[uuid.UUID] = None
+
+
+class UpdateSpatialExtentResponse(BaseModel):
+    spatial_extent: List[SpatialExtentResponse] = None

@@ -306,7 +306,7 @@ class ResourceService:
 
     def set_main_category(
         self, category_id: uuid.UUID, resource_id: uuid.UUID, user: User
-    ) -> uuid.UUID:
+    ) -> Category:
         existing_resource = self.get_resource(resource_id)
         if not existing_resource:
             raise ValueError(f"Resource with ID: {resource_id} not found")
@@ -344,11 +344,12 @@ class ResourceService:
             existing_resource.categories.append(resource_category)
 
         self.session.commit()
-        return category_id
+        # Return the updated main category
+        return self.category_service.get_category(category_id)
 
     def override_additional_categories(
         self, resource_id: uuid.UUID, categories: list[uuid.UUID] or None, user: User
-    ) -> list[uuid.UUID]:
+    ) -> list[Category]:
         existing_resource = self.get_resource(resource_id)
 
         if not existing_resource:
@@ -376,34 +377,69 @@ class ResourceService:
             )
         ]
         # add the rest of them to the new list
-        for category_id in categories if categories else []:
-            category = self.category_service.get_category(category_id)
-            if not category:
-                raise ValueError(f"Category with ID: {category_id} not found")
-            new_additional_resource_categories.append(
-                ResourceCategory(
-                    resource=existing_resource,
-                    category=category,
-                    is_main_category=False,
-                    created_by=user.email,
+        if categories:
+            for category_id in categories:
+                category = self.category_service.get_category(category_id)
+                if not category:
+                    raise ValueError(f"Category with ID: {category_id} not found")
+                new_additional_resource_categories.append(
+                    ResourceCategory(
+                        resource=existing_resource,
+                        category=category,
+                        is_main_category=False,
+                        created_by=user.email,
+                    )
                 )
-            )
 
         existing_resource.categories = new_additional_resource_categories
         self.session.add(existing_resource)
         self.session.commit()
 
-        # Get all uuids of additional categories and return them
-        return [
-            rc.category_id
-            for rc in existing_resource.categories
-            if not rc.is_main_category
-        ]
+        # Get updated categories and return them as Category, not ResourceCategory
+        # stmt = (
+        #     select(Category)
+        #     .join(ResourceCategory, ResourceCategory.category_id == Category.id)
+        #     .where(ResourceCategory.resource_id == resource_id)
+        # )
+        # updated_categories = list(self.session.scalars(stmt))
+
+        updated_categories = (
+            self.category_service.get_additional_categories_by_resource_id(resource_id)
+        )
+        return updated_categories
 
     def get_spatial_extent(self, spatial_extent_id) -> SpatialExtent:
         stmt = select(SpatialExtent).where(SpatialExtent.id == spatial_extent_id)
         return self.session.scalars(stmt).unique().one_or_none()
 
+    def update_spatial_extent(
+        self,
+        resource_id: uuid.UUID,
+        spatial_extent_ids: list[uuid.UUID],
+    ) -> list[SpatialExtent]:
+        existing_resource = self.get_resource(resource_id)
+
+        if not existing_resource:
+            raise ValueError(f"Resource with ID: {resource_id} not found")
+
+        new_spatial_extent = []
+
+        if spatial_extent_ids:
+            for spatial_extent_id in spatial_extent_ids:
+                spatial_extent = self.get_spatial_extent(spatial_extent_id)
+                if not spatial_extent:
+                    raise ValueError(
+                        f"Spatial extent with ID: {spatial_extent_id} not found"
+                    )
+                new_spatial_extent.append(spatial_extent)
+
+        existing_resource.spatial_extent = new_spatial_extent
+        self.session.add(existing_resource)
+        self.session.commit()
+
+        return new_spatial_extent
+
+    """
     def update_spatial_extent(
         self,
         resource_id: uuid.UUID,
@@ -450,6 +486,7 @@ class ResourceService:
 
         self.session.commit()
         return existing_spatial_extent
+    """
 
     def create_spatial_extent(
         self, resource_id: uuid.UUID, spatial_extent: SpatialExtent, current_user: User
