@@ -16,3 +16,4 @@ class TemporalExtentResponse(BaseModel):
     start_date: PastDate
     end_date: Optional[PastDate] = None
     created_by: Optional[str] = None
+    updated_by: Optional[str] = None

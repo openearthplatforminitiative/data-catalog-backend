@@ -239,3 +239,11 @@ class UpdateSpatialExtentRequest(BaseModel):
 
 class UpdateSpatialExtentResponse(BaseModel):
     spatial_extent: List[SpatialExtentResponse] = None
+
+
+class UpdateTemporalExtentRequest(BaseModel):
+    temporal_extent_ids: List[uuid.UUID] = None
+
+
+class UpdateTemporalExtentResponse(BaseModel):
+    temporal_extent: List[TemporalExtentResponse] = None

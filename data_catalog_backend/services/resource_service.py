@@ -439,92 +439,34 @@ class ResourceService:
 
         return new_spatial_extent
 
-    """
-    def update_spatial_extent(
-        self,
-        resource_id: uuid.UUID,
-        updated_spatial_extent: SpatialExtent,
-        spatial_extent_id: uuid.UUID,
-        current_user: User,
-    ) -> SpatialExtent:
-        existing_spatial_extent = self.get_spatial_extent(spatial_extent_id)
+    def get_temporal_extent(self, temporal_extent_id) -> TemporalExtent:
+        stmt = select(TemporalExtent).where(TemporalExtent.id == temporal_extent_id)
+        return self.session.scalars(stmt).unique().one_or_none()
 
-        updated_spatial_extent.resource_id = resource_id
+    def update_temporal_extent(
+        self, resource_id: uuid.UUID, temporal_extent_ids: list[uuid.UUID]
+    ) -> list[TemporalExtent]:
+        existing_resource = self.get_resource(resource_id)
 
-        resource = self.get_resource(resource_id)
-        if not resource:
+        if not existing_resource:
             raise ValueError(f"Resource with ID: {resource_id} not found")
 
-        if not existing_spatial_extent:
-            raise ValueError(f"Spatial extent with ID: {spatial_extent_id} not found")
+        new_temporal_extent = []
 
-        existing_spatial_extent.type = (
-            updated_spatial_extent.type or existing_spatial_extent.type
-        )
-        existing_spatial_extent.region = (
-            updated_spatial_extent.region
-            if updated_spatial_extent.region
-            else existing_spatial_extent.region
-        )
-        existing_spatial_extent.details = (
-            updated_spatial_extent.details
-            if updated_spatial_extent.details
-            else existing_spatial_extent.details
-        )
-        existing_spatial_extent.geometry = (
-            updated_spatial_extent.geometry
-            if updated_spatial_extent.geometry
-            else existing_spatial_extent.geometry
-        )
-        existing_spatial_extent.spatial_resolution = (
-            updated_spatial_extent.spatial_resolution
-            if updated_spatial_extent.spatial_resolution
-            else existing_spatial_extent.spatial_resolution
-        )
-        existing_spatial_extent.updated_by = current_user.email
-        existing_spatial_extent.updated_at = datetime.now()
+        if temporal_extent_ids:
+            for temporal_extent_id in temporal_extent_ids:
+                temporal_extent = self.get_temporal_extent(temporal_extent_id)
+                if not temporal_extent:
+                    raise ValueError(
+                        f"Temporal extent with ID: {temporal_extent_id} not found"
+                    )
+                new_temporal_extent.append(temporal_extent)
 
+        existing_resource.temporal_extent = new_temporal_extent
+        self.session.add(existing_resource)
         self.session.commit()
-        return existing_spatial_extent
-    """
 
-    def create_spatial_extent(
-        self, resource_id: uuid.UUID, spatial_extent: SpatialExtent, current_user: User
-    ) -> SpatialExtent:
-        try:
-            geometries = []
-            resource = self.get_resource(resource_id)
-            if not resource:
-                raise ValueError(f"Resource with ID: {resource_id} not found")
-
-            if spatial_extent.geometries:
-                for geometry_name in spatial_extent.geometries:
-                    geometry = self.geometry_service.get_geometry_by_name(geometry_name)
-                    if geometry:
-                        geometries.append(geometry)
-                    else:
-                        raise ValueError(f"Geometry {geometry_name} not found")
-
-            spa = SpatialExtent(
-                type=spatial_extent.type,
-                region=spatial_extent.region,
-                details=spatial_extent.details,
-                spatial_resolution=spatial_extent.spatial_resolution,
-            )
-
-            spa.created_by = current_user.email
-            spa.resource_id = resource_id
-            spa.geometries = geometries
-
-            self.session.add(spa)
-            self.session.commit()
-            return spa
-
-        except Exception as e:
-            # Log unexpected errors and raise a 500 error
-            logger.error(f"Unexpected error: {e}")
-            self.session.rollback()
-            raise e
+        return new_temporal_extent
 
     def create_temporal_extent(
         self, resource_id, temporal_extent_data, current_user: User

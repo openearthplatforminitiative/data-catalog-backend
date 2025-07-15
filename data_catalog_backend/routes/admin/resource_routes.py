@@ -40,6 +40,8 @@ from data_catalog_backend.schemas.resource import (
     UpdateResourceCategoriesResponse,
     UpdateSpatialExtentRequest,
     UpdateSpatialExtentResponse,
+    UpdateTemporalExtentRequest,
+    UpdateTemporalExtentResponse,
 )
 from data_catalog_backend.schemas.spatial_extent import (
     SpatialExtentResponse,
@@ -103,62 +105,32 @@ async def update_resource(
     try:
         updated_resource_data = update_resource_req.model_dump(exclude_unset=True)
         updated_resource = Resource(**updated_resource_data)
-        if "spatial_extent" in updated_resource:
-            spatial_extent_data = updated_resource.spatial_extent.model_dump()
-            validated_spatial_extent = []
+
+        if "code_examples" in updated_resource:
+            code_examples = updated_resource.code_examples.model_dump()
+            validated_code_examples = []
+
             try:
-                for extent in spatial_extent_data:
-                    validated_extent = UpdateSpatialExtentRequest(**extent)
-                    extent_data = validated_extent.model_dump()
+                for example in code_examples:
+                    validated_example = UpdateCodeExampleRequest(**example)
+                    example_data = validated_example.model_dump()
 
-                    extent_data["resource_id"] = resource_id
-                    updated_spatial_extent = SpatialExtent(**extent_data)
-
-                    spatial_extent_instance = resource_service.update_spatial_extent(
-                        resource_id,
-                        updated_spatial_extent,
-                        updated_spatial_extent.id,
-                        current_user,
+                    example_data["resource_id"] = resource_id
+                    code_example_instance = (
+                        resource_service.code_example_service.update_code_example(
+                            resource_id, example_data, example_data.id, current_user
+                        )
                     )
 
-                    validated_spatial_extent.append(spatial_extent_instance)
-
+                    validated_code_examples.append(code_example_instance)
             except ValueError as ve:
-                logger.error(f"Validation error for spatial extent: {ve}")
-                raise HTTPException(status_code=404, detail=str(ve))
+                logger.error(f"Validation error for code example: {ve}")
+                raise HTTPException(status_code=400, detail=str(ve))
             except Exception as e:
-                logger.error(f"Unexpected error while processing spatial extent: {e}")
+                logger.error(f"Unexpected error while processing code examples: {e}")
                 raise HTTPException(status_code=500, detail=str(e))
 
-            updated_resource.spatial_extent = validated_spatial_extent
-
-            if "code_examples" in updated_resource:
-                code_examples = updated_resource.code_examples.model_dump()
-                validated_code_examples = []
-
-                try:
-                    for example in code_examples:
-                        validated_example = UpdateCodeExampleRequest(**example)
-                        example_data = validated_example.model_dump()
-
-                        example_data["resource_id"] = resource_id
-                        code_example_instance = (
-                            resource_service.code_example_service.update_code_example(
-                                resource_id, example_data, example_data.id, current_user
-                            )
-                        )
-
-                        validated_code_examples.append(code_example_instance)
-                except ValueError as ve:
-                    logger.error(f"Validation error for code example: {ve}")
-                    raise HTTPException(status_code=400, detail=str(ve))
-                except Exception as e:
-                    logger.error(
-                        f"Unexpected error while processing code examples: {e}"
-                    )
-                    raise HTTPException(status_code=500, detail=str(e))
-
-                updated_resource.code_examples = validated_code_examples
+            updated_resource.code_examples = validated_code_examples
 
         updated_resource = resource_service.update_resource(
             resource_id, updated_resource, current_user
@@ -256,97 +228,31 @@ async def update_spatial_extent(
     return UpdateSpatialExtentResponse(spatial_extent=[])
 
 
-@router.post(
-    "/{resource_id}/spatial_extent",
-    status_code=201,
-    description="Add a spatial extent to a resource",
-    response_model=SpatialExtentResponse,
-    response_model_exclude_none=True,
-    tags=["admin"],
-)
-async def add_spatial_extent(
-    resource_id: uuid.UUID,
-    spatial_extent_req: SpatialExtentRequest,
-    current_user: Annotated[User, Depends(authenticate_user)],
-    resource_service: ResourceService = Depends(get_resource_service),
-) -> SpatialExtentResponse:
-    try:
-        spatial_extent_data = spatial_extent_req.model_dump()
-        spatial_extent = SpatialExtent(**spatial_extent_data)
-        created_spatial_extent = resource_service.create_spatial_extent(
-            resource_id, spatial_extent, current_user
-        )
-        converted = SpatialExtentResponse.model_validate(created_spatial_extent)
-        return converted
-    except ValueError as e:
-        logger.error(f"Value error while adding spatial extent: {e}")
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        logger.error(
-            f"Error adding spatial extent to resource with ID: {resource_id} - {e}"
-        )
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-"""
 @router.put(
-    "/{resource_id}/spatial_extent/{spatial_extent_id}",
-    status_code=200,
-    description="Update a spatial extent of a resource",
-    response_model=SpatialExtentResponse,
-    response_model_exclude_none=True,
-    tags=["admin"],
-)
-async def update_spatial_extent(
-    resource_id: uuid.UUID,
-    spatial_extent_req: UpdateSpatialExtentRequest,
-    spatial_extent_id: uuid.UUID,
-    current_user: Annotated[User, Depends(authenticate_user)],
-    resource_service: ResourceService = Depends(get_resource_service),
-) -> SpatialExtentResponse:
-    try:
-        spatial_extent_data = spatial_extent_req.model_dump()
-        spatial_extent = SpatialExtent(**spatial_extent_data)
-        updated_spatial_extent = resource_service.update_spatial_extent(
-            resource_id, spatial_extent, spatial_extent_id, current_user
-        )
-        converted = SpatialExtentResponse.model_validate(updated_spatial_extent)
-        return converted
-    except ValueError as e:
-        logger.error(f"Value error while updating spatial extent: {e}")
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        logger.error(f"Unexpected error while updating spatial extent: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-"""
-
-
-@router.post(
     "/{resource_id}/temporal_extent",
-    status_code=201,
-    description="Add a temporal extent to a resource",
-    response_model=List[TemporalExtentResponse],
+    status_code=200,
+    description="Update temporal extent of a resource",
+    response_model=UpdateTemporalExtentResponse,
     response_model_exclude_none=True,
     tags=["admin"],
 )
-async def add_temporal_extent(
+async def update_temporal_extent(
     resource_id: uuid.UUID,
-    temporal_extent: TemporalExtentResponse,
-    current_user: Annotated[User, Depends(authenticate_user)],
-    temporal_extent_service: ResourceService = Depends(get_resource_service),
-) -> List[TemporalExtentResponse]:
-    try:
-        created_temporal_extent = temporal_extent_service.create_temporal_extent(
-            resource_id, temporal_extent, current_user
-        )
-        converted = [TemporalExtentResponse.model_validate(created_temporal_extent)]
-        return converted
-    except ValueError as e:
-        logger.error(f"Value error while adding temporal extent: {e}")
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=500, detail=str(e))
+    temporal_extent_req: UpdateTemporalExtentRequest,
+    resource_service: ResourceService = Depends(get_resource_service),
+) -> UpdateTemporalExtentResponse:
+    temporal_extent_data = temporal_extent_req.model_dump()
+    new_temporal_extents = resource_service.update_temporal_extent(
+        resource_id=resource_id,
+        temporal_extent_ids=temporal_extent_data["temporal_extent_ids"],
+    )
+    if new_temporal_extents:
+        temporal_extent_responses = [
+            TemporalExtentResponse.model_validate(extent)
+            for extent in new_temporal_extents
+        ]
+        return UpdateTemporalExtentResponse(temporal_extent=temporal_extent_responses)
+    return UpdateTemporalExtentResponse(temporal_extent=[])
 
 
 @router.post(
