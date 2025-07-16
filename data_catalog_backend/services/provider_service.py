@@ -14,12 +14,6 @@ class ProviderService:
     def __init__(self, session):
         self.session = session
 
-    def get_resource_summery_on_id(self, id: uuid.UUID) -> List[dict]:
-        from data_catalog_backend.dependencies import get_resource_service
-
-        resource_service = get_resource_service()
-        return resource_service.get_resource_summery_on_id(id)
-
     def get_providers(self) -> List[Provider]:
         stmt = select(Provider)
         return self.session.scalars(stmt).unique().all()
@@ -29,21 +23,9 @@ class ProviderService:
             select(Provider)
             .select_from(ResourceProvider)
             .join(Provider, ResourceProvider.provider_id == Provider.id)
-            .where(
-                ResourceProvider.resource_id == resource_id,
-            )
+            .where(ResourceProvider.resource_id == resource_id)
         )
-        providers = self.session.execute(stmt).scalars().all()
-        return [
-            Provider(
-                id=provider.id,
-                name=provider.name,
-                short_name=provider.short_name,
-                provider_url=provider.provider_url,
-                description=provider.description,
-            )
-            for provider in providers
-        ]
+        return self.session.execute(stmt).scalars().all()
 
     def get_provider_by_short_name(self, short_name: str) -> Provider:
         stmt = select(Provider).where(Provider.short_name == short_name)
