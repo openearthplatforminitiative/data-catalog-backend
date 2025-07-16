@@ -224,7 +224,7 @@ class UpdateProviderRequest(BaseModel):
 
 
 class UpdateProviderResponse(BaseModel):
-    providers: List[ProviderResponse] = Field(
+    providers: List[ProviderSummaryResponse] = Field(
         None, description="List of updated providers"
     )
 
