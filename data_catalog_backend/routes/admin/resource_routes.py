@@ -3,7 +3,6 @@ import uuid
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.sql.functions import current_user
 
 from data_catalog_backend.dependencies import (
     get_resource_service,
