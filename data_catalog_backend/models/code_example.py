@@ -26,7 +26,7 @@ class CodeExamples(Base):
         DateTime, nullable=False, default=func.now(), doc="created at"
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now(), doc="updated at"
+        DateTime, nullable=True, default=func.now(), doc="updated at"
     )
     resource_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("resources.id"), nullable=True

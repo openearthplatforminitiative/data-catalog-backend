@@ -51,7 +51,7 @@ class SpatialExtent(Base):
         String, nullable=True, doc="region"
     )
     resource_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("resources.id"), nullable=False
+        ForeignKey("resources.id", ondelete="CASCADE"), nullable=False
     )
 
     # Relations
@@ -61,6 +61,7 @@ class SpatialExtent(Base):
         secondary=spatial_extent_geometry_relation,
         back_populates="spatial_extents",
         lazy="noload",
+        cascade="save-update",
     )
 
     geometry: Mapped[Optional[WKBElement]] = deferred(

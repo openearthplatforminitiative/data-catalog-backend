@@ -4,7 +4,6 @@ from sqlalchemy import select
 
 from data_catalog_backend.models import Geometry
 from data_catalog_backend.schemas.User import User
-from data_catalog_backend.schemas.geometry import GeometryRequest
 
 from shapely.geometry import shape, GeometryCollection
 from geoalchemy2.shape import from_shape
@@ -16,7 +15,7 @@ class GeometryService:
     def __init__(self, session):
         self.session = session
 
-    def create_geometry(self, geometry_req: GeometryRequest, user: User) -> None:
+    def create_geometry(self, geometry_req: Geometry, user: User) -> None:
         feature_collection = geometry_req.geometry
 
         if feature_collection.type != "FeatureCollection":

@@ -6,11 +6,21 @@ from pydantic import Field, conlist
 
 from data_catalog_backend.models import ResourceType
 from data_catalog_backend.schemas.basemodel import BaseModel
-from data_catalog_backend.schemas.category import CategorySummaryResponse
-from data_catalog_backend.schemas.code import CodeExampleRequest, CodeExampleResponse
+from data_catalog_backend.schemas.category import (
+    CategorySummaryResponse,
+    CategoryResponse,
+)
+from data_catalog_backend.schemas.code import (
+    CodeExampleRequest,
+    CodeExampleResponse,
+    UpdateCodeExampleRequest,
+)
 from data_catalog_backend.schemas.example import ExampleResponse, ExampleRequest
 from data_catalog_backend.schemas.license import LicenseResponse
-from data_catalog_backend.schemas.provider import ProviderSummaryResponse
+from data_catalog_backend.schemas.provider import (
+    ProviderSummaryResponse,
+    ProviderResponse,
+)
 from data_catalog_backend.schemas.resource_summary import ResourceSummaryResponse
 from data_catalog_backend.schemas.spatial_extent import (
     SpatialExtentRequest,
@@ -25,6 +35,8 @@ from data_catalog_backend.schemas.temporal_extent import (
 class ResourceCategoryResponse(BaseModel):
     category: CategorySummaryResponse = Field(description="Category")
     is_main_category: bool = Field(description="Role of the provider")
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
 
 
 class ResourceProviderResponse(BaseModel):
@@ -113,7 +125,7 @@ class ResourceResponse(BaseModel):
     id: uuid.UUID
     title: str = Field(description="Title of the resource")
     abstract: str = Field(description="Short description of the resource")
-    icon: str = Field(description="Icon of the resource")
+    icon: Optional[str] = Field(default=None, description="Icon of the resource")
     html_content: Optional[str] = Field(
         description="Extended description of the resource"
     )
@@ -164,7 +176,7 @@ class ResourceResponse(BaseModel):
         default=None, nullable=True, description="The version of this resource"
     )
     type: ResourceType = Field(description="Type of the resource")
-    categories: List[ResourceCategoryResponse] = Field(
+    categories: Optional[List[ResourceCategoryResponse]] = Field(
         default=None, nullable=True, description="List of categories"
     )
     code_examples: Optional[List[CodeExampleResponse]] = Field(
@@ -181,3 +193,63 @@ class ResourceResponse(BaseModel):
     children: Optional[List[ResourceSummaryResponse]] = Field(
         default=None, nullable=True, description="Child resources"
     )
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
+
+
+class UpdateResourceRequest(BaseModel):
+    title: Optional[str] = None
+    abstract: Optional[str] = None
+    html_content: Optional[str] = None
+    resource_url: Optional[str] = None
+    documentation_url: Optional[str] = None
+    download_url: Optional[str] = None
+    git_url: Optional[str] = None
+    data_hub_url: Optional[str] = None
+    research_paper_url: Optional[str] = None
+    openapi_url: Optional[str] = None
+    client_library: Optional[bool] = False
+    api_authentication_url: Optional[str] = None
+    maintenance_and_update_frequency: Optional[str] = None
+    release_date: Optional[datetime.date] = None
+    contact: Optional[str] = None
+    keywords: List[str] = None
+    version: Optional[str] = None
+    type: Optional[ResourceType] = None
+    license: Optional[str] = None
+
+
+class UpdateProviderRequest(BaseModel):
+    provider_ids: List[uuid.UUID] = Field(None, description="List of providers")
+
+
+class UpdateProviderResponse(BaseModel):
+    providers: List[ProviderSummaryResponse] = Field(
+        None, description="List of updated providers"
+    )
+
+
+class UpdateResourceCategoriesRequest(BaseModel):
+    main_category: Optional[uuid.UUID] = None
+    additional_categories: Optional[List[uuid.UUID]] = None
+
+
+class UpdateResourceCategoriesResponse(BaseModel):
+    main_category: Optional[CategoryResponse] = None
+    additional_categories: Optional[List[CategoryResponse]] = None
+
+
+class UpdateSpatialExtentRequest(BaseModel):
+    spatial_extent_ids: List[uuid.UUID] = None
+
+
+class UpdateSpatialExtentResponse(BaseModel):
+    spatial_extent: List[SpatialExtentResponse] = None
+
+
+class UpdateTemporalExtentRequest(BaseModel):
+    temporal_extent_ids: List[uuid.UUID] = None
+
+
+class UpdateTemporalExtentResponse(BaseModel):
+    temporal_extent: List[TemporalExtentResponse] = None

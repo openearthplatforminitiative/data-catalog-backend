@@ -20,7 +20,9 @@ router = APIRouter(prefix="/licenses")
     tags=["licenses"],
 )
 async def get_licenses(
-    service: LicenseService = Depends(get_license_service),
+    license_service: LicenseService = Depends(get_license_service),
 ) -> List[LicenseResponse]:
     logging.info("Getting licenses")
-    return service.get_licenses()
+    licences = license_service.get_licenses()
+    converted = [LicenseResponse.model_validate(lic) for lic in licences]
+    return converted

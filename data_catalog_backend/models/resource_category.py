@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey, Boolean, Index, DateTime, String, func
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
+
 from data_catalog_backend.database import Base
 
 
@@ -11,7 +12,7 @@ class ResourceCategory(Base):
     __tablename__ = "resource_category"
 
     resource_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("resources.id"), primary_key=True
+        ForeignKey("resources.id", ondelete="CASCADE"), primary_key=True
     )
     category_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("categories.id"), primary_key=True

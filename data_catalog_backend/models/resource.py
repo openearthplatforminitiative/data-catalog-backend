@@ -133,10 +133,12 @@ class Resource(Base):
     # Relations
     license: Mapped["License"] = relationship(back_populates="resources")
     spatial_extent: Mapped[List["SpatialExtent"]] = relationship(
-        back_populates="resource"
+        back_populates="resource",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     temporal_extent: Mapped[List["TemporalExtent"]] = relationship(
-        back_populates="resource"
+        back_populates="resource",
     )
     parents: Mapped[List["Resource"]] = relationship(
         "Resource",
@@ -153,7 +155,10 @@ class Resource(Base):
         back_populates="parents",
     )
     categories: Mapped[List["ResourceCategory"]] = relationship(
-        "ResourceCategory", back_populates="resource"
+        "ResourceCategory",
+        back_populates="resource",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     providers: Mapped[List["ResourceProvider"]] = relationship(
         "ResourceProvider", back_populates="resource"

@@ -1,10 +1,12 @@
 import logging
+import uuid
 from typing import List
 
 from sqlalchemy import select
 
 from data_catalog_backend.models import License
 from data_catalog_backend.schemas.User import User
+from data_catalog_backend.schemas.license import LicenseRequest
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +28,25 @@ class LicenseService:
         return self.session.scalars(stmt).unique().all()
 
     def create_license(self, license: License, user: User) -> License:
-        license = License(
+        new_license = License(
             name=license.name, url=str(license.url), created_by=user.email
         )
-        self.session.add(license)
+        self.session.add(new_license)
         try:
             self.session.commit()
         except Exception as e:
             self.session.rollback()
             raise e
-        return license
+        return new_license
+
+    def delete_license(self, license_id: uuid.UUID):
+        license = self.get_license(license_id)
+        if not license:
+            raise ValueError(f"License with ID {license_id} does not exist.")
+
+        self.session.delete(license)
+        try:
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
