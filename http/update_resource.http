@@ -1,0 +1,9 @@
+### Update provider for a resource
+PUT http://localhost:8000/admin/resources/21acf306-434d-4efb-aad8-9ee9172d0a50/providers
+Content-Type: application/json
+
+{
+  "provider_ids": [
+    "29d8302b-8228-4d59-a772-0e398acfa615"
+  ]
+}
