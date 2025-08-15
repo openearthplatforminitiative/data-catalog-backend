@@ -18,14 +18,14 @@ class GeometryService:
     def create_geometry(self, geometry_req: Geometry, user: User) -> None:
         feature_collection = geometry_req.geometry
 
-        if feature_collection.type != "FeatureCollection":
+        if feature_collection["type"] != "FeatureCollection":
             raise ValueError("Invalid GeoJSON: must be a FeatureCollection")
 
-        if not feature_collection.features:
+        if not feature_collection["features"]:
             raise ValueError("FeatureCollection must contain at least one feature")
 
         geometries = [
-            shape(feature.geometry) for feature in feature_collection.features
+            shape(feature["geometry"]) for feature in feature_collection["features"]
         ]
 
         geometry_collection = GeometryCollection(geometries)
