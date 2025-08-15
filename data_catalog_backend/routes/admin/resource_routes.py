@@ -236,6 +236,7 @@ async def update_resource_categories(
     status_code=200,
     description="Update spatial extent of a resource",
     response_model=UpdateSpatialExtentResponse,
+    dependencies=[Depends(authenticate_user)],
     response_model_exclude_none=True,
     tags=["admin"],
 )
@@ -263,6 +264,7 @@ async def update_spatial_extent(
     status_code=200,
     description="Update temporal extent of a resource",
     response_model=UpdateTemporalExtentResponse,
+    dependencies=[Depends(authenticate_user)],
     response_model_exclude_none=True,
     tags=["admin"],
 )
