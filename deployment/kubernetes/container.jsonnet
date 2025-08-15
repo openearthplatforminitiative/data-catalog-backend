@@ -21,7 +21,7 @@
       spec: {
         initContainers: [{
           name: 'migrate-database',
-          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.1.2',
+          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.1.3',
           imagePullPolicy: 'Always',
           envFrom: [{
             secretRef: {
