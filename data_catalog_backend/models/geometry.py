@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import List
 
-from geoalchemy2 import Geometry, WKBElement
+from geoalchemy2 import Geometry as Geo, WKBElement
 from sqlalchemy import String, UUID, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -26,7 +26,7 @@ class Geometry(Base):
         String, nullable=False, doc="Unique name for Geometry", unique=True
     )
     geometry: Mapped[WKBElement] = mapped_column(
-        Geometry(geometry_type="GEOMETRY", srid=4326),
+        Geo(geometry_type="GEOMETRY", srid=4326),
         nullable=False,
         doc="geometry value",
     )

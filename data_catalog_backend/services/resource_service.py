@@ -93,13 +93,24 @@ class ResourceService:
         )
 
         query = ResourceQuery()
-        base_stmt = query.apply_tag_filters(base_stmt, resources_req)
-        base_stmt = query.apply_type_filters(base_stmt, resources_req)
-        base_stmt = query.apply_category_filters(base_stmt, resources_req)
-        base_stmt = query.apply_provider_filters(base_stmt, resources_req)
-        base_stmt = query.apply_spatial_filters(base_stmt, resources_req)
-        base_stmt = query.apply_features_filters(base_stmt, resources_req)
-        base_stmt = query.apply_temporal_filters(base_stmt, resources_req)
+        if resources_req.tags:
+            base_stmt = query.apply_tag_filters(base_stmt, resources_req)
+        if resources_req.types:
+            base_stmt = query.apply_type_filters(base_stmt, resources_req)
+        if resources_req.categories:
+            base_stmt = query.apply_category_filters(base_stmt, resources_req)
+        if resources_req.providers:
+            base_stmt = query.apply_provider_filters(base_stmt, resources_req)
+        if resources_req.features:
+            base_stmt = query.apply_features_filters(base_stmt, resources_req)
+        if resources_req.years:
+            base_stmt = query.apply_temporal_filters(base_stmt, resources_req)
+        if resources_req.spatial or resources_req.features:
+            base_stmt = base_stmt.outerjoin(SpatialExtent)
+            if resources_req.features:
+                base_stmt = query.apply_features_filters(base_stmt, resources_req)
+            if resources_req.spatial:
+                base_stmt = query.apply_spatial_filters(base_stmt, resources_req)
 
         group_by = [
             Resource.id,

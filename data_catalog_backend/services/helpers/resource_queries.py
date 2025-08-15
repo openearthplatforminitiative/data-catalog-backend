@@ -1,6 +1,6 @@
 import logging
 
-from geoalchemy2.functions import ST_Covers, ST_Intersects
+from geoalchemy2.functions import ST_Covers, ST_Intersects, ST_Envelope
 from geoalchemy2.shape import from_shape
 from shapely.geometry.geo import shape
 from sqlalchemy import or_, case, and_, func, select, literal_column, exists
@@ -23,9 +23,6 @@ class ResourceQuery:
         self.logger = logging.getLogger(__name__)
 
     def apply_tag_filters(self, stmt, resources_req):
-        if not resources_req.tags:
-            return stmt
-
         self.logger.info("Filtering by tags")
         tag_filters = []
         for tag in resources_req.tags:
@@ -48,16 +45,10 @@ class ResourceQuery:
         return stmt.where(and_(*tag_filters))
 
     def apply_type_filters(self, stmt, resources_req):
-        if not resources_req.types:
-            return stmt
-
         self.logger.info("Filtering by types")
         return stmt.where(Resource.type.in_(resources_req.types))
 
     def apply_category_filters(self, stmt, resources_req):
-        if not resources_req.categories:
-            return stmt
-
         self.logger.info("Filtering by categories")
         FilterResourceCategory = aliased(ResourceCategory)
         return stmt.outerjoin(
@@ -65,21 +56,13 @@ class ResourceQuery:
         ).where(FilterResourceCategory.category_id.in_(resources_req.categories))
 
     def apply_provider_filters(self, stmt, resources_req):
-        if not resources_req.providers:
-            return stmt
-
         self.logger.info("Filtering by providers")
         return stmt.outerjoin(
             Resource.providers,
         ).where(ResourceProvider.provider_id.in_(resources_req.providers))
 
     def apply_spatial_filters(self, stmt, resources_req):
-        if not resources_req.spatial:
-            return stmt
-
         self.logger.info("Filtering by spatial extent")
-
-        stmt = stmt.outerjoin(SpatialExtent)
 
         conditions = []
 
@@ -97,29 +80,30 @@ class ResourceQuery:
         return stmt
 
     def apply_features_filters(self, stmt, resources_req):
-        if not resources_req.features:
-            return stmt
-
         self.logger.info("Filtering by features")
 
         shapely_geoms = [
             from_shape(shape(feature.geometry), srid=4326)
             for feature in resources_req.features
         ]
-        covers_conditions = [
+        
+        envelope_intersects_conditions = [
+            ST_Intersects(ST_Envelope(SpatialExtent.geometry), ST_Envelope(geom)) 
+            for geom in shapely_geoms
+        ]
+        
+        covers = [
             ST_Covers(SpatialExtent.geometry, geom) for geom in shapely_geoms
         ]
         intersects_conditions = [
             ST_Intersects(SpatialExtent.geometry, geom) for geom in shapely_geoms
         ]
 
-        stmt = stmt.outerjoin(SpatialExtent)
-
         is_global = Resource.spatial_extent_type == SpatialExtentRequestType.Global
 
         stmt = stmt.add_columns(
-            or_(is_global, *covers_conditions).label("covers_some"),
-            or_(is_global, and_(*covers_conditions)).label("covers_all"),
+            or_(is_global, *covers).label("covers_some"),
+            or_(is_global, and_(*covers)).label("covers_all"),
             or_(is_global, *intersects_conditions).label("intersects_some"),
             or_(is_global, and_(*intersects_conditions)).label("intersects_all"),
         )
@@ -127,15 +111,14 @@ class ResourceQuery:
         return stmt.where(
             or_(
                 is_global,
-                *intersects_conditions,
-                *covers_conditions,
+                and_(
+                    or_(*envelope_intersects_conditions),
+                    or_(*intersects_conditions, *covers)
+                )
             )
         )
 
     def apply_temporal_filters(self, stmt, resources_req):
-        if not resources_req.years:
-            return stmt
-
         logging.info("Filtering by temporal extent")
 
         from data_catalog_backend.models import TemporalExtent
