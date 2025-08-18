@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 @router.post(
     "/",
     summary="Add a resource relation to the database",
-    tags=["admin"],
+    tags=["resource_relations"],
     response_model=ResourceRelationResponse,
 )
 async def add_resource_relation(

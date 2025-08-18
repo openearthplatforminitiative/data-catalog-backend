@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
     "/",
     status_code=201,
     summary="Add a geometry to the database",
-    tags=["admin"],
+    tags=["geometries"],
 )
 async def add_geometry(
     geometry_req: GeometryRequest,

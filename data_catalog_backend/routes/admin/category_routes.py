@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
     "/",
     status_code=201,
     summary="Add a category to the database",
-    tags=["admin"],
+    tags=["categories"],
     response_model=CategoryResponse,
 )
 async def add_category(
@@ -51,7 +51,7 @@ async def add_category(
     description="Update an existing category",
     response_model=CategoryResponse,
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["categories"],
 )
 async def update_category(
     category_req: UpdateCategoryRequest,
@@ -81,7 +81,7 @@ async def update_category(
     status_code=204,
     description="Delete a category",
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["categories"],
 )
 async def delete_category(
     category_id: uuid.UUID,

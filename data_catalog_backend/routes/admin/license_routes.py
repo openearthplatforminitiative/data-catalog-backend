@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
     "/",
     status_code=201,
     summary="Add a license to the database",
-    tags=["admin"],
+    tags=["licenses"],
     response_model=LicenseResponse,
 )
 async def add_license(
@@ -44,7 +44,7 @@ async def add_license(
     status_code=204,
     description="Delete a license",
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["licenses"],
 )
 async def delete_license(
     license_id: uuid.UUID,

@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
     "/",
     status_code=201,
     summary="Add a provider to the database",
-    tags=["admin"],
+    tags=["providers"],
     response_model=ProviderResponse,
 )
 async def add_provider(
@@ -44,7 +44,7 @@ async def add_provider(
     status_code=200,
     summary="Update a provider",
     description="Updates a provider in the database",
-    tags=["admin"],
+    tags=["providers"],
     response_model=ProviderResponse,
 )
 async def update_provider(
@@ -76,7 +76,7 @@ async def update_provider(
     description="Delete a provider",
     dependencies=[Depends(authenticate_user)],
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["providers"],
 )
 async def delete_provider(
     provider_id: uuid.UUID,

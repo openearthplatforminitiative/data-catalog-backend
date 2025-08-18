@@ -59,7 +59,7 @@ logger = logging.getLogger(__name__)
     "/",
     status_code=201,
     summary="Add a resource to the database",
-    tags=["admin"],
+    tags=["resources"],
     response_model=ResourceResponse,
 )
 async def add_resource(
@@ -90,7 +90,7 @@ async def add_resource(
     status_code=200,
     description="Update a resource",
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
     response_model=ResourceResponse,
 )
 async def update_resource(
@@ -125,7 +125,7 @@ async def update_resource(
     status_code=200,
     description="Update license of a resource",
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
     response_model=LicenseResponse,
 )
 async def update_license(
@@ -152,7 +152,7 @@ async def update_license(
     status_code=200,
     description="Update providers for a resource",
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
     response_model=UpdateProviderResponse,
 )
 async def update_resource_providers(
@@ -182,7 +182,7 @@ async def update_resource_providers(
     description="Update categories of a resource",
     response_model=UpdateResourceCategoriesResponse,
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
 )
 async def update_resource_categories(
     resource_id: uuid.UUID,
@@ -238,7 +238,7 @@ async def update_resource_categories(
     response_model=UpdateSpatialExtentResponse,
     dependencies=[Depends(authenticate_user)],
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
 )
 async def update_spatial_extent(
     resource_id: uuid.UUID,
@@ -266,7 +266,7 @@ async def update_spatial_extent(
     response_model=UpdateTemporalExtentResponse,
     dependencies=[Depends(authenticate_user)],
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
 )
 async def update_temporal_extent(
     resource_id: uuid.UUID,
@@ -293,7 +293,7 @@ async def update_temporal_extent(
     description="Add code examples to a resource",
     response_model=List[CodeExampleResponse],
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
 )
 async def add_code_examples(
     resource_id: uuid.UUID,
@@ -338,7 +338,7 @@ async def add_code_examples(
     description="Update a code example of a resource",
     response_model=CodeExampleResponse,
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
 )
 async def update_code_example(
     resource_id: uuid.UUID,
@@ -397,7 +397,7 @@ async def update_code_example(
     description="Add examples to a resource",
     response_model=List[ExampleResponse],
     response_model_exclude_none=True,
-    tags=["admin"],
+    tags=["resources"],
 )
 async def add_examples(
     resource_id: uuid.UUID,
@@ -453,7 +453,7 @@ async def update_example(
     "/{resource_id}",
     status_code=204,
     description="Delete a resource from the metadata store",
-    tags=["admin"],
+    tags=["resources"],
     response_model_exclude_none=True,
 )
 async def delete_resource(
