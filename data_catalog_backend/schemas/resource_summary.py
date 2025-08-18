@@ -4,10 +4,10 @@ from typing import Optional
 from pydantic import Field
 
 from data_catalog_backend.models import ResourceType, SpatialExtentType
-from data_catalog_backend.schemas.basemodel import BaseModel
+from data_catalog_backend.schemas.basemodel import AuditFieldsMixins
 
 
-class ResourceSummaryResponse(BaseModel):
+class ResourceSummaryResponse(AuditFieldsMixins):
     id: uuid.UUID
     title: str = Field(description="Title of the resource")
     abstract: str = Field(description="Description of the resource")
@@ -20,5 +20,3 @@ class ResourceSummaryResponse(BaseModel):
         default=None,
         description="If the resource has a spatial extent, the type of the spatial extent",
     )
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None
