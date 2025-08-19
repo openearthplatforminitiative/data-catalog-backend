@@ -12,7 +12,3 @@ from data_catalog_backend.models.spatial_extent import *
 from data_catalog_backend.models.temporal_extent import *
 from data_catalog_backend.models.spatial_extent_geometry_relation import *
 from data_catalog_backend.models.geometry import *
-
-
-class BaseWithTimestamps:
-    pass
