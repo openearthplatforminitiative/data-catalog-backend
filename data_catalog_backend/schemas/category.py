@@ -1,8 +1,12 @@
 import uuid
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import Field
-from data_catalog_backend.schemas.basemodel import BaseModel
+from data_catalog_backend.schemas.basemodel import (
+    BaseModel,
+    AuditFieldsMixins,
+)
 from data_catalog_backend.schemas.resource_summary import ResourceSummaryResponse
 
 
@@ -10,7 +14,7 @@ class ResourceCategoryResponse(BaseModel):
     resource: ResourceSummaryResponse = Field(description="Resource")
 
 
-class CategoryResponse(BaseModel):
+class CategoryResponse(AuditFieldsMixins):
     id: uuid.UUID
     title: str = Field(description="title of the category")
     abstract: str = Field(description="short description of the category")
@@ -18,24 +22,12 @@ class CategoryResponse(BaseModel):
     resources: List[ResourceCategoryResponse] = Field(
         description="list of resources in the category"
     )
-    created_by: Optional[str] = Field(
-        default=None, description="email of the user who created the data"
-    )
-    updated_by: Optional[str] = Field(
-        default=None, description="email of the user who updated the data"
-    )
 
 
 class CategoryRequest(BaseModel):
     title: str = Field(description="title of the category")
     abstract: str = Field(description="short description of the category")
     icon: str = Field(description="MUI icon of the category")
-    created_by: Optional[str] = Field(
-        default=None, description="email of the user who created the data"
-    )
-    updated_by: Optional[str] = Field(
-        default=None, description="email of the user who updated the data"
-    )
 
 
 class UpdateCategoryRequest(BaseModel):
@@ -46,11 +38,8 @@ class UpdateCategoryRequest(BaseModel):
     icon: Optional[str] = Field(default=None, description="MUI icon of the category")
 
 
-class CategorySummaryResponse(BaseModel):
+class CategorySummaryResponse(AuditFieldsMixins):
     id: uuid.UUID
     title: str = Field(description="title of the category")
     abstract: str = Field(description="short description of the category")
     icon: Optional[str] = Field(default=None, description="MUI icon of the category")
-    created_by: Optional[str] = Field(
-        default=None, description="email of the user who created the data"
-    )

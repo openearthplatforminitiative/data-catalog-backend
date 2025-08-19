@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import (
     UUID,
@@ -13,18 +12,19 @@ from sqlalchemy import (
     Boolean,
     select,
     func,
-    exists,
-    DateTime,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
-from data_catalog_backend.database import Base
 from enum import StrEnum as PyStrEnum
 
-from data_catalog_backend.models import ResourceCategory, Category
+from data_catalog_backend.models.resource_category import ResourceCategory
+from data_catalog_backend.models.category import Category
 from data_catalog_backend.models.spatial_extent import SpatialExtent
 from data_catalog_backend.models.resource_resource import (
     resource_relation,
 )
+
+from data_catalog_backend.database import Base
+from data_catalog_backend.models import AuditFieldsMixin
 
 
 class ResourceType(PyStrEnum):
@@ -34,7 +34,7 @@ class ResourceType(PyStrEnum):
     API = "API"
 
 
-class Resource(Base):
+class Resource(AuditFieldsMixin, Base):
     __tablename__ = "resources"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -167,15 +167,6 @@ class Resource(Base):
         back_populates="resource"
     )
     examples: Mapped[List["Examples"]] = relationship(back_populates="resource")
-
-    created_by: Mapped[str] = mapped_column(String, nullable=False, doc="created by")
-    updated_by: Mapped[str] = mapped_column(String, nullable=True, doc="updated by")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now(), doc="created at"
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now(), doc="updated at"
-    )
 
     __table_args__ = (
         Index("unique_resource_title_type", "title", "type", unique=True),

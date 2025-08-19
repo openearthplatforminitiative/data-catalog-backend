@@ -5,7 +5,10 @@ from typing import List, Optional
 from pydantic import Field, conlist
 
 from data_catalog_backend.models import ResourceType
-from data_catalog_backend.schemas.basemodel import BaseModel
+from data_catalog_backend.schemas.basemodel import (
+    BaseModel,
+    AuditFieldsMixins,
+)
 from data_catalog_backend.schemas.category import (
     CategorySummaryResponse,
     CategoryResponse,
@@ -32,14 +35,12 @@ from data_catalog_backend.schemas.temporal_extent import (
 )
 
 
-class ResourceCategoryResponse(BaseModel):
+class ResourceCategoryResponse(AuditFieldsMixins):
     category: CategorySummaryResponse = Field(description="Category")
     is_main_category: bool = Field(description="Role of the provider")
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None
 
 
-class ResourceProviderResponse(BaseModel):
+class ResourceProviderResponse(AuditFieldsMixins):
     provider: ProviderSummaryResponse = Field(description="List of providers")
     role: str = Field(description="Role of the provider")
 
@@ -121,7 +122,7 @@ class ResourceRelationResponse(BaseModel):
     based_on: uuid.UUID = Field(description="The resource it is based on")
 
 
-class ResourceResponse(BaseModel):
+class ResourceResponse(AuditFieldsMixins):
     id: uuid.UUID
     title: str = Field(description="Title of the resource")
     abstract: str = Field(description="Short description of the resource")
@@ -193,8 +194,6 @@ class ResourceResponse(BaseModel):
     children: Optional[List[ResourceSummaryResponse]] = Field(
         default=None, nullable=True, description="Child resources"
     )
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None
 
 
 class UpdateResourceRequest(BaseModel):

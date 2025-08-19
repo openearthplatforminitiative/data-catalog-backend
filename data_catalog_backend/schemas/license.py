@@ -1,22 +1,21 @@
 from typing import Optional
 import uuid
 
-from data_catalog_backend.schemas.basemodel import BaseModel
+from data_catalog_backend.schemas.basemodel import (
+    BaseModel,
+    AuditFieldsMixins,
+)
 
 
 class LicenseRequest(BaseModel):
     name: str
     url: str
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None
 
 
-class LicenseResponse(BaseModel):
+class LicenseResponse(AuditFieldsMixins):
     id: uuid.UUID
     name: str
     url: Optional[str]
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None
 
 
 class UpdateLicenseRequest(BaseModel):

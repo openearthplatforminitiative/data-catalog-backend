@@ -86,15 +86,13 @@ class ResourceQuery:
             from_shape(shape(feature.geometry), srid=4326)
             for feature in resources_req.features
         ]
-        
+
         envelope_intersects_conditions = [
-            ST_Intersects(ST_Envelope(SpatialExtent.geometry), ST_Envelope(geom)) 
+            ST_Intersects(ST_Envelope(SpatialExtent.geometry), ST_Envelope(geom))
             for geom in shapely_geoms
         ]
-        
-        covers = [
-            ST_Covers(SpatialExtent.geometry, geom) for geom in shapely_geoms
-        ]
+
+        covers = [ST_Covers(SpatialExtent.geometry, geom) for geom in shapely_geoms]
         intersects_conditions = [
             ST_Intersects(SpatialExtent.geometry, geom) for geom in shapely_geoms
         ]
@@ -113,8 +111,8 @@ class ResourceQuery:
                 is_global,
                 and_(
                     or_(*envelope_intersects_conditions),
-                    or_(*intersects_conditions, *covers)
-                )
+                    or_(*intersects_conditions, *covers),
+                ),
             )
         )
 

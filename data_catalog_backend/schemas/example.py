@@ -1,18 +1,19 @@
 import uuid
 from typing import Optional
 
-from data_catalog_backend.schemas.basemodel import BaseModel
+from data_catalog_backend.schemas.basemodel import (
+    BaseModel,
+    AuditFieldsMixins,
+)
 
 
-class ExampleResponse(BaseModel):
+class ExampleResponse(AuditFieldsMixins):
     id: uuid.UUID
     title: str = None
     type: str = None
     description: Optional[str] = None
     example_url: str = None
     favicon_url: Optional[str] = None
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None
 
 
 class ExampleRequest(BaseModel):
@@ -21,8 +22,6 @@ class ExampleRequest(BaseModel):
     description: Optional[str] = None
     example_url: str = None
     favicon_url: Optional[str] = None
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None
 
 
 class UpdateExampleRequest(BaseModel):
@@ -31,5 +30,3 @@ class UpdateExampleRequest(BaseModel):
     description: Optional[str] = None
     example_url: Optional[str] = None
     favicon_url: Optional[str] = None
-    created_by: Optional[str] = None
-    updated_by: Optional[str] = None

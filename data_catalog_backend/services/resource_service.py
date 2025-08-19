@@ -80,6 +80,10 @@ class ResourceService:
                 Category.icon.label("icon"),
                 Resource.has_spatial_extent,
                 Resource.spatial_extent_type,
+                Resource.created_by,
+                Resource.created_at,
+                Resource.updated_by,
+                Resource.updated_at,
             )
             .select_from(Resource)
             .join(
