@@ -34,6 +34,12 @@ async def authenticate_user(
     if settings.api_domain == "localhost" and token is None:
         return dummy_user
 
+    if token is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated or missing token.",
+        )
+
     payload = jwt.decode(
         token,
         jwk_client.get_signing_key_from_jwt(token).key,
