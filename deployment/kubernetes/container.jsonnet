@@ -21,7 +21,7 @@
       spec: {
         initContainers: [{
           name: 'migrate-database',
-          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.1.5',
+          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.1.6',
           imagePullPolicy: 'Always',
           envFrom: [{
             secretRef: {
@@ -37,7 +37,7 @@
         }],
         containers: [{
           name: 'data-catalog-public-api',
-          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.1.5',
+          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.1.6',
           imagePullPolicy: 'Always',
           ports: [{
             containerPort: 8000,
@@ -73,7 +73,7 @@
         },
         {
           name: 'data-catalog-admin-api',
-          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.1.5',
+          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.1.6',
           imagePullPolicy: 'Always',
           ports: [{
             containerPort: 8001,
