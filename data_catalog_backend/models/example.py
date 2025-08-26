@@ -5,9 +5,10 @@ from sqlalchemy import UUID, ForeignKey, String, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from data_catalog_backend.database import Base
+from data_catalog_backend.models import AuditFieldsMixin
 
 
-class Examples(Base):
+class Examples(AuditFieldsMixin, Base):
     __tablename__ = "examples"
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -24,14 +25,6 @@ class Examples(Base):
         String, nullable=True, doc="link to favicon"
     )
     resource_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("resources.id"))
-    created_by: Mapped[str] = mapped_column(String, nullable=False, doc="created by")
-    updated_by: Mapped[str] = mapped_column(String, nullable=True, doc="updated by")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now(), doc="created at"
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now(), doc="updated at"
-    )
 
     # Relations
     resource: Mapped["Resource"] = relationship(back_populates="examples")

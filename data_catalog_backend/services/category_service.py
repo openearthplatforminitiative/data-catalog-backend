@@ -48,16 +48,7 @@ class CategoryService:
 
     def get_categories(self) -> list[Category]:
         stmt = select(Category)
-        categories = self.session.execute(stmt).scalars().all()
-        return [
-            Category(
-                id=category.id,
-                title=category.title,
-                abstract=category.abstract,
-                icon=category.icon or "",
-            )
-            for category in categories
-        ]
+        return self.session.execute(stmt).scalars().all()
 
     def get_main_category(self, resource_id: uuid.UUID) -> Category:
         from data_catalog_backend.models.resource_category import ResourceCategory
