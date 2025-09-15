@@ -2,7 +2,7 @@ from typing import Optional, List
 import uuid
 
 from geojson_pydantic import FeatureCollection
-from pydantic import Field
+from pydantic import Field, AliasChoices
 
 from data_catalog_backend.models import SpatialExtentType
 from data_catalog_backend.schemas.basemodel import (
@@ -30,7 +30,11 @@ class SpatialExtentResponse(AuditFieldsMixins):
     details: Optional[str] = Field(
         None, description="addition information about the region"
     )
-    geometry: Optional[FeatureCollection] = None
+    geometry: Optional[FeatureCollection] = Field(
+        None,
+        description="GeoJSON FeatureCollection",
+        validation_alias=AliasChoices("geom", "geometry"),
+    )
     spatial_resolution: Optional[str] = Field(
         None, description="description of the resolution of the data. ex: 5mx5m"
     )

@@ -93,14 +93,9 @@ async def get_resource(
     resource_id: uuid.UUID,
     resource_service: ResourceService = Depends(get_resource_service),
 ) -> ResourceResponse:
-    resource = resource_service.get_resource(resource_id)
     try:
-        for extent in resource.spatial_extent:
-            extent.geometry = extent.geom  # Convert WKB to GeoJSON
-
-        converted = ResourceResponse.model_validate(resource)
-        logger.info(converted)
-        return converted
+        resource = resource_service.get_resource(resource_id)
+        return ResourceResponse.model_validate(resource)
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=500, detail=str(e))
