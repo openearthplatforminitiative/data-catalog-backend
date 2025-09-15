@@ -29,5 +29,5 @@ class ProviderSummaryResponse(AuditFieldsMixins):
     description: str = Field(description="description of the provider")
 
 
-class ProviderResponse(AuditFieldsMixins):
+class ProviderResponse(ProviderSummaryResponse):
     resources: List[ResourceProviderResponse]
