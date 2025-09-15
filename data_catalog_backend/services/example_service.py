@@ -69,7 +69,6 @@ class ExampleService:
             example.favicon_url if example.favicon_url else existing_example.favicon_url
         )
         existing_example.updated_by = user.email
-        existing_example.updated_at = datetime.now()
 
         self.session.commit()
         return existing_example

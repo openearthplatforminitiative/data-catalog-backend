@@ -30,7 +30,6 @@ class CodeExampleService:
                 description=code_example.description,
                 resource_id=resource_id,
                 created_by=user.email,
-                created_at=datetime.now(),
             )
 
             self.session.add(new_code_example)
@@ -42,7 +41,6 @@ class CodeExampleService:
                     source=code.source,
                     examples_id=new_code_example.id,
                     created_by=user.email,
-                    created_at=datetime.now(),
                 )
                 self.session.add(new_code)
 
