@@ -2,7 +2,7 @@ import datetime
 import uuid
 from typing import List, Optional
 
-from pydantic import Field, conlist
+from pydantic import Field
 
 from data_catalog_backend.models import ResourceType
 from data_catalog_backend.schemas.basemodel import (
@@ -16,13 +16,11 @@ from data_catalog_backend.schemas.category import (
 from data_catalog_backend.schemas.code import (
     CodeExampleRequest,
     CodeExampleResponse,
-    UpdateCodeExampleRequest,
 )
 from data_catalog_backend.schemas.example import ExampleResponse, ExampleRequest
 from data_catalog_backend.schemas.license import LicenseResponse
 from data_catalog_backend.schemas.provider import (
     ProviderSummaryResponse,
-    ProviderResponse,
 )
 from data_catalog_backend.schemas.resource_summary import ResourceSummaryResponse
 from data_catalog_backend.schemas.spatial_extent import (
@@ -51,27 +49,21 @@ class ResourceRequest(BaseModel):
     html_content: Optional[str] = Field(
         description="Extended description of the resource"
     )
-    resource_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to github"
-    )
+    resource_url: Optional[str] = Field(default=None, description="link to github")
     documentation_url: Optional[str] = Field(
         description="link to openAPI specification"
     )
     download_url: Optional[str] = Field(description="link to download")
-    git_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to github"
-    )
-    data_hub_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to data hub"
-    )
+    git_url: Optional[str] = Field(default=None, description="link to github")
+    data_hub_url: Optional[str] = Field(default=None, description="link to data hub")
     research_paper_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to research paper"
+        default=None, description="link to research paper"
     )
     openapi_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to openAPI specification"
+        default=None, description="link to openAPI specification"
     )
     api_authentication_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to api authentication"
+        default=None, description="link to api authentication"
     )
     client_library: bool = Field(
         default=False, description="can be used by our client libraries"
@@ -80,35 +72,31 @@ class ResourceRequest(BaseModel):
         description="Description of how often this resource is being updated"
     )
     release_date: Optional[datetime.date] = Field(
-        default=None, nullable=True, description="Date the resource was released"
+        default=None, description="Date the resource was released"
     )
     spatial_extent: Optional[List[SpatialExtentRequest]] = Field(
-        default=None, nullable=True, description="spatial extent"
+        default=None, description="spatial extent"
     )
     temporal_extent: Optional[List[TemporalExtentRequest]] = Field(
-        default=None, nullable=True, description="temporal extent"
+        default=None, description="temporal extent"
     )
-    contact: Optional[str] = Field(
-        default=None, nullable=True, description="contact information"
-    )
+    contact: Optional[str] = Field(default=None, description="contact information")
     keywords: List[str]
     version: Optional[str] = Field(
-        default=None, nullable=True, description="The version of this resource"
+        default=None, description="The version of this resource"
     )
     type: ResourceType
     main_category: str = Field(description="Main category of the resource")
     additional_categories: Optional[List[str]] = Field(
-        default=None, nullable=True, description="List of relevant categories"
+        default=None, description="List of relevant categories"
     )
     code_examples: Optional[List[CodeExampleRequest]] = Field(
-        default=None, nullable=True, description="Code examples"
+        default=None, description="Code examples"
     )
-    license: Optional[str] = Field(
-        default=None, nullable=True, description="License of the resource"
-    )
-    providers: conlist(str, min_length=1) = Field(description="List of providers")
+    license: Optional[str] = Field(default=None, description="License of the resource")
+    providers: list[str] = Field(description="List of providers", min_length=1)
     examples: Optional[List[ExampleRequest]] = Field(
-        default=None, nullable=True, description="examples of the resource"
+        default=None, description="examples of the resource"
     )
 
 
@@ -130,29 +118,21 @@ class ResourceResponse(AuditFieldsMixins):
     html_content: Optional[str] = Field(
         description="Extended description of the resource"
     )
-    resource_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to resource"
-    )
+    resource_url: Optional[str] = Field(default=None, description="link to resource")
     documentation_url: Optional[str] = Field(
         description="link to openAPI specification"
     )
-    download_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to download"
-    )
-    git_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to github"
-    )
-    data_hub_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to data hub"
-    )
+    download_url: Optional[str] = Field(default=None, description="link to download")
+    git_url: Optional[str] = Field(default=None, description="link to github")
+    data_hub_url: Optional[str] = Field(default=None, description="link to data hub")
     research_paper_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to research paper"
+        default=None, description="link to research paper"
     )
     api_authentication_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to api authentication"
+        default=None, description="link to api authentication"
     )
     openapi_url: Optional[str] = Field(
-        default=None, nullable=True, description="link to openAPI specification"
+        default=None, description="link to openAPI specification"
     )
     client_library: Optional[bool] = Field(
         default=False, description="can be used by our client libraries"
@@ -161,38 +141,36 @@ class ResourceResponse(AuditFieldsMixins):
         description="Description of how often this resource is being updated"
     )
     release_date: Optional[datetime.date] = Field(
-        default=None, nullable=True, description="Date the resource was released"
+        default=None, description="Date the resource was released"
     )
     spatial_extent: Optional[List[SpatialExtentResponse]] = Field(
-        default=None, nullable=True, description="spatial extent"
+        default=None, description="spatial extent"
     )
     temporal_extent: Optional[List[TemporalExtentResponse]] = Field(
-        default=None, nullable=True, description="temporal extent"
+        default=None, description="temporal extent"
     )
-    contact: Optional[str] = Field(
-        default=None, nullable=True, description="contact information"
-    )
+    contact: Optional[str] = Field(default=None, description="contact information")
     keywords: List[str] = Field(description="keywords")
     version: Optional[str] = Field(
-        default=None, nullable=True, description="The version of this resource"
+        default=None, description="The version of this resource"
     )
     type: ResourceType = Field(description="Type of the resource")
     categories: Optional[List[ResourceCategoryResponse]] = Field(
-        default=None, nullable=True, description="List of categories"
+        default=None, description="List of categories"
     )
     code_examples: Optional[List[CodeExampleResponse]] = Field(
-        default=None, nullable=True, description="Code examples"
+        default=None, description="Code examples"
     )
     license: Optional[LicenseResponse] = Field(description="License of the resource")
     providers: List[ResourceProviderResponse] = Field(description="List of providers")
     examples: Optional[List[ExampleResponse]] = Field(
-        default=None, nullable=True, description="examples of the resource"
+        default=None, description="examples of the resource"
     )
     parents: Optional[List[ResourceSummaryResponse]] = Field(
-        default=None, nullable=True, description="Parent resources"
+        default=None, description="Parent resources"
     )
     children: Optional[List[ResourceSummaryResponse]] = Field(
-        default=None, nullable=True, description="Child resources"
+        default=None, description="Child resources"
     )
 
 
