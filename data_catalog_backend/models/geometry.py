@@ -1,7 +1,10 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 from geoalchemy2 import Geometry as Geo, WKBElement
+from geoalchemy2.shape import to_shape
+from geojson_pydantic import FeatureCollection, Feature
+from shapely.geometry import mapping
 from sqlalchemy import String, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -31,9 +34,36 @@ class Geometry(AuditFieldsMixin, Base):
         doc="geometry value",
     )
 
+    bb_geometry: Mapped[WKBElement] = mapped_column(
+        Geo(geometry_type="POLYGON", srid=4326),
+        nullable=False,
+        doc="bounding box of the geometry",
+        default="ST_Envelope(geometry)",
+        onupdate="ST_Envelope(geometry)",
+    )
+
     # Relations
     spatial_extents: Mapped[List["SpatialExtent"]] = relationship(
         "SpatialExtent",
         secondary=spatial_extent_geometry_relation,
         back_populates="geometries",
     )
+
+    # WKBElement to GeoJSON
+    @property
+    def geom(self) -> Optional[FeatureCollection]:
+        if not isinstance(self.geometry, WKBElement):
+            return None
+
+        shapely_geom = to_shape(self.geometry)
+        geojson = mapping(shapely_geom)
+
+        if geojson.get("type") == "GeometryCollection":
+            features = [
+                Feature(geometry=g, properties={}, type="Feature")
+                for g in geojson.get("geometries", [])
+            ]
+        else:
+            features = [Feature(geometry=geojson, properties={}, type="Feature")]
+
+        return FeatureCollection(type="FeatureCollection", features=features)
