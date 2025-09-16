@@ -1,10 +1,12 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import UUID, ForeignKey, String, DateTime, func
+from sqlalchemy import UUID, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from data_catalog_backend.database import Base
 from enum import StrEnum as PyStrEnum
+
+from data_catalog_backend.database import Base
+from data_catalog_backend.models import AuditFieldsMixin
 
 
 class CodeType(PyStrEnum):
@@ -16,7 +18,7 @@ class CodeType(PyStrEnum):
     Bash = "bash"
 
 
-class Code(Base):
+class Code(AuditFieldsMixin, Base):
     __tablename__ = "code"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -30,14 +32,6 @@ class Code(Base):
     source: Mapped[str] = mapped_column(String, nullable=True, doc="code")
     examples_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("code_examples.id"), nullable=True
-    )
-    created_by: Mapped[str] = mapped_column(String, nullable=False, doc="created by")
-    updated_by: Mapped[str] = mapped_column(String, nullable=True, doc="updated by")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now(), doc="created at"
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now(), doc="updated at"
     )
 
     # Relations

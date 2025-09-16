@@ -30,7 +30,6 @@ from data_catalog_backend.schemas.example import (
 )
 from data_catalog_backend.schemas.license import (
     LicenseResponse,
-    LicenseRequest,
     UpdateLicenseRequest,
 )
 from data_catalog_backend.schemas.provider import ProviderResponse
@@ -72,10 +71,6 @@ async def add_resource(
 
         created = resource_service.create_resource(resource_req, current_user)
 
-        if created.spatial_extent is not None:
-            for extent in created.spatial_extent:
-                extent.geometry = extent.geom
-
         converted = ResourceResponse.model_validate(created)
         return converted
     except Exception as e:
@@ -99,10 +94,6 @@ async def update_resource(
     current_user: Annotated[User, Depends(authenticate_user)],
     resource_service: ResourceService = Depends(get_resource_service),
 ) -> ResourceResponse:
-    resource = resource_service.get_resource(resource_id)
-    if not resource:
-        raise ValueError("Resource not found")
-
     try:
         updated_resource_data = update_resource_req.model_dump(exclude_unset=True)
         updated_resource = Resource(**updated_resource_data)
@@ -110,11 +101,7 @@ async def update_resource(
         updated_resource = resource_service.update_resource(
             resource_id, updated_resource, current_user
         )
-
         return ResourceResponse.model_validate(updated_resource)
-    except ValueError as e:
-        logger.error(f"Value error while updating resource: {e}")
-        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Error updating resource with ID: {resource_id} - {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -452,18 +439,18 @@ async def update_example(
 @router.delete(
     "/{resource_id}",
     status_code=204,
-    description="Delete a resource from the metadata store",
+    description="Delete a resource",
     tags=["resources"],
+    dependencies=[Depends(authenticate_user)],
     response_model_exclude_none=True,
 )
 async def delete_resource(
     resource_id: uuid.UUID,
-    current_user: Annotated[User, Depends(authenticate_user)],
     resource_service: ResourceService = Depends(get_resource_service),
 ):
     try:
         logging.info(f"Deleting resource with id {resource_id}")
-        resource_service.delete_resource(resource_id, current_user)
+        resource_service.delete_resource(resource_id)
 
     except ValueError as ve:
         logger.warning(
