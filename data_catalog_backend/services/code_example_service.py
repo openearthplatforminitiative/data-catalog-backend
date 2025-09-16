@@ -1,6 +1,5 @@
 import logging
 import uuid
-from datetime import datetime
 from typing import List
 
 from sqlalchemy.orm import joinedload
@@ -54,18 +53,18 @@ class CodeExampleService:
 
         return created_code_examples
 
-    def get_code_examples(self, id: int) -> List[CodeExamples]:
+    def get_code_examples(self, code_example_id: int) -> List[CodeExamples]:
         stmt = (
             select(CodeExamples)
-            .where(CodeExamples.id == id)
+            .where(CodeExamples.id == code_example_id)
             .options(joinedload(CodeExamples.code))
         )
         return self.session.scalars(stmt).unique().all()
 
-    def get_code_example(self, id: uuid.UUID) -> CodeExamples:
+    def get_code_example(self, code_example_id: uuid.UUID) -> CodeExamples:
         stmt = (
             select(CodeExamples)
-            .where(CodeExamples.id == id)
+            .where(CodeExamples.id == code_example_id)
             .options(joinedload(CodeExamples.code))
         )
         return self.session.scalars(stmt).unique().first()
