@@ -1,12 +1,10 @@
 import logging
 import uuid
-from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select, func, and_, case
+from sqlalchemy import select, func, and_
 from sqlalchemy.orm import joinedload, Session
-from sqlalchemy.sql.functions import user
 
 from data_catalog_backend.exceptions import (
     LicenseNotFoundError,
@@ -314,9 +312,7 @@ class ResourceService:
         existing_resource.git_url = (
             updated_resource.git_url or existing_resource.git_url
         )
-        existing_resource.icon = updated_resource.icon or existing_resource.icon
         existing_resource.updated_by = current_user.email
-        existing_resource.updated_at = datetime.now()
 
         self.session.commit()
         return existing_resource
@@ -332,8 +328,9 @@ class ResourceService:
         if not new_license:
             raise ValueError(f"License with ID: {license_id} not found")
         existing_resource.license = new_license
+
         existing_resource.updated_by = current_user.email
-        existing_resource.updated_at = datetime.now()
+
         self.session.commit()
         return new_license
 
@@ -366,6 +363,7 @@ class ResourceService:
                 )
 
         existing_resource.providers = new_providers
+        existing_resource.updated_by = current_user.email
         self.session.add(existing_resource)
         self.session.commit()
 
@@ -418,7 +416,7 @@ class ResourceService:
         return self.category_service.get_category(category_id)
 
     def override_additional_categories(
-        self, resource_id: uuid.UUID, categories: list[uuid.UUID] or None, user: User
+        self, resource_id: uuid.UUID, categories: Optional[list[uuid.UUID]], user: User
     ) -> list[Category]:
         existing_resource = self.get_resource(resource_id)
 
@@ -462,6 +460,8 @@ class ResourceService:
                 )
 
         existing_resource.categories = new_additional_resource_categories
+        existing_resource.updated_by = user.email
+
         self.session.add(existing_resource)
         self.session.commit()
 
@@ -496,6 +496,7 @@ class ResourceService:
                 new_spatial_extents.append(spatial_extent)
 
         existing_resource.spatial_extent = new_spatial_extents
+        existing_resource.updated_by = user.email
         self.session.add(existing_resource)
         self.session.commit()
 
@@ -525,6 +526,7 @@ class ResourceService:
                 new_temporal_extent.append(temporal_extent)
 
         existing_resource.temporal_extent = new_temporal_extent
+        existing_resource.updated_by = user.email
         self.session.add(existing_resource)
         self.session.commit()
 

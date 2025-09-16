@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from typing import Optional
 
 from sqlalchemy import UUID, ForeignKey, Date
@@ -18,8 +19,8 @@ class TemporalExtent(AuditFieldsMixin, Base):
         nullable=False,
         doc="Unique identifier for temporal extent",
     )
-    start_date: Mapped[Date] = mapped_column(Date, nullable=False, doc="start date")
-    end_date: Mapped[Optional[Date]] = mapped_column(
+    start_date: Mapped[date] = mapped_column(Date, nullable=False, doc="start date")
+    end_date: Mapped[Optional[date]] = mapped_column(
         Date, nullable=True, doc="end date"
     )
     resource_id: Mapped[uuid.UUID] = mapped_column(

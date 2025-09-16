@@ -1,7 +1,7 @@
 import uuid
+from datetime import date
 from typing import Optional
 
-from pydantic import PastDate
 from data_catalog_backend.schemas.basemodel import (
     BaseModel,
     AuditFieldsMixins,
@@ -9,11 +9,11 @@ from data_catalog_backend.schemas.basemodel import (
 
 
 class TemporalExtentRequest(BaseModel):
-    start_date: PastDate
-    end_date: Optional[PastDate] = None
+    start_date: date
+    end_date: Optional[date] = None
 
 
 class TemporalExtentResponse(AuditFieldsMixins):
     id: uuid.UUID
-    start_date: PastDate
-    end_date: Optional[PastDate] = None
+    start_date: date
+    end_date: Optional[date] = None
