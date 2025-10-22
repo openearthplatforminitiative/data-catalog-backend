@@ -90,6 +90,7 @@ class ResourceService:
                 ),
             )
             .join(Category, Category.id == ResourceCategory.category_id)
+            .where(Resource.is_deleted == False)
         )
 
         query = ResourceQuery()
@@ -141,7 +142,9 @@ class ResourceService:
         )
 
     def get_resource(self, resource_id: uuid.UUID) -> Resource:
-        stmt = select(Resource).where(Resource.id == resource_id)
+        stmt = select(Resource).where(
+            Resource.id == resource_id and Resource.is_deleted == False
+        )
         return self.session.scalars(stmt).unique().one_or_none()
 
     def create_resource(self, resource_req: ResourceRequest, user: User) -> Resource:
@@ -559,48 +562,19 @@ class ResourceService:
                 status_code=500, detail=f"Error deleting SpatialExtent: {e}"
             )
 
-    def delete_resource(self, resource_id):
+    def delete_resource(self, resource_id, current_user: User):
         try:
             resource = (
-                self.session.query(Resource)
-                .options(
-                    joinedload(Resource.categories).joinedload(
-                        ResourceCategory.category
-                    ),
-                    joinedload(Resource.providers).joinedload(
-                        ResourceProvider.provider
-                    ),
-                    joinedload(Resource.spatial_extent),
-                    joinedload(Resource.temporal_extent),
-                    joinedload(Resource.examples),
-                    joinedload(Resource.code_examples),
-                    joinedload(Resource.license),
-                )
-                .where(Resource.id == resource_id)
-                .first()
+                self.session.query(Resource).where(Resource.id == resource_id).first()
             )
 
             if not resource:
                 raise ValueError(f"Resource with id {resource_id} not found")
 
+            resource.is_deleted = True
+            resource.updated_by = current_user.email
+            resource.updated_at = datetime.now()
             try:
-                for provider in resource.providers:
-                    self.session.delete(provider)
-                for extent in resource.spatial_extent:
-                    self.delete_spatial_extent_without_geometries(extent.id)
-                for extent in resource.temporal_extent:
-                    self.session.delete(extent)
-                for example in resource.examples:
-                    self.session.delete(example)
-                for code_example in resource.code_examples:
-                    self.session.delete(code_example)
-
-            except Exception as e:
-                logger.error(f"Error deleting resource with ID:{resource_id} - {e}")
-                raise e
-
-            try:
-                self.session.delete(resource)
                 self.session.commit()
             except Exception as e:
                 logger.error(
