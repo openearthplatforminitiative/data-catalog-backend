@@ -15,6 +15,7 @@ from sqlalchemy import (
     func,
     exists,
     DateTime,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
 from data_catalog_backend.database import Base
@@ -92,6 +93,15 @@ class Resource(Base):
         String, nullable=True, doc="resource version"
     )
     type: Mapped[str] = mapped_column(String, nullable=True, doc="type")
+
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        doc="is deleted",
+        default=False,
+        server_default=text("false"),
+    )
+
     license_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("licenses.id"), nullable=True
     )
