@@ -73,7 +73,7 @@
         },
         {
           name: 'data-catalog-admin-api',
-          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.1.6',
+          image: 'ghcr.io/openearthplatforminitiative/data-catalog-backend:0.2.0',
           imagePullPolicy: 'Always',
           ports: [{
             containerPort: 8001,
